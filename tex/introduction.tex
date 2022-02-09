@@ -1,0 +1,47 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Introduction}
+
+Here is a test reference~\cite{Knuth68:art_of_programming}.
+These additional lines have been added just to demonstrate the spacing
+for the rest of the document. Spacing will differ between the typeset main
+document, and typeset individual documents, as the commands
+to change spacing for the body of the thesis are only in the main document.
+
+\section{Cross-Referencing}\label{sec:crossRef}
+
+Cross-references between child documents are possible using the
+\href{https://www.ctan.org/pkg/zref}{\texttt{zref}} package.
+
+\newpage
+
+Text on a new page, to test top margin size.
+
+A sample equation \eqref{eq:test} follows:
+
+\begin{equation}
+y = \frac{1}{x^2} + 4 \label{eq:test}
+\end{equation}
+
+A sample table, Table \ref{tab:test}:
+
+\begin{table}[h]
+    \centering
+    \begin{tabulary}{0.75\textwidth}{r|L}
+    \textbf{Non-wrapping column} & \textbf{Wrapping column} \\ \hline
+    This is an ordinary column & This is a balanced-width column, where text will wrap
+    \end{tabulary}
+    \caption[A sample table] {A sample table created using the \href{https://ctan.org/pkg/tabulary}{\texttt{tabulary}} package}
+    \label{tab:test}
+\end{table}
+
+If there are many acronyms, such as \gls{asa}, and specialized technical terms, consider adding a glossary.
+Sample \gls{sampleGlossaryEntry}, and acroynm (\gls{asa}) descriptions are provided above.
+
+\end{document}

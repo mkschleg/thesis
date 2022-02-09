@@ -1,0 +1,23 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Background Material}
+
+Material in an appendix.
+
+We plot an equation in figure \ref{fig:plot}.
+
+\begin{figure}
+    \centering
+    \includegraphics[keepaspectratio=true, width=0.9\textwidth]{\main/img/plot}
+    \caption[A supporting figure] {A graph of $y = \sin(x) + \sqrt{x}$}
+    \label{fig:plot}
+    % Put the label *after* the caption, but inside the float
+\end{figure}
+
+\end{document}

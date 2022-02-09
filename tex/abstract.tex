@@ -1,0 +1,17 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+% environment for abstract.
+\begin{abstract}
+
+  When making decisions in large, complex environments, such as the real world, partial observability is inevitable. To make decisions which will lead to larger returns, an agent will have to take advantage of its history to identify latent information. One state construction architecture is a recurrent neural network, which iteratively updates its state with new observations. This is a powerful and useful strategy, but the use of backpropagation through time has known limitations when the span of a prediction extends beyond the training sequence length. This is highlighted when episodes are either long, or there are no clear boundaries for the agent in a continuing task. 
+
+  This thesis will consider a predictive approach to state construction. Specifically, using general value functions to construct predictive targets for the state components. In this pursuit, chapters on learning off-policy value functions, learning state with recurrent networks, the derivation and application of general value function networks and how they relate to previous predictive approaches, and several novel algorithms for training GVFNs will be included.
+\end{abstract}
+
+\end{document}
