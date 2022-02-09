@@ -1,0 +1,202 @@
+%%%
+% Text
+%%%
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{relsize}
+\usepackage{microtype}      % microtypography
+
+% Unicode characters
+\DeclareUnicodeCharacter{1EF3}{\`y}
+
+%%%
+% Organization
+%%%
+\usepackage{subfiles}
+\usepackage[titletoc]{appendix}
+% For cross-references between files
+% https://tex.stackexchange.com/questions/77774/undefined-control-sequence-when-cross-referencing-with-xr-hyper
+\usepackage{nameref,zref-xr}
+\zxrsetup{toltxlabel}
+
+\usepackage[breaklinks=true,hidelinks]{hyperref} % See % https://en.wikibooks.org/wiki/LaTeX/Hyperlinks#Customization
+\usepackage{url}
+
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{csquotes} % Also used with biblatex
+\usepackage{xmpincl} % Seems to be needed when converting to PDF/A, 
+
+%%%
+% For figures
+%%%
+\usepackage{graphicx} % more modern
+\usepackage{subcaption}
+\usepackage{sidecap}
+\usepackage{tabularx}
+\usepackage{pbox}
+\usepackage{csquotes}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{wrapfig}
+
+\graphicspath{{./figures/}}
+
+%%%
+% Maths
+%%%
+% \usepackage{amssymb,amsmath}
+% \usepackage{amsthm}
+% \usepackage{amsfonts}       % blackboard math symbols
+% \usepackage{nicefrac}       % compact symbols for 1/2, etc.
+% \usepackage{mathtools}
+% \usepackage{nicematrix}
+
+% \usepackage{tabulary} % Better text wrapping in tables. See https://en.wikibooks.org/wiki/LaTeX/Tables
+% \usepackage{rotating} % For the 'sidewaystable' environment. See https://en.wikibooks.org/wiki/LaTeX/Rotations
+% \usepackage{multirow} % For multirow/multicolumn cells in a table. See https://en.wikibooks.org/wiki/LaTeX/Tables#Columns_spanning_multiple_rows
+
+
+%\usepackage{subcaption} % A package that can be used to create sub-figures
+\usepackage{enumitem} % for more control over enumerate
+\usepackage{mdwlist}	% the 'note' environment
+
+%%%%%%%%%%%%%%%
+% biblatex    %
+%%%%%%%%%%%%%%%
+% (Added by Bernard Llanos)
+% biblatex is intended to be the successor to BibTeX
+% (https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management#biblatex)
+% \usepackage{cite}
+\usepackage[%
+backend=biber,%
+style=numeric,%
+backref=false,%
+sortcites=true,sorting=nyt,%
+mincitenames=1,maxcitenames=2%
+]{biblatex}
+% `backref=true` adds back references - Links to the in-text citations from
+% the corresponding bibliography entries. Back references are not mentioned
+% in thesis guidelines, but are, in my opinion, helpful for reading and editing.
+
+\newcommand{\citep}{\parencite}
+\newcommand{\citeA}[1]{\citeauthor{#1} (\citeyear{#1})}
+\newcommand{\citeR}{\cite}
+
+
+\usepackage[american]{babel}
+
+% The following macro will put back references on the right edge of the page
+% (https://tex.stackexchange.com/questions/149009/biblatex-pagebackref-reference-in-the-flush-right-margin)
+\renewbibmacro*{pageref}{%
+   \iflistundef{pageref}
+     {\renewcommand{\finentrypunct}{\addperiod}}
+     {\renewcommand{\finentrypunct}{\addspace}%
+       \printtext{\addperiod\hfill\rlap{\hskip15pt\colorbox{blue!5}{\scriptsize\printlist[pageref][-\value{listtotal}]{pageref}}}}}}
+
+\addbibresource{rnns.bib}
+\addbibresource{rl.bib}
+\addbibresource{candidacy.bib}
+\addbibresource{predreps.bib}
+\addbibresource{me.bib}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Glossary and acronyms (optional) %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[nogroupskip,nonumberlist,nopostdot]{glossaries}
+
+\setacronymstyle{long-short-desc}
+\setglossarystyle{altlist}
+
+% A simple, but limited way to produce a sorted glossary
+% Other options are described in the 'glossaries' Beginner's Guide (https://ctan.org/pkg/glossaries)
+\makenoidxglossaries % use TeX to sort
+
+% Glossary entries will be loaded from a separate file
+\loadglsentries{\main/tex/glossary}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Thesis style package %
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{\main/uathesis}  % Earlier version says this should be last package 
+                     % imported. Never checked if this is still true. 
+                     % Having this second last before the next one seems fine.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Shorthands               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% From the CVPR paper template (http://cvpr2017.thecvf.com/submission/main_conference/author_guidelines)
+% Add a period to the end of an abbreviation unless there's one
+% already, then \xspace.
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+
+\def\eg{\emph{e.g}\onedot} \def\Eg{\emph{E.g}\onedot}
+\def\ie{\emph{i.e}\onedot} \def\Ie{\emph{I.e}\onedot}
+\def\cf{\emph{c.f}\onedot} \def\Cf{\emph{C.f}\onedot}
+\def\etc{\emph{etc}\onedot} \def\vs{vs\onedot}
+\def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
+\def\etal{\emph{et al}\onedot}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title page and Table of Contents Tweaks %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Correct title for TOC
+\renewcommand{\contentsname}{Table of Contents}
+
+% Fill in the following
+% \title{Developing algorithms for learning predictive representations of state} % Title can't use formulae, symbols, superscripts, subscripts, greek letters, etc. all of which should be replaced with word substitutes
+% \author{Matthew Schlegel}
+
+\degree{\PhD}
+%\degree{\PhD} % uncomment respective degree
+
+\dept{Computing Science}  % Write Computing Science or Civil Engineering.
+
+% If you have a specialization, uncomment the following line and enter it below.
+% It must correspond with what it says on Bear Tracks
+% (Academics>My Academics>Graduation). If, like most people, you don't have one,
+% just leave it commented.
+%\field{Specialization Field}
+
+% Put the year that you submitted your thesis below
+\submissionyear{\number2021}
+
+%%%%%%%%%%%%%%%%%%%%%
+% Document Content  %
+%%%%%%%%%%%%%%%%%%%%%
+
+% This is a modular document.
+% The 'subfiles' package allows you to typeset the included
+% documents separately from the main document, so that you
+% can view only pieces of the thesis at a time.
+% See https://en.wikibooks.org/wiki/LaTeX/Modular_Documents
+%
+% Subfiles that contain references: You can just run
+% `biber subfilename` on them when compiling them individually.
+% There is no need to make them reference the bibliography database
+% 'refs.bib', as they inherit the reference from this file.
+
+
+% \usepackage[showframe,headsep=1cm,headheight=2cm]{geometry}
+
+% \usepackage{\main/uathesis}
+
+\newcommand{\onlyinsubfile}[1]{#1}
+\newcommand{\notinsubfile}[1]{}
+
+% \input{variables.tex}
+
+
+
+\newcommand{\mytodo}[1]{{\color{red} #1}}
+\newcommand{\citehere}{{\bf \color{red} [CITE]}}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main.org"
+%%% End:

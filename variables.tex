@@ -1,0 +1,290 @@
+
+%%%
+% Math packages
+%%%
+\usepackage{amssymb,amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{mathtools}
+\usepackage{nicematrix}
+
+
+%%%%%%
+% Theorems
+%%%%%%
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{assumption}{Assumption}
+
+
+%%%%%
+% Number sets
+%%%%%
+\newcommand{\Integers}{\mathbb{Z}}
+\newcommand{\Naturals}{\mathbb{N}}
+\newcommand{\Reals}{\mathbb{R}}
+\newcommand{\RR}{\mathbb{R}}
+
+%%%%%%
+% Mathematical operations
+%%%%%%
+
+% Probabilites
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\prob}{\mathbb{P}}
+
+% Expectations
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Expected}{\mathbb{E}}
+\newcommand{\Expectation}{\mathbb{E}}
+% \newcommand{\expect}{\operatorname{\mathbb{E}}\expectarg}
+% \DeclarePairedDelimiterX{\expectarg}[1]{[}{]}{%
+% \ifnum\currentgrouptype=16 \else\begingroup\fi
+% \activatebar#1
+% \ifnum\currentgrouptype=16 \else\endgroup\fi
+% }
+
+% Variance
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\Variance}{\mathbb{V}}
+
+% define equals
+\newcommand*{\defeq}{\stackrel{\mathsmaller{\mathsf{def}}}{=}}
+
+
+% misc linear algebra
+\newcommand{\trans}{\top}
+\newcommand{\transpose}{{\raisebox{.2ex}{$\scriptscriptstyle\top$}}}
+\newcommand{\inv}{{\raisebox{.2ex}{$\scriptscriptstyle-1$}}}
+\newcommand{\invt}{{\raisebox{.2ex}{$\scriptscriptstyle-\top$}}}
+\newcommand{\pinv}{{\raisebox{.2ex}{$\scriptscriptstyle\dagger$}}}
+\newcommand{\pinvt}{{\raisebox{.2ex}{$\scriptscriptstyle\dagger\top$}}}
+
+% vector w/ two things in it.
+\newcommand{\twovec}[2]{{\small \Big[\!\! \begin{array}{c}
+#1\\
+#2 
+\end{array}
+\!\!\Big] }}
+
+% Partial Derivative
+\newcommand{\partialderivative}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+% Kronecker delta
+\newcommand{\kron}{\delta}
+
+
+%%%%%
+% Variables
+%%%%%
+
+% Matrices
+\newcommand{\Amat}{\mathbf{A}}
+\newcommand{\Bmat}{\mathbf{B}}
+\newcommand{\Cmat}{\mathbf{C}}
+\newcommand{\Dmat}{\mathbf{D}}
+\newcommand{\Hmat}{\mathbf{H}}
+\newcommand{\Kmat}{\mathbf{K}}
+\newcommand{\Lmat}{\mathbf{L}}
+\newcommand{\Pmat}{\mathbf{P}}
+\newcommand{\Ppi}{\mathbf{P}^\pi}
+\newcommand{\Qmat}{\mathbf{Q}}
+\newcommand{\Rmat}{\mathbf{R}}
+\newcommand{\Umat}{\mathbf{U}}
+\newcommand{\Vmat}{\mathbf{V}}
+\newcommand{\Xmat}{\mathbf{X}}
+\newcommand{\Zmat}{\mathbf{Z}}
+\newcommand{\Tmat}{\mathbf{T}}
+\newcommand{\LL}{\lambda}
+
+% Vectors
+\newcommand{\avec}{\mathbf{a}}
+\newcommand{\bvec}{\mathbf{b}}
+\newcommand{\cvec}{\mathbf{c}}
+\newcommand{\dvec}{\mathbf{d}}
+\newcommand{\evec}{\mathbf{e}}
+\newcommand{\gvec}{\mathbf{g}}
+\newcommand{\hvec}{\mathbf{h}}
+\newcommand{\lvec}{\mathbf{l}}
+\newcommand{\mvec}{\mathbf{m}}
+\newcommand{\nvec}{\mathbf{n}}
+\newcommand{\pvec}{\mathbf{p}}
+\newcommand{\qvec}{\mathbf{q}}
+\newcommand{\rvec}{\mathbf{r}}
+\newcommand{\svec}{\mathbf{s}}
+\newcommand{\uvec}{\mathbf{u}}
+\newcommand{\vvec}{\mathbf{v}}
+\newcommand{\wvec}{\mathbf{w}}
+\newcommand{\xvec}{\mathbf{x}}
+\newcommand{\yvec}{\mathbf{y}}
+\newcommand{\zvec}{\mathbf{z}}
+
+% zero vector
+\newcommand{\zerovec}{\mathbf{0}}
+
+% yhat
+\newcommand{\yhat}{\hat{y}}
+
+%%%%
+% Dimensions and sizes of things
+%%%%
+\newcommand{\xdim}{d}
+\newcommand{\pdim}{k}
+\newcommand{\nsamples}{T}
+\newcommand{\nstates}{n}
+\newcommand{\statesize}{n}
+\newcommand{\obssize}{m}
+\newcommand{\astatesize}{b}
+\newcommand{\agentstatesize}{b}
+\newcommand{\numgvfs}{N}
+\newcommand{\numparams}{d}
+
+%%%%
+% various function parameters
+%%%%
+\newcommand{\regwgt}{\eta}
+\newcommand{\decay}{\beta}
+\newcommand{\stepsize}{\alpha}
+\newcommand{\avewgt}{\epsilon}
+
+%%%% 
+% Learnable Weights
+%%%%
+\newcommand{\weights}{{\boldsymbol{\theta}}}
+\newcommand{\weightspace}{\boldsymbol{\Theta}}
+\newcommand{\secweights}{\wvec}
+
+%%%%
+% Reinforcement learning specific
+%%%%
+
+% actions
+\newcommand{\Actions}{\mathcal{A}}
+\newcommand{\Action}{A}
+\newcommand{\action}{a}
+
+% states
+\newcommand{\States}{\mathcal{S}}
+\newcommand{\State}{S}
+\newcommand{\state}{s}
+\newcommand{\pstate}{\tilde{s}}
+\newcommand{\ipstate}{\tilde{s}}
+
+% states
+\newcommand{\Observations}{\mathcal{O}}
+\newcommand{\obs}{\mathbf{o}}
+
+% features
+\newcommand{\feat}{\mathbf{x}}
+
+% histories
+\newcommand{\Histories}{\mathcal{H}}
+\newcommand{\Hists}{\mathcal{H}}
+\newcommand{\Hist}{\mathcal{H}}
+\newcommand{\history}{\hvec}
+
+% agent state for po
+\newcommand{\agentstate}{\mathbf{s}}
+
+% rewards and cumulants
+\newcommand{\Rewards}{\mathcal{R}}
+\newcommand{\reward}{r}
+\newcommand{\cumulant}{c}
+
+% MDP dynamic functions
+\newcommand{\Pfcn}{\mathrm{P}}
+\newcommand{\PSSA}{P_{s,s'}^a}
+\newcommand{\Rfcn}{r}
+\newcommand{\RSSA}{R_{s,s'}^a}
+
+% Value functions
+\newcommand{\Value}{\mathcal{V}}
+\newcommand{\vfunc}{V}
+\newcommand{\vifunc}[1]{V^{(#1)}}
+\newcommand{\viweights}[1]{V^{(#1)}_\weights}
+
+\newcommand{\QValue}{\mathcal{Q}}
+
+\newcommand{\valuevec}{\mathbf{g}}
+\newcommand{\rewardvec}{\mathbf{r}}
+
+% RL policy induced distributions
+\newcommand{\dmu}{\mathbf{d}_\mu}
+\newcommand{\bpolicy}{\mu}
+\newcommand{\tpolicy}{\pi}
+\newcommand{\bpi}{\mathbf{b}}
+\newcommand{\dstat}[1]{\mathbf{d}_{#1}}
+\newcommand{\behaviorPolicy}{\mu}
+\newcommand{\questionPolicy}{\pi}
+
+% importance sampling
+\newcommand{\rhomat}{\mathcal{P}}
+\newcommand{\rhovec}{\boldsymbol{\rho}}
+
+% error funcs
+\newcommand{\tderror}{\boldsymbol{\delta}}
+\newcommand{\tdnerror}{\boldsymbol{\delta_{TDN}}}
+\newcommand{\loss}{\mathcal{L}}
+
+% projection operator
+\newcommand{\proj}{\Pi}
+
+
+% Math Functions
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\diag}{diag}
+
+% useful constants
+\newcommand{\ralignspace}{\vspace{-0.15cm}}
+\newcommand{\balignspace}{\par\vspace{-0.2cm}}
+
+
+
+%%%%%%%%%%
+%
+% Paper Specific variables
+% 
+%%%%%%%%%%
+
+
+%%%%
+% Resampling
+%%%%
+
+\newcommand{\cumul}{c}
+\newcommand{\cumulr}{C}
+\newcommand{\stater}{S}
+\newcommand{\actionr}{A}
+% \renewcommand{\Value}{V}
+
+\newcommand{\xiwer}{X_{\mathrm{IR}}}
+\newcommand{\xbciwer}{X_{\mathrm{BC}}}
+\newcommand{\xbciwerb}[1]{X_{\mathrm{BC}}^{(#1)}}
+\newcommand{\xwis}{X_{\mathrm{WIS}^*}}
+\newcommand{\xis}{X_{\mathrm{IS}}}
+\newcommand{\xwindow}[1]{X_{#1}}
+\newcommand{\Var}{\mathrm{Var}}
+
+\newcommand{\bsize}{n}
+
+\newcommand{\varReduction}{\V_{\text{reduc}}}
+\newcommand{\irsample}{{i_j}}
+\newcommand{\unisample}{{z_j}}
+\newcommand{\muB}[1]{\mu_{#1}}
+
+%%%%
+% ARNNs
+%%%%
+% number of factors
+\newcommand{\factors}{M}
+
+
+
+
+% \newcommand{\dummycite}[1]{
+%   {[{\bf CITE #1}]}}
+
