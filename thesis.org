@@ -1,4 +1,5 @@
 #+title: Developing algorithms for learning predictive representations of state
+#+FILETAGS: :THESIS:
 #+author: Matthew Schlegel
 #+STARTUP: overview
 #+STARTUP: latexpreview
@@ -8,6 +9,26 @@
 #+LATEX_CLASS: thesis
 #+LATEX_HEADER: \input{variables.tex}
 #+MACRO: c #+latex: %
+
+
+*************** TODO Re-organize the thesis document
+Outline:
+1. Introduction
+2. Background - RL
+3. Background - RNNs
+4. State construction in reinforcement learning
+5. Recurrent neural networks for RL + Known problems
+6. Empirical comparisons of various cells
+7. General Value Function Networks for state construction
+8. Empirical Comparison of various architectures
+9. Discovery
+10. Off-policy prediction?
+11. Conclusions
+
+
+
+*************** END
+
 
 
 * Preamble                                                           :ignore:
@@ -81,10 +102,21 @@ and sets formatting up for main text.
 
 #+END_EXPORT
 
+
 * Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
 :END:
+
+*************** TODO [#B] What is my thesis statement now?
+The proposal is centered on what GVFs can bring to the table in terms of learnability in recurrent networks. Now we want to incorporate RNNs more into the discussion. What should we do?
+- Focus on understanding: The goal of my work generally is to understand. What are RNNs brining to the table, what are GVFNs brining to the table. Are they compatible?
+- partial observability
+- some History of RNNs in RL/online data.
+- some History of pred reps.
+- some History of perception.
+*************** END
+
 
 Partial observability is an inevitable reality of any sufficiently large domain. From time-series forecasting to StarCraft to Robotics, AI systems must grapple with having insufficient information to make accurate predictions and good decisions. A natural approach to overcome partial observability is for the agent to maintain a history of its interaction with the world cite:&mccalum1996learning. For example, consider an agent in a large and empty room with low-powered sensors that reach only a few meters. In the middle of the room, with just the immediate sensor readings, the agent cannot know how far it is from a wall. Once the agent reaches a wall, though, it can determine its distance from the wall in the future by remembering this interaction. However, such an algorithm may require computational resource which are linear in time, or can be problematic if a long history length is needed cite:&mccalum1996learning.
 
@@ -102,6 +134,13 @@ These are briefly listed here with an example using GVFNs, but leave a more deta
 
 Given a predictive approach to state building requires consideration of these difficult algorithmic choices, a natural question arises ``Why shouldn't we use non-predictive subjective based approaches for learning state, such as the usual recurrent networks?''. While this thesis won't provide (or seek) a conclusive answer to this question, predictive approaches to state construction may have a positive effect on a system's ability to generalize and learn a state representation. This is stated in the /Predictive Representation Hypothesis/ cite:&schaul2013better:
 
+*************** TODO How do we want to talk about the predictive representation hypothesis in light of the new thesis statements?
+
+The predictive representation hypothesis is a bit of a pain point here. On one hand it is a part of the pred rep history and should be discussed (even if to only pump up mark ring), but it just is a bit of a clamugeon. I would like to rephrase or re-conceptualize the hypothesis and recommend steps forward for reasonably grounding the hypothesis.
+
+*************** END
+
+
 #+begin_quote
   a(n) /(explicit) predictive representation of state/ will be able to continually construct useful generalizations of the regularities in an environment.
 #+end_quote
@@ -112,6 +151,10 @@ An /(explicit) predictive representation of state/ is an algorithm, or architect
 # Also such generalizations could be generally useful for the agent's downstream objectives.
 
 The /Predictive Representation Hypothesis/ is intuitively appealing with evidence provided through specific predictive approaches cite:&singh2004predictive;&sutton2004temporal;&sutton2005temporal;&schaul2013better;&sutton2011horde;&white2015thesis;&schlegel2021general. Unfortunately, finding sufficient evidence for this hypothesis is difficult, and likely future systems will need to leverage both predictive and memory based approaches (i.e. RNNs).  I believe the creation and study of approaches for state construction leveraging predictions will lead to a more nuanced understanding of what kinds of state are useful for agents. The following hypothesis emphasizes what explicit predictive representations may bring to state learning:
+
+*************** TODO Redo thesis statement
+The thesis statement has changed. But this is still a reasonable hypothesis for the GVFN section.
+*************** END
 
 #+begin_quote
 Restricting the agent's internal state to have predictive semantics in the form of GVFs learned incrementally via TD methods will reduce temporal sensitivities compared with classical recurrent architectures.
@@ -163,6 +206,7 @@ Finally, below is the list of the other papers not covered in my thesis I contri
 - "Meta-descent for online, continual prediction" cite:&jacobsen2019meta
 - "Continual auxiliary task learning" cite:&gupta2021structural
 - "Structural Credit Assignment in Neural Networks using Reinforcement Learning" cite:&mcleod2021continual
+
 
 * Reinforcement Learning under Partial Observability
 :PROPERTIES:
@@ -263,93 +307,7 @@ This objective is trying to find a sufficient statistic of the history for all p
 
 Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. While a reasonable starting algorithm, the lack of heuristic information to guide the search can often be slow cite:&schlegel2021general and possibly infeasible in an agent's lifetime. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017theoption;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
 
-* Learning GVFs Off-policy with Replay
-  :PROPERTIES:
-  :CUSTOM_ID: chap:offpolicy
-  :END:
 
-
-In this section, we introduce off-policy learning and then present importance resampling for learning off-policy predictions. The setting in this section deviates to the fully-observable setting, which fits cleanly with the surrounding literature and removes confounding variables. In cite:&schlegel2019importance, the core contributions are as follows:
-- derivation of importance resampling and batch-corrected importance resampling for prediction in RL,
-- proofs of the unbiasedness of BC-IR, and special cases in which the variance is reduced,
-- and an empirical evaluation of (BC-)IR against several other off-policy excursionist methods on several illustrative domains and a larger demonstration.
-
-Some key empirical conclusions include (details found in cite:&schlegel2019importance):
-  - importance resampling can learn better approximations of value functions with fewer learning updates,
-  - there is little difference between the corrected and vanilla resampling update when the buffer is large,
-  - and resampling effectively reduces the update variance as compared to importance sampling without adding significant bias like vtrace.
-
-** Learning Predictions Off-policy
-
-We consider the problem of learning General Value Functions (GVFs) cite:&sutton2011horde off-policy with (assumed) full access to the state. The agent interacts in an environment defined by a set of states 
-$\States$, a set of actions $\Actions$ and Markov transition dynamics, with probability $\Pfcn(\state'|\state,\action)$ of transitions to state $\state'$ when taking action $\action$ in state $\state$. A GVF is defined for policy $\pi: \States \!\times \!\Actions \!\rightarrow\! [0,1]$, cumulant $\cumul: \States\! \times \!\Actions \!\times\! \States\! \rightarrow\! \RR$ and continuation function $\gamma: \States \!\times\! \Actions \!\times \!\States \rightarrow [0,1]$, with $\cumulr_{t+1} \defeq  \cumul(\stater_t, \actionr_t, \stater_{t+1})$ and  $\gamma_{t+1} \defeq  \gamma(\stater_t, \actionr_t, \stater_{t+1})$ for a (random) transition $(\stater_t, \actionr_t, \stater_{t+1})$. The value for a state $s \in \States$ is
-{{{c}}}
-{{{c}}}
-\begin{align*}
-  \Value(\state) \defeq \mathbb{E}_\pi\left[ G_t | \stater_t = \state \right] &
-&\text{where }  G_t \defeq \cumulr_{t+1} + \gamma_{t+1} \cumulr_{t+2} + \gamma_{t+1} \gamma_{t+2} \cumulr_{t+3} + \ldots
-.
-\end{align*}
-{{{c}}}
-{{{c}}}
-The operator $\mathbb{E}_\pi$ indicates an expectation with actions selected according to policy $\pi$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy $\pi$. 
-These values are typically estimated using parametric function approximation, with weights $\theta \in \RR^d$ defining approximate values $\Value_\theta(\state)$. 
-
-In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
-To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update $\alpha_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for a given $S_t = s$, 
-for learning rate $\alpha_t \in \RR^+$ and TD-error $\delta_t \defeq C_{t+1} + \gamma_{t+1}\Value_{\theta}(S_{t+1}) -  \Value_{\theta}(s)$. 
-If actions are instead sampled according to a behavior policy $\mu: \States \times \Actions \rightarrow [0,1]$, then we can use importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\actionr_t | \stater_t)}{\bpolicy(\actionr_t | \stater_t)}$. 
-Given state $\stater_t = \state$, if $\mu(a | s) > 0$ when $\pi(a | s) > 0$, then the expected value of these two updates are equal. To see why, notice that
-{{{c}}}
-{{{c}}}
-\begin{equation*}
-  \mathbb{E}_\mu\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]
-  =  \alpha_t\nabla_\theta \Value_{\theta}(s)\mathbb{E}_\mu\left[\rho_t\delta_t |S_t = s\right]
-\end{equation*}
-{{{c}}}
-{{{c}}}
-which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]$ because
-{{{c}}}
-{{{c}}}
-\begin{align*}
-\mathbb{E}_\mu\left[\rho_t\delta_t |\stater_t = \state\right] 
-&= \sum_{\action \in \Actions} \mu(\action | \state) \frac{\tpolicy(\action | \state)}{\bpolicy(\action | \state)} \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right]
-= \ \mathbb{E}_\pi\left[\delta_t |\stater_t = \state\right].
-\end{align*}
-{{{c}}}
-{{{c}}}
-Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
-{{{c}}}
-For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update $\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)$. Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular cite:&precup2001off and linear functions cite:&mahmood2014;&mahmood2015off.
-We nonetheless use WIS as a baseline in the experiments and theory.
-
-** Importance Resampling
-   :PROPERTIES:
-   :CUSTOM_ID: sec:resampling_offpolicy
-   :END:
-
-In this section, we briefly introduce Importance Resampling (IR) for
-off-policy prediction. A fuller description and analysis of its bias
-and variance can be found in cite:&schlegel2019importance. 
-A resampling strategy requires a buffer of samples, from which we can resample. Replaying experience from a buffer was introduced as a biologically plausible way to reuse old experience cite:&lin1992,lin1993reinforcement, and has  become common for improving sample efficiency, particularly for control cite:&mnih2015human,schaul2015prioritized. In the simplest case---which we assume here---the buffer is a sliding window of the most recent $n$ samples, $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=t-n}^t$, at time step $t > n$. 
-{{{c}}}
-
-Samples are generated by taking actions according to behavior $\bpolicy$. The transitions are generated with probability $d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$, where $d_\bpolicy : \States \rightarrow [0,1]$ is the stationary distribution for policy $\bpolicy$. The goal is to obtain samples according to  $d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, as if we had taken actions according to policy $\tpolicy$ from states[fn:: The assumption that states are sampled from $d_\bpolicy$ underlies most off-policy learning algorithms. Only a few attempt to adjust probabilities $d_\bpolicy$ to $d_\tpolicy$, either by multiplying IS ratios before a transition cite:&precup2001off or by directly estimating state distributions cite:&hallak2017consistent;&liu2018breaking. In this work, we focus on using resampling to correct the action distribution---the standard setting. We expect, however, that some insights will extend to how to use resampling to correct the state distribution, particularly because wherever IS ratios are used it should be straightforward to use our resampling approach.] $\state \sim d_\bpolicy$.
-
-The IR algorithm is simple: resample a mini-batch of size $k$ on each step $t$ from the buffer of size $n$, proportionally to $\rho_i$ in the buffer. Using the resampled mini-batch we can update our value function using standard on-policy approaches, such as on-policy TD or on-policy gradient TD.The key difference to IS and WIS is that the distribution itself is corrected, before the update, whereas IS and WIS correct the update itself. This small difference, however, can have larger ramifications practically, as we show in the paper.
-
-
-We consider two variants of IR: with and without bias correction. For point $i_j$ sampled from the buffer, let $\Delta_{i_j}$ be the on-policy update for that transition. For example, for TD, $\Delta_{i_j} = \delta_{i_j} \nabla_\theta V_\theta(s_{i_j})$. The first step for either variant is to sample a mini-batch of size $k$ from the buffer, proportionally to $\rho_i$. Bias-Corrected IR (BC-IR) additionally pre-multiplies with the average ratio in the buffer $\bar{\rho} \defeq \tfrac{1}{n} \sum_{i=1}^n \rho_i$, giving the following estimators for the update direction 
-{{{c}}}
-{{{c}}}
-\begin{align*}
-\xiwer &\defeq \tfrac{1}{k} \sum_{j=1}^k \Delta_{i_j} \hspace{2.0cm}
-\xbciwer \defeq \tfrac{\bar{\rho}}{k} \sum_{j=1}^k \Delta_{i_j}
-\end{align*}
-{{{c}}}
-{{{c}}}
-BC-IR negates bias introduced by the average ratio in the buffer deviating significantly from the true mean. For reasonably large buffers, $\bar{\rho}$ will be close to 1 making IR and BC-IR have near-identical updates[fn:: $\bar{\rho} \approx \mathbb{E}[\rho(a|s)] = \mathbb{E}[\frac{\pi(a|s)}{\mu(a|s)}] = \sum_{s,a} \frac{\pi(a|s)}{\mu(a|s)}\mu(a|s) d_{\mu}(s) = 1$. ].
-Nonetheless, they do have different theoretical properties, particularly for small buffer sizes $n$, so we characterize both in cite:&schlegel2019importance.
 * Learning State using RNNs
 :PROPERTIES:
 :CUSTOM_ID: chap:rnn
@@ -444,6 +402,7 @@ where $\weights^{(j)} \in \Reals^{I_j \times \factors}$, and $\factors$ is the r
 Using a low-rank approximation of a multiplicative operation has been derived before. A multiplicative update was used to make action-conditional video predictions in Atari cite:&oh2015.  This operation also appears in a Predictive State RNN hidden state update cite:&downey2017predictive, albeit it never performed as well as the full rank version. This version is also similar to the network used in cite:&sutskever2011, where they mention optimization issues (which were overcome through the use of quasi-second order methods).
 
 Another approach to reducing the number of parameters required--and to reduce redundant learning--is through passing in an action embedding rather than a one-hot encoding. For example, in Pong it is known that only ~5 actions play a role in the game. By taking advantage of the structure of the action space we could potentially further reduce the number of parameters required to get these benefits.
+
 
 * Learning State with GVFs
 :PROPERTIES:
@@ -544,6 +503,93 @@ The agent could also also ask if it will see Red, within a horizon of about 10 s
 
 Notice that though we define the cumulants and continuation functions on the underlying (unknown) state $\hvec_t$, this is a generalization of defining it on the observations. The observations are a function of state; the cumulants and continuations $\gamma$ that are defined on observations are therefore defined on $\hvec_t$. In the examples above, these functions were defined using just the observations. More generally, we consider them as part of a problem definition. This means they could be defined using short histories, or other separate summaries of the history. As we discuss in cite:&schlegel2021general, we can also consider cumulants that are a function of our own predictions or constructed state.
 
+* Learning GVFs Off-policy with Replay
+  :PROPERTIES:
+  :CUSTOM_ID: chap:offpolicy
+  :END:
+
+
+In this section, we introduce off-policy learning and then present importance resampling for learning off-policy predictions. The setting in this section deviates to the fully-observable setting, which fits cleanly with the surrounding literature and removes confounding variables. In cite:&schlegel2019importance, the core contributions are as follows:
+- derivation of importance resampling and batch-corrected importance resampling for prediction in RL,
+- proofs of the unbiasedness of BC-IR, and special cases in which the variance is reduced,
+- and an empirical evaluation of (BC-)IR against several other off-policy excursionist methods on several illustrative domains and a larger demonstration.
+
+Some key empirical conclusions include (details found in cite:&schlegel2019importance):
+  - importance resampling can learn better approximations of value functions with fewer learning updates,
+  - there is little difference between the corrected and vanilla resampling update when the buffer is large,
+  - and resampling effectively reduces the update variance as compared to importance sampling without adding significant bias like vtrace.
+
+** Learning Predictions Off-policy
+
+We consider the problem of learning General Value Functions (GVFs) cite:&sutton2011horde off-policy with (assumed) full access to the state. The agent interacts in an environment defined by a set of states 
+$\States$, a set of actions $\Actions$ and Markov transition dynamics, with probability $\Pfcn(\state'|\state,\action)$ of transitions to state $\state'$ when taking action $\action$ in state $\state$. A GVF is defined for policy $\pi: \States \!\times \!\Actions \!\rightarrow\! [0,1]$, cumulant $\cumul: \States\! \times \!\Actions \!\times\! \States\! \rightarrow\! \RR$ and continuation function $\gamma: \States \!\times\! \Actions \!\times \!\States \rightarrow [0,1]$, with $\cumulr_{t+1} \defeq  \cumul(\stater_t, \actionr_t, \stater_{t+1})$ and  $\gamma_{t+1} \defeq  \gamma(\stater_t, \actionr_t, \stater_{t+1})$ for a (random) transition $(\stater_t, \actionr_t, \stater_{t+1})$. The value for a state $s \in \States$ is
+{{{c}}}
+{{{c}}}
+\begin{align*}
+  \Value(\state) \defeq \mathbb{E}_\pi\left[ G_t | \stater_t = \state \right] &
+&\text{where }  G_t \defeq \cumulr_{t+1} + \gamma_{t+1} \cumulr_{t+2} + \gamma_{t+1} \gamma_{t+2} \cumulr_{t+3} + \ldots
+.
+\end{align*}
+{{{c}}}
+{{{c}}}
+The operator $\mathbb{E}_\pi$ indicates an expectation with actions selected according to policy $\pi$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy $\pi$. 
+These values are typically estimated using parametric function approximation, with weights $\theta \in \RR^d$ defining approximate values $\Value_\theta(\state)$. 
+
+In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
+To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update $\alpha_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for a given $S_t = s$, 
+for learning rate $\alpha_t \in \RR^+$ and TD-error $\delta_t \defeq C_{t+1} + \gamma_{t+1}\Value_{\theta}(S_{t+1}) -  \Value_{\theta}(s)$. 
+If actions are instead sampled according to a behavior policy $\mu: \States \times \Actions \rightarrow [0,1]$, then we can use importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\actionr_t | \stater_t)}{\bpolicy(\actionr_t | \stater_t)}$. 
+Given state $\stater_t = \state$, if $\mu(a | s) > 0$ when $\pi(a | s) > 0$, then the expected value of these two updates are equal. To see why, notice that
+{{{c}}}
+{{{c}}}
+\begin{equation*}
+  \mathbb{E}_\mu\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]
+  =  \alpha_t\nabla_\theta \Value_{\theta}(s)\mathbb{E}_\mu\left[\rho_t\delta_t |S_t = s\right]
+\end{equation*}
+{{{c}}}
+{{{c}}}
+which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]$ because
+{{{c}}}
+{{{c}}}
+\begin{align*}
+\mathbb{E}_\mu\left[\rho_t\delta_t |\stater_t = \state\right] 
+&= \sum_{\action \in \Actions} \mu(\action | \state) \frac{\tpolicy(\action | \state)}{\bpolicy(\action | \state)} \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right]
+= \ \mathbb{E}_\pi\left[\delta_t |\stater_t = \state\right].
+\end{align*}
+{{{c}}}
+{{{c}}}
+Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
+{{{c}}}
+For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update $\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)$. Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular cite:&precup2001off and linear functions cite:&mahmood2014;&mahmood2015off.
+We nonetheless use WIS as a baseline in the experiments and theory.
+
+** Importance Resampling
+   :PROPERTIES:
+   :CUSTOM_ID: sec:resampling_offpolicy
+   :END:
+
+In this section, we briefly introduce Importance Resampling (IR) for
+off-policy prediction. A fuller description and analysis of its bias
+and variance can be found in cite:&schlegel2019importance. 
+A resampling strategy requires a buffer of samples, from which we can resample. Replaying experience from a buffer was introduced as a biologically plausible way to reuse old experience cite:&lin1992,lin1993reinforcement, and has  become common for improving sample efficiency, particularly for control cite:&mnih2015human,schaul2015prioritized. In the simplest case---which we assume here---the buffer is a sliding window of the most recent $n$ samples, $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=t-n}^t$, at time step $t > n$. 
+{{{c}}}
+
+Samples are generated by taking actions according to behavior $\bpolicy$. The transitions are generated with probability $d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$, where $d_\bpolicy : \States \rightarrow [0,1]$ is the stationary distribution for policy $\bpolicy$. The goal is to obtain samples according to  $d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, as if we had taken actions according to policy $\tpolicy$ from states[fn:: The assumption that states are sampled from $d_\bpolicy$ underlies most off-policy learning algorithms. Only a few attempt to adjust probabilities $d_\bpolicy$ to $d_\tpolicy$, either by multiplying IS ratios before a transition cite:&precup2001off or by directly estimating state distributions cite:&hallak2017consistent;&liu2018breaking. In this work, we focus on using resampling to correct the action distribution---the standard setting. We expect, however, that some insights will extend to how to use resampling to correct the state distribution, particularly because wherever IS ratios are used it should be straightforward to use our resampling approach.] $\state \sim d_\bpolicy$.
+
+The IR algorithm is simple: resample a mini-batch of size $k$ on each step $t$ from the buffer of size $n$, proportionally to $\rho_i$ in the buffer. Using the resampled mini-batch we can update our value function using standard on-policy approaches, such as on-policy TD or on-policy gradient TD.The key difference to IS and WIS is that the distribution itself is corrected, before the update, whereas IS and WIS correct the update itself. This small difference, however, can have larger ramifications practically, as we show in the paper.
+
+
+We consider two variants of IR: with and without bias correction. For point $i_j$ sampled from the buffer, let $\Delta_{i_j}$ be the on-policy update for that transition. For example, for TD, $\Delta_{i_j} = \delta_{i_j} \nabla_\theta V_\theta(s_{i_j})$. The first step for either variant is to sample a mini-batch of size $k$ from the buffer, proportionally to $\rho_i$. Bias-Corrected IR (BC-IR) additionally pre-multiplies with the average ratio in the buffer $\bar{\rho} \defeq \tfrac{1}{n} \sum_{i=1}^n \rho_i$, giving the following estimators for the update direction 
+{{{c}}}
+{{{c}}}
+\begin{align*}
+\xiwer &\defeq \tfrac{1}{k} \sum_{j=1}^k \Delta_{i_j} \hspace{2.0cm}
+\xbciwer \defeq \tfrac{\bar{\rho}}{k} \sum_{j=1}^k \Delta_{i_j}
+\end{align*}
+{{{c}}}
+{{{c}}}
+BC-IR negates bias introduced by the average ratio in the buffer deviating significantly from the true mean. For reasonably large buffers, $\bar{\rho}$ will be close to 1 making IR and BC-IR have near-identical updates[fn:: $\bar{\rho} \approx \mathbb{E}[\rho(a|s)] = \mathbb{E}[\frac{\pi(a|s)}{\mu(a|s)}] = \sum_{s,a} \frac{\pi(a|s)}{\mu(a|s)}\mu(a|s) d_{\mu}(s) = 1$. ].
+Nonetheless, they do have different theoretical properties, particularly for small buffer sizes $n$, so we characterize both in cite:&schlegel2019importance.
 * Thesis Proposal
 :PROPERTIES:
 :CUSTOM_ID: chap:proposal
