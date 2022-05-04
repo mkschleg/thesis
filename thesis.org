@@ -128,7 +128,7 @@ State Construction is...?
 - Levels of state construction:
   - Reactive/low-level state vs abstractions for state?
   - What do we want to learn in a state? -> We don't know!
-  - There isn't a clear set of criteria for determining what makes for a good state in reinforcement learing
+  - There isn't a clear set of criteria for determining what makes for a good state in reinforcement learning
     - Separability? Good Representations properties? Predictive of final task?
 
 - At what abstraction should we be focused?
@@ -164,6 +164,33 @@ Methods to deal with partial observability:
   - Predictive state recurrent networks
 
 
+
+** More structured thinking/outline
+
+- goal of the document is to think about "state construction".
+  - Decompose the terms "state" and "construction" in context of the literature
+  - Construction is not limited to composing fixed random functions or the schema mechanism.
+- Searching and sorting. Q: What are we searching for? A: Something which helps us maximize return.
+- What could we want when maximizing reward
+  - Markov state?
+  - sufficient statistic of the history of observations?
+  - core tests -> ability to predict anything?
+
+- Thesis statement: While many authors have proposed different algorithms for state construction, we take the attitude that little is known about how each of these work in prediction and control. This thesis will be focused on understanding and developing on current algorithms for state construction.
+
+- This document is meant to:
+  - Explore potential state constructing methods, discuss extensions, propose future research.
+  - History based approaches, prediction based approaches
+  - Understanding, understanding, understanding. Sensible recommendations for the current state of state construction.
+  - What can we do to further the two approaches? What do both give? Problems with both?
+
+
+
+* Reinforcement Learning
+- RL as a means to build behaviour through maximizing return.
+
+
+* State Construction
 
 * Postamble                                                          :ignore:
 
