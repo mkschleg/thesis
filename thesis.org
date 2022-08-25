@@ -109,6 +109,72 @@ and sets formatting up for main text.
 :END:
 
 
+** ARNNs Introduction
+
+Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large complex domains. For example, a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. A game playing systems such as StarCraft \citep{vinyals2019grandmaster} provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
+
+Deep reinforcement learning has expanded the types of problems reinforcement learning can be applied to, specifically those with complex observations from the environment \citep{mnih2015human, vinyals2019grandmaster}. Significant work has gone into engineering primarily non-recurrent networks \citep{hessel2017, espeholt2018impala}, while several challenges remain for recurrent architectures in reinforcement learning \citep{hausknecht2015, zhu2017improving, rafiee2020eye, schlegel2020general}. There are many design and algorithmic decisions required when applying a recurrent architecture to a reinforcement learning problem. We have a larger discussion on the open-problems for recurrent agents in Section \ref{sec:open_problems}.
+
+Recurrent neural networks (RNNs) have been established as an important tool for modeling data with temporal dependencies. They have been primarily used in language and video prediction \citep{mikolov2010recurrent, tiang2016, Saon2017, wang2018eidetic, oh2015}, but have also been used in traditional time-series forecasting \citep{bianchi2017overview} and RL \citep{onat1998recurrent, bakker2002, wierstra2007solving, hausknecht2015, heess2015}. Many specialized architectures have been developed to improve learning with recurrence. These architectures are designed to better model long temporal dependence and avoid saturation including, Long-short Term Memory units (LSTMs) \citep{hochreiter1997}, Gated Recurrent Units (GRUs) \citep{cho2014, chung2014empirical}, Non-saturating Recurrent Units (NRUs) \citep{chandar2019}, and others. Most modern RNN architectures integrate information through additive operations. However, some work has also examined multiplicative updating \citep{sutskever2011, wu2016} which follows from what were known as Second-order RNNs \citep{goudreau1994}.
+
+One important design decision is the strategy used to incorporate action in the state update function which can have a large impact on the agent's ability to predict and control (see Figure \ref{fig:ring_world_example}). This has been noted before, \cite{zhu2017improving} provides a discussion on the importance of these choices developing an architecture which encodes the action through several layers before concatenating with the observation encoding. Other types of action encodings have been used for the state update in RNNs for RL \citep{schaefer2007recurrent, zhu2017improving, schlegel2020general}, but without an in-depth discussion or focus on the ramifications of the particular choice of architecture.  In other cases, action has seemingly been omitted \citep{oh2015,hausknecht2015, espeholt2018impala}. Other state construction approaches also see action as a primary component, predictive representations of state encode predictions as the likelihood of seeing action-observation pairs given a history \citep{littman2002}.
+
+\begin{wrapfigure}[21]{r}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{plots/figures/ringworld_example_lc.pdf}
+  \caption{Learning Curves for various RNN cells in Ring World using experience replay and three strategies to incorporate action into an RNN. The agent learns 20 GVF predictions for 300k steps and we report root mean squared value error  averaged over 50 runs with $95\%$ confidence intervals with window averaging over 1000 steps. See Section \ref{sec:learnability} for full details.}\label{fig:ring_world_example}
+\end{wrapfigure}
+
+% $\text{RMSVE}_t = \sqrt{\sum_i(\tilde{V}_i(s_t) - V_i(\bar{s}_t))^2}$
+
+Action plays an important role in perception in cognitive sciences. \cite{noe2004action} proposed that perception is dependent on the actions we can take and have taken on the world around us. In effect, one can look at the objective of a reinforcement learning agent as the desire to control and predict the experience (or data) stream, which inevitably means we must model our agency on the data stream. Action has also played an important part in understanding representations (or codings) in the brain through common coding \Citep{prinz1990}, and in the larger interplay between prediction and action in the brain \citep{clark2013whatever}. While the RNN architecture is not exactly reminiscent of these cognitive models, the role of action in perception further motivates the need to study the role action plays in an RL agent's perceptual system more in-depth.
+
+In this paper, we focus on several architectures for incorporating action into the state-update function of an RNN in partially observable RL settings. Many of these architectures have been proposed previously for recurrent architectures (i.e. \cite{zhu2017improving, schlegel2020general}), and others are either related to or obvious extensions of those architectures. We perform an in-depth empirical evaluation on several illustrative domains, and outline the relationship between the domain and architectures. Finally, we discuss future work in developing recurrent architectures designed for the RL problem and discuss challenges specific to the RL setting needing investigation in the future.
+
+** GVFN Introduction
+
+Most domains of interest are partially observable, where an agent only observes a limited part of the state. In such a setting, if the agent uses only the immediate observations, then it has insufficient information to make accurate predictions or decisions. A natural approach to overcome partial observability is for the agent to maintain a history of its interaction with the world. For example, consider an agent in a large and empty room with low-powered sensors that reach only a few meters. In the middle of the room, with just the immediate sensor readings, the agent cannot know how far it is from a wall. Once the agent reaches a wall, though, it can determine its distance from the wall in the future by remembering this interaction. This simple strategy, however, can be problematic if a long history length is needed \citep{mccalum1996learning}.
+
+State construction enables the agent to overcome partial observability, with a more compact representation than an explicit history. Because most environments and datasets are partially observable---in time series prediction, in modeling dynamical systems and in reinforcement learning---there is a large literature on state construction. These strategies can be separated into Objective-state and Subjective-state approaches.
+
+
+Objective-state approaches specify a true latent space, and use observations to identify this latent state. An objective representation is one that is defined in human-terms, external to the agent's data-stream of interaction. They typically require an expert to provide feature generators or models of the agent's motion and sensor apparatus. Many approaches are designed for a discrete set of latent states, including HMMs \citep{baum1966statistical} and POMDPs \citep{kaelbling1998planning}.
+A classical example is Simultaneous Localization and Mapping, where the agent attempts to extract its position and orientation as a part of the state \citep{durrantwhyte2006simultaneous}.
+These methods are particularly useful in applications where the dynamics are well-understood or provided, and so accurate transitions can be used in the explicit models. When models need to be estimated or the latent space is unknown, however, these methods either cannot be applied or are prone to misspecification.
+
+
+The goal of subjective-state approaches, on the other hand, is to construct an internal state only from a stream of experience. This contrasts objective-state approaches in two key ways. First, the agent is not provided with a true latent space to identify. Second, the agent need not identify a true latent state, even if there is one. Rather, it only needs to identify an internal state that is sufficient for making predictions about target variables of interest. Such a state will likely not correspond to objective quantities like meters and angles, but could be much simpler than the true latent state and can be readily learned from the data stream. Examples of subjective-state approaches to state construction include Recurrent Neural Networks (RNNs) \citep{hopfield1982neural,lin1993reinforcement}, Predictive State Representations (PSRs) \citep{littman2001predictive} and TD Networks \citep{sutton2004temporal}.
+
+RNNs have emerged as one of the most popular approaches for online state construction, due to their generality and the ability to leverage advances in optimizing neural networks. An RNN provides a recurrent state-update function, where the state is updated as a function of the (learned) state on the previous step and the current observations. These recurrent connections can be unrolled back in time, making it possible for the current RNN state to be dependent on observations far back in time. There have been several specialized activation units crafted to improve learning long-term dependencies, including long short-term memory units (LSTMs) \citep{hochreiter1997long} and gated recurrent units (GRUs) \citep{cho2014properties}. PSRs and TD Networks are not as widely used, because they make use of complex training algorithms that do not work well in practice (see \citeR{mccracken2005online,boots2011closing} and \citeR{vigorito2009temporal,silver2012gradient} respectively). In fact, recent work has investigated facilitating use of these models by combining them with RNNs \citep{downey2017predictive,choromanski2018initialization,venkatraman2017predictive}. Other subjective state approaches based on filtering can be complicated to extend to nonlinear dynamics, such as system identification approaches \citep{ljung2010perspectives} or Predictive Linear Gaussian models \citep{rudary2005predictive,wingate2006mixtures}.
+
+One issue with RNNs, however, is that training can be unstable and expensive. There are two well-known approaches to training RNNs. The first, Real Time Recurrent Learning (RTRL) \citep{williams1989alearning} relies on a recursive form to estimate gradients. This gradient computation is exact in the offline setting---when RNN parameters are fixed---but only an approximation when computing gradients online. RTRL is prohibitively expensive, requiring computation that is quartic in the hidden dimension size $\statesize$. Low-rank approximations have been developed \citep{tallec2018unbiased,mujika2018approximating,benzing2019optimal} to improve computational efficiency, but these approaches to training RNNs remain less popular than the simpler strategy of Back propagation through time (BPTT).
+
+BPTT explicitly computes gradients of the parameters, by using the chain rule back in time, essentially unrolling the recursive RNN computation. This approach requires maintaining the entire trajectory, which is infeasible for many online learning systems we consider here. A truncated form of BPTT (p-BPTT) is often used to reduce the complexity of training, where complexity grows linearly with p: $O(p \statesize^2)$.
+Unfortunately, training can be highly sensitive to the truncation parameters \citep{pascanu2013onthe}, particularly if the dependencies back-in-time are longer than the chosen $p$---as we reaffirm in our experiments.
+
+One potential cause of this instability is precisely the generality of RNNs. These systems require expertise in selecting architectures and tuning hyperparameters \citep{pascanu2013onthe,sutskever2013training}. This design space can already be difficult to navigate with standard feed-forward neural networks, and is exacerbated by the recurrence that makes the learning dynamics more unstable. Further, it can be hard to leverage domain expertise to constrain the space of RNNs, and so improve trainability. Specialized, complex architectures have been designed for speech recognition \citep{saon2017english} and NLP \citep{Peters:2018}; redesigning such systems for new problems is an onerous task. Many general purpose architectural restrictions have been proposed, such as GRUs and skip connections (see \citeR{greff2017lstm} and \citeR{trinh2018learning} for thorough overviews). These methods all provide tools to design, and tune, better architectures, but still do not provide a simple mechanism for a non-expert in deep learning to inject prior knowledge.
+
+An alternative direction, that requires more domain expertise than RNN expertise, is to use predictions as auxiliary losses. Auxiliary unsupervised losses have been used in NLP to improve trainability \citep{trinh2018learning}. Less directly, auxiliary losses were used in reinforcement learning \citep{jaderberg2016reinforcement} and for modeling dynamical systems \citep{venkatraman2017predictive}, to improve the quality of the representation; this is a slightly different but nonetheless related goal to trainability. The use of predictions for auxiliary losses is an elegant way to constrain the RNN, because the system designers are likely to have some understanding of the relevant system components to predict. For the larger goals of AI, augmenting the RNN with additional predictions is promising because one could imagine the agent discovering these predictions autonomously---predictions by design are grounded in the data stream and learnable without human supervision. Nonetheless, the use of predictions as auxiliary tasks provides a more indirect (second-order) mechanism to influence the state variables. In this work, we ask: is there utility in directly constraining states to be predictions?
+
+To answer this question, we need a practical approach for learning RNNs, where the internal state corresponds to predictions. We propose a new RNN architecture, where we constrain the hidden state to be multi-step predictions, using an explicit loss function on the hidden state.
+In particular, we use general policy-contingent, multi-step predictions---called General Value Functions (GVFs) \citep{sutton2011horde}---generalizing the types of predictions considered in related predictive representation architectures \citep{rafols2005using,silver2012gradient,sun2016learning,downey2017predictive}. These GVFs have been shown to represent a wide array of multi-step predictions
+\citep{modayil2014multi}. In this paper, we develop the objective and algorithm(s) to train these GVF networks (GVFNs).
+
+We then demonstrate through a series of experiments that GVFNs can effectively represent the state and are much more robust to train, allowing even simple gradient updates with no gradients needed
+back-in-time. We first investigate accuracy on two time series datasets, and find that our approach is
+competitive with a baseline RNN and more robust to BPTT truncation length. We then investigate GVFNs more deeply in several synthetic problems, to determine 1) if robustness
+to truncation remains for a domain with long-term dependencies and 2) the impact of the prediction specification---or misspecification---on GVFN performance. We find that GVFNs have consistent robustness properties across problems, but that, unsurprisingly, the choice of predictions do matter, both for improving learning as well as final accuracy. Our experiments provide evidence that constraining states to be predictions can be effective, and raise the importance of better understanding what these predictions should be.
+
+Our work provides additional support for the {\em predictive representation hypothesis}, that state-components restricted to be predictions about the future result in good generalization \citep{rafols2005using}. Constraining the state to be predictions could both regularize learning---by reducing the hypothesis space for state construction---and prevent the constructed state from overfitting to the observed data and target predictions. To date, there has only been limited investigation into and evidence for this hypothesis.
+\citeA{rafols2005using} showed that, for a discrete state setting, learning was more sample efficient with a predictive representation than a tabular state representation and a tabular history representation.
+\citeA{schaul2013better} showed how a collection of optimal GVFs---learned offline---provide a better state representation for a reward maximizing task, than a collection of optimal PSR predictions.
+\citeA{sun2016learning} showed that, for dynamical systems, constraining state to be predictions about the future significantly improved convergence rates over auto-regressive models and n4sid.
+Our experiments show that RNNs with state composed of GVF predictions can have notable advantage over RNNs in building state with p-BPTT, even when the RNN is augmented with auxiliary tasks based on those same GVFs.
+
+** Thoughts
+
+
+
 *************** TODO [#B] What is my thesis statement now?
 The proposal is centered on what GVFs can bring to the table in terms of learnability in recurrent networks. Now we want to incorporate RNNs more into the discussion. What should we do?
 - Focus on understanding: The goal of my work generally is to understand. What are RNNs brining to the table, what are GVFNs brining to the table. Are they compatible?
@@ -164,7 +230,6 @@ Methods to deal with partial observability:
   - Predictive state recurrent networks
 
 
-
 ** More structured thinking/outline
 
 - goal of the document is to think about "state construction".
@@ -185,13 +250,122 @@ Methods to deal with partial observability:
   - What can we do to further the two approaches? What do both give? Problems with both?
 
 
+What sections do I want to write?
+- Introduction (1):
+  - What specific research question are we addressing?
+- Reinforcement Learning (2)
+  - Agent perspective
+  - Goal of an agent
+  - Parts of an agent
+- Predictions (Horde) (3/4)
+  - Learning Predictions (resampling)
+- Perception and Partial Observability (5)
+- Recurrent neural networks in and out of RL (6)
+- We have a long way to go in understanding and using rnns in RL (7/8/8.5?)
+- Predictive state representations in and out of RL (9)
+- Applying GVFs to learn state representations (10/11/12)
+- Future Work (13)
 
-* Reinforcement Learning
-- RL as a means to build behaviour through maximizing return.
+** Contributions
+
+In this section, I outline the specific contributions made to the field of machine intelligence and reinforcement learning to satisfy the requirements of the doctoral degree at University of Alberta.
+
+- Applied the importance re-sampling technique in learning predictions in the reinforcement learning.
+- Extensive empirical analysis of various recurrent architectures for incorporating action.
+- Formulating and empirically evaluating a novel predictive state representation, general value function networks (GVFNs), to learn long-temporal dependencies.
+
+* Reinforcement Learning (Part 1?)
+RL as a means to build behavior through maximizing return.
 
 
-* State Construction
+*The Environment*
+   - The world
+   - Environment states
+   - Stochasticity or Partial Observability?
 
+*The Problem (header section?)*
+   - Maximizing the (discounted?) return.
+   - Predicting the return
+
+*The Agent*
+   - Smaller than the world
+   - Perception, Behavior, Mind-Body Interface
+   - State representations
+   
+** Control
+   - Q-learning
+   - Exploration ($\epsilon$-greedy)
+     
+** Deep Reinforcement Learning
+   - Deep Q Networks
+   - Experience Replay
+   - Target Networks
+
+* Predictions and Prediction Making
+** GVFs
+** Composite GVFs
+** General Forms of Prediction
+
+* Learning Predictions Off-policy using Importance Resampling
+(Point to paper for theory)
+
+** Algorithm
+** Empirical Results
+
+* Perception and Partial Observability (Part 2?)
+
+- State, credit assignment/search through the functional space
+- Environment State, Agent State, Representations
+- Working towards a better definition of what we want from state -> Better path of discovery for new algorithms which learn state.
+- Focus is on understanding prior methods through empirical investigations, developing these methods using modern tools, and making recommendations for the future.
+
+** Sufficient state
+** Discovery, search, and credit assignment
+** Long Temporal Abstractions vs embodied state
+
+* Recurrent Neural Networks in Reinforcement Learning
+* How do we incorporate action into a recurrent network?
+* Empirical Results - ARNNs
+* Open Problems using RNNs in DRL
+** Open problems for history dependent architectures.
+** Solution method issues
+* Predictive State Representations in Perception
+
+The idea that an agent's knowledge might be represented as predictions has a long history in machine learning. The first references to such a predictive approach can be found in the work of \citeA{Cunninghambook}, \citeA{becker1973model}, and \citeA{drescher1991made}, who hypothesized that agents would construct their understanding of the world from interaction, rather than human engineering. These ideas inspired work on predictive state representations (PSRs) \citep{littman2001predictive}, as an approach to modeling dynamical systems. Simply put, a PSR can predict all possible interactions between an agent and it's environment by reweighting a minimal collection of core test (sequence of actions and observations) and their predictions, without the need for a finite history or dynamics model.
+Extensions to high-dimensional continuous tasks have demonstrated that the predictive approach to dynamical system modeling is competitive with state-of-the-art system identification methods \citep{hsu2012spectral}.
+PSRs can be combined with options \citep{wolfe2006predictive}, and some work suggests discovery of the core tests is possible \citep{mccracken2005online}.
+One important limitation of the PSR formalism is that the agent's internal representation of state must be composed exclusively of probabilities of action-observation sequences.
+
+A PSR can be represented as a GVF network by using a myopic $\gamma = 0$ and compositional predictions. For a test $q = \action_1\obs_2$, for example, to compute the probability of seeing $\obs_2$ after taking action $\action_1$, the cumulant is $1$ if $\obs_2$ is observed and $0$ otherwise; the policy is to always take action $\action_1$; and the continuation $\gamma = 0$. To get a longer test, say $\action_0\obs_1\action_1\obs_2$, a second GVF can be added which predicts the output of the first GVF. For this second GVF, the cumulant is the prediction from the first GVF (which predicts the probability of seeing $\obs_2$ given $\action_1$ is taken); the policy is to always take action $\action_0$; and the continuation is again $\gamma = 0$. Though GVFNs can represent a PSR, they do not encompass the discovery methods or other nice mathematical properties of PSRs, such as can be obtained with linear PSRs.
+
+TD networks \citep{sutton2004temporal} were introduced after PSRs, and inspired by the PSR approach to state construction that is grounded in observations.
+GVFNs build on and are a strict generalization of TD networks.
+A TD network \citep{sutton2004temporal} is similarly composed of $\numgvfs$ predictions, and updates using the current observation and previous step predictions like an RNN. TD networks with options \citep{rafols2005using} condition the predictions on temporally extended actions similar to GVF Networks, but do not incorporate several of the recent modernizations around GVFs, including state-dependent discounting and convergent off-policy training methods.
+The key differences, then, between GVF Networks and TD networks is in how the question networks are expressed and subsequently how they can be answered.
+GVF Networks are less cumbersome to specify, because they use the language of GVFs. Further, once in this language, it is more straightforward to apply algorithms designed for learning GVFs.
+
+More recently, there has been an effort to combine the benefits of PSRs and RNNs. This began with work on Predictive State Inference Machines (PSIMs) \citep{sun2016learning}, for inference in linear dynamical systems. The state is learned in a supervised way, by using statistics of the future $k$ observations as targets for the predictive state. This earlier work focused on inference in linear dynamical systems, and did not state a clear connection to RNNs. Later work more explicitly combines PSRs and RNNs \citep{downey2017predictive,choromanski2018initialization}, but restricts the RNN architecture to a bilinear update to encode the PSR update for predictive state. In parallel, \citeA{venkatraman2017predictive} proposed another strategy to incorporate ideas from PSRs into RNNs, without restricting the RNN architecture, called Predictive State Decoders (PSDs) \citep{venkatraman2017predictive}. Instead of constraining internal state to be predictions about future observations, statistics about future observations are used as auxiliary tasks in the RNN.
+
+Of all these approaches, the most directly related to GVFNs is PSIMs. This connection is most clear from the PSIM objective \citep[Equation 8]{sun2016learning}, where the goal is to make predictive state match a vector of statistics about future outcomes. There are some key differences, mainly due to a focus on offline estimation in PSIMs. The predictive questions in PSIMs are typically about observations 1-step, 2-step up to $k$-steps into the future. To use such targets, batches of data need to be gathered and statistics computed offline to create the targets. Further, the state-update (filtering) function is trained using an alternating minimization strategy, with an algorithm called DAgger, rather than with algorithms for RNNs. Nonetheless, the motivation is similar: using an explicit objective to encourage internal state to be a predictive state.
+
+A natural question, then, is whether the types of questions used by GVFNs provides advantages over PSIMs. Unlike $k$-step predictions in the future, GVFs allow questions about outcomes infinitely far into the far, through the use of cumulative discounted sums. Such predictions, though, do not provide high precision about such future events. As motivated in Section \ref{sec_constraining}, GVFs should be easier to learn online. In our experiments, we include a baseline, called a Forecast Network, that uses $k$-step predictions as predictive features, to provide some evidence that GVFs are more suitable as predictive features for online agents.
+
+
+* General Value Function Networks
+* An objective function for GVFNs
+* Empirical Results (GVFNs)
+** Time Series Data sets
+** RL problems (compass world, RingWorld, CycleWorld)
+* Open Problems using GVFNs in large domains - Solution Methods
+** Discovery
+** Optimization
+** Architecture
+* Future directions
+** Modules, Modules, Modules
+- End to end-to-end learning.
+- How do we construct modules such that they 
+** Discovery
+** Open Problems in learning state
 * Postamble                                                          :ignore:
 
 #+begin_export latex
