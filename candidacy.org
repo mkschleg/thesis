@@ -11,7 +11,8 @@
 #+MACRO: c #+latex: %
 
 
-*************** TODO Re-organize the thesis document
+*************** DONE Re-organize the thesis document
+CLOSED: [2022-06-22 Wed 09:36]
 Outline:
 1. Introduction
 2. Background - RL
@@ -131,7 +132,8 @@ These are briefly listed here with an example using GVFNs, but leave a more deta
 
 Given a predictive approach to state building requires consideration of these difficult algorithmic choices, a natural question arises ``Why shouldn't we use non-predictive subjective based approaches for learning state, such as the usual recurrent networks?''. While this thesis won't provide (or seek) a conclusive answer to this question, predictive approaches to state construction may have a positive effect on a system's ability to generalize and learn a state representation. This is stated in the /Predictive Representation Hypothesis/ cite:&schaul2013better:
 
-*************** TODO How do we want to talk about the predictive representation hypothesis in light of the new thesis statements?
+*************** DONE How do we want to talk about the predictive representation hypothesis in light of the new thesis statements?
+CLOSED: [2022-06-22 Wed 09:35]
 
 The predictive representation hypothesis is a bit of a pain point here. On one hand it is a part of the pred rep history and should be discussed (even if to only pump up mark ring), but it just is a bit of a clamugeon. I would like to rephrase or re-conceptualize the hypothesis and recommend steps forward for reasonably grounding the hypothesis.
 
@@ -149,7 +151,8 @@ An /(explicit) predictive representation of state/ is an algorithm, or architect
 
 The /Predictive Representation Hypothesis/ is intuitively appealing with evidence provided through specific predictive approaches cite:&singh2004predictive;&sutton2004temporal;&sutton2005temporal;&schaul2013better;&sutton2011horde;&white2015thesis;&schlegel2021general. Unfortunately, finding sufficient evidence for this hypothesis is difficult, and likely future systems will need to leverage both predictive and memory based approaches (i.e. RNNs).  I believe the creation and study of approaches for state construction leveraging predictions will lead to a more nuanced understanding of what kinds of state are useful for agents. The following hypothesis emphasizes what explicit predictive representations may bring to state learning:
 
-*************** TODO Redo thesis statement
+*************** DONE Redo thesis statement
+CLOSED: [2022-06-22 Wed 09:35]
 The thesis statement has changed. But this is still a reasonable hypothesis for the GVFN section.
 *************** END
 
