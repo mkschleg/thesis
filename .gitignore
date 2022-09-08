@@ -22,3 +22,5 @@ auto/
 *.fdb_latexmk
 *.run.xml
 thesis.tex
+
+.stfolder/

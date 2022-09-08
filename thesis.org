@@ -41,7 +41,7 @@ details commented out for brevity. This makes:
 and sets formatting up for main text.
 #+end_comment
 
-#+BEGIN_EXPORT LaTeX
+#+BEGIN_EXPORT latex
 
 \renewcommand{\onlyinsubfile}[1]{}
 \renewcommand{\notinsubfile}[1]{#1}
