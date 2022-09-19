@@ -11,6 +11,23 @@
 #+MACRO: c #+latex: %
 
 
+*************** DONE [#C] Thesis re-org
+CLOSED: [2022-09-06 Tue 14:00]
+Outline:
+1. Introduction
+2. Background - RL
+3. Background - RNNs
+4. State construction in reinforcement learning
+5. Recurrent neural networks for RL + Known problems
+6. Empirical comparisons of various cells
+7. General Value Function Networks for state construction
+8. Empirical Comparison of various architectures
+9. Discovery
+10. Off-policy prediction?
+11. Conclusions
+*************** END
+
+
 * Preamble                                                           :ignore:
 #+begin_comment
 Preamble for UofA thesis. Needed to make thesis compliant. I use this in my candidacy as well, with specific
@@ -365,15 +382,24 @@ Note here that this is a less stringent definition of sufficient state than used
 ** Sufficient state
 ** Discovery, search, and credit assignment
 ** Long Temporal Abstractions vs embodied state
+
+
+
+
+
+
 ** Open Problems using RNNs in DRL
 *** Open problems for history dependent architectures.
 *** Solution method issues
 * How do we incorporate action into a recurrent network?
 
-#+CAPTION: Visualizations of the multiplicative and additive RNNs.
-#+NAME: fig:viz_rnn
-[[./plots/figures/RNN.pdf]]
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\linewidth]{plots/figures/RNN.pdf}
+  \caption{Visualizations of the multiplicative and additive RNNs.}
+\label{fig:viz_rnn}
+\end{figure}
 
 In this paper, we define two broad categories for incorporating action into the state update function of an RNN, and discuss various variations on these ideas (see Figure \ref{fig:viz_rnn} for a visualization of two main architectures).
 
@@ -426,10 +452,11 @@ Another approach to reducing the number of parameters required---and to reduce r
 
 ** Empirical Results - ARNNs
 
-In the following sections, we set out to empirically evaluate the three operations for incorporating action into the state update function: \textbf{N}o \textbf{A}ction input (``\textbf{NA}''), \textbf{A}dditive (``\textbf{AA}''), \textbf{M}ultiplicative (``\textbf{MA}''), \textbf{Fac}tored (`` \textbf{Fac} ''), \textbf{D}eep \textbf{A}dditive (``\textbf{DA}''). We explore all the variants using both standard RNNs and a GRU cell. Our experiments are primarily driven by the main hypothesis that the multiplicative will strictly outperform the other variants, as suggested by \cite{schlegel2020general}. To explore this hypothesis we focus on two main empirical questions:
-
-- How do the different cells effect the ``learnability'' of the agent and the properties of the learned state?
-- Are there examples where the other variants outperform the multiplicative variant?
+In the following sections, we set out to empirically evaluate the three operations for incorporating action into the state update function: {\bf N}o {\bf A}ction input (``{\bf NA}''), {\bf A}dditive (``{\bf AA}''), {\bf M}ultiplicative (``{\bf MA}''), {\bf Fac}tored (``{\bf Fac}''), {\bf D}eep {\bf A}dditive (``{\bf DA}''). We explore all the variants using both stanard RNNs and a GRU cell. Our experiments are primarily driven by the main hypothesis that the multiplicative will strictly outperform the other variants, as suggested by \cite{schlegel2020general}. To explore this hypothesis we focus on two main empirical questions:
+\begin{itemize}
+\item How do the different cells effect the ``learnability'' of the agent and the properties of the learned state?
+\item Are there examples where the other variants outperform the multiplicative variant?
+\end{itemize}
 
 
 In all control experiments, we use an $\epsilon$-greedy policy with $\epsilon=0.1$. All networks are initialized using a uniform Xavier strategy \citep{glorot2010understanding}, with the multiplicative operation independently normalizing across the action dimension (i.e. each matrix associated with an action in the tensor is independently sampled using the Xavier distribution). Unless otherwise stated, we performed a hyperparameter search for all models using a grid search over various parameters (listed appropriately in the Appendix \ref{app:emp}). To best to our ability we kept the number of hyperparameter settings to be equivalent across all models, except the factored variants which use several combinations of hidden state size and number of factors. The best settings were selected and reported using independent runs with seeds different from those used in the hyperparameter search, unless otherwise specified.
@@ -459,9 +486,11 @@ The agent learns a total of 20 GVFs with state-termination continuation function
 
 For both the RNN and GRU cells the MA variant performs the best, while the additive performs the worst of the cells which include action information. Interestingly, the factored variants for the GRU perform almost identically, while the FacRNN with a smaller hidden state perform marginally better. All factored variants straddled the performance of the additive and multiplicative updates. The DAAGRU performs similarly to the AAGRU, while the DAARNN fails to learn in this setting. Finally, the MARNN performs the best overall, only needing a truncation value of $\tau=6$ to learn, which is shorter than the Ring World. We conclude that with the same number of parameters, the operation used to update the state can have a significant effect on the required sequence length and final performance.
 
-#+CAPTION: Ring World predictions of $\text{seed}=62$ for the multiplicative and additive RNNs. Discounts listed with the target policy persistently going counter-clockwise.
-#+NAME: fig:rw_pred
-[[./plots/figures/ringworld_pred_truth_vert.pdf]]
+\begin{wrapfigure}[25]{r}{0.4\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{plots/figures/ringworld_pred_truth_vert.pdf}
+  \caption{Ring World predictions of $\text{seed}=62$ for the multiplicative and additive RNNs. Discounts listed with the target policy persistently going counter-clockwise.} \label{fig:rw_pred}
+\end{wrapfigure}
 
 To ground the prediction error reported, we present two representative examples of the learned predictions for the additive and multiplicative RNNs in Figure \ref{fig:rw_pred}. These plots show a single seed (selected as the best for the additive) over a small snippet of time, but are representative of our observations of the general performance for both cells. The multiplicative follows the actual prediction within a small delta being as close to zero error as we should expect, while the additive has many artifacts and other miss-predictions for both the myopic ($\gamma = 0.0$) and long-horizion ($\gamma=0.9$) predictions. In Figure \ref{fig:rw_ind_lcs}, we report all the individual learning curves for the additive and multiplicative.
 
@@ -485,11 +514,8 @@ A natural question is why might the multiplicative cell perform significantly be
 
 Overall, we observe the additive and multiplicative separate on the previous action equally well, matching our initial hypothesis. While action is important, the additive seems to be hyper-focused on action even as the cell is able to partition on environment state. The multiplicative, on the other hand, is able to cluster the hidden states for various environment states together with only minor separation on action as seen in states 1 and 7. It is possible this is a natural part of th learning process for both the cells, but the multiplicative is able to cluster the states in less samples. If we look at the median performer (seed=55 and seed=67 for the additive and multiplicative respectively) the additive fails to separate on environment state, while the multiplicative looks similarly to the previous seed.
 
-*************** TODO Add tsne plots over time.
-*************** END
 
-
-
+% While action is important, what seems to be happening is that the multiplicative is focusing gradient information on the actual observation histories as the action separation is done as a hand designed feature of the architecture. This separation is extremely beneficial during the learning process for the Ring World domain, but comes with a downside as the hidden states for the multiplicative cell sometimes are separate on both previous action and state. While this is not an issue for ring world, later we will see where this might be problematic.
 
 
 *** Understanding when Action Encoding Does and Does Not Matter
