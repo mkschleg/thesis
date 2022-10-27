@@ -141,7 +141,7 @@
 \newcommand{\statesize}{n}
 \newcommand{\obssize}{m}
 \newcommand{\astatesize}{b}
-\newcommand{\agentstatesize}{b}
+\newcommand{\agentstatesize}{n}
 \newcommand{\numgvfs}{N}
 \newcommand{\numparams}{d}
 
@@ -156,9 +156,11 @@
 %%%% 
 % Learnable Weights
 %%%%
-\newcommand{\weights}{{\boldsymbol{\theta}}}
-\newcommand{\weightspace}{\boldsymbol{\Theta}}
-\newcommand{\secweights}{\wvec}
+\newcommand{\weightmat}{\Wmat}
+\newcommand{\weightvec}{\wvec}
+\newcommand{\weights}{\weightmat}
+\newcommand{\weightspace}{\boldsymbol{\Omega}}
+% \newcommand{\secweights}{\wvec}
 
 %%%%
 % Reinforcement learning specific
@@ -169,14 +171,19 @@
 \newcommand{\Action}{A}
 \newcommand{\action}{a}
 
-% states
+% environment states
+\newcommand{\EnvStates}{\boldsymbol{\Psi}}
+\newcommand{\EnvState}{S}
+\newcommand{\envstate}{\psi}
+
+% agent states
 \newcommand{\States}{\mathcal{S}}
 \newcommand{\State}{S}
 \newcommand{\state}{s}
 \newcommand{\pstate}{\tilde{s}}
 \newcommand{\ipstate}{\tilde{s}}
 
-% states
+% observations
 \newcommand{\Observations}{\mathcal{O}}
 \newcommand{\obs}{\mathbf{o}}
 

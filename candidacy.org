@@ -2,7 +2,7 @@
 #+FILETAGS: :THESIS:
 #+author: Matthew Schlegel
 #+STARTUP: overview
-#+STARTUP: latexpreview
+#+STARTUP: nolatexpreview
 #+OPTIONS: toc:nil
 #+OPTIONS: title:nil
 #+OPTIONS: ':t
