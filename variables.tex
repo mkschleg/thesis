@@ -9,6 +9,7 @@
 \usepackage{mathtools}
 \usepackage{nicematrix}
 
+\usepackage{thmtools,thm-restate}
 
 %%%%%%
 % Theorems
@@ -40,12 +41,19 @@
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Expected}{\mathbb{E}}
 \newcommand{\Expectation}{\mathbb{E}}
-% \newcommand{\expect}{\operatorname{\mathbb{E}}\expectarg}
-% \DeclarePairedDelimiterX{\expectarg}[1]{[}{]}{%
-% \ifnum\currentgrouptype=16 \else\begingroup\fi
-% \activatebar#1
-% \ifnum\currentgrouptype=16 \else\endgroup\fi
-% }
+\newcommand{\expect}{\operatorname{\mathbb{E}}\expectarg}
+\DeclarePairedDelimiterX{\expectarg}[1]{[}{]}{%
+\ifnum\currentgrouptype=16 \else\begingroup\fi
+\activatebar#1
+\ifnum\currentgrouptype=16 \else\endgroup\fi
+}
+
+\newcommand{\innermid}{\nonscript\;\delimsize\vert\nonscript\;}
+\newcommand{\activatebar}{%
+\begingroup\lccode`\~=`\|
+\lowercase{\endgroup\let~}\innermid
+\mathcode`|=\string"8000
+}
 
 % Variance
 \newcommand{\V}{\mathbb{V}}
@@ -101,8 +109,6 @@
 \newcommand{\Xmat}{\mathbf{X}}
 \newcommand{\Zmat}{\mathbf{Z}}
 
-\newcommand{\LL}{\lambda}
-
 % Vectors
 \newcommand{\avec}{\mathbf{a}}
 \newcommand{\bvec}{\mathbf{b}}
@@ -124,6 +130,9 @@
 \newcommand{\xvec}{\mathbf{x}}
 \newcommand{\yvec}{\mathbf{y}}
 \newcommand{\zvec}{\mathbf{z}}
+
+\newcommand{\phivec}{\boldsymbol{\phi}}
+\newcommand{\psivec}{\boldsymbol{\psi}}
 
 % zero vector
 \newcommand{\zerovec}{\mathbf{0}}
@@ -170,6 +179,7 @@
 \newcommand{\Actions}{\mathcal{A}}
 \newcommand{\Action}{A}
 \newcommand{\action}{a}
+\newcommand{\actionsize}{b}
 
 % environment states
 \newcommand{\EnvStates}{\boldsymbol{\Psi}}
@@ -292,8 +302,46 @@
 % number of factors
 \newcommand{\factors}{M}
 
+%%%%
+% GVFNs
+%%%%
+
+\newcommand{\vit}[2]{\mathbf{V}^{(#1)}_{#2}}
+\newcommand{\vi}[1]{\mathbf{V}^{(#1)}}
+\newcommand{\vt}[1]{\mathbf{V}_{#1}}
+\newcommand{\vinone}{\mathbf{V}}
+\newcommand{\Bn}{\mathbf{B}}
+
+\newcommand{\Lmattilde}{\tilde{\Lmat}}
+\newcommand{\Rmattilde}{\tilde{\Rmat}}
+
+\newcommand{\Arank}{\hat{\mathbf{A}}}
+\newcommand{\Api}{\mathbf{A}}
+
+\newcommand{\Cpi}{\mathbf{C}}
+\newcommand{\Cpij}[1]{\mathbf{C}^{(#1)}}
+\newcommand{\Ppigamma}{\mathbf{P}}
+\newcommand{\Ppigammaj}[1]{\mathbf{P}^{(#1)}}
+\newcommand{\pij}[1]{\pi^{(j)}}
+\newcommand{\gammaj}[1]{\gamma^{(#1)}}
+\newcommand{\cj}[1]{c^{(#1)}}
+\newcommand{\crj}[1]{C^{(#1)}}
+
+\newcommand{\Lambdamat}{\boldsymbol{\Lambda}}
+\newcommand{\Phimat}{\boldsymbol{\Phi}}
+\newcommand{\phimat}{\boldsymbol{\Phi}}
+\newcommand{\Sigmamat}{\boldsymbol{\Sigma}}
+\newcommand{\Etamat}{\boldsymbol{H}}
+\newcommand{\Gammamat}{\boldsymbol{\Gamma}}
+\newcommand{\gammamat}{\boldsymbol{\Gamma}}
 
 
+\newcommand{\LL}{\lambda}
+
+\newcommand{\dw}{\mathbf{d}}
+\newcommand{\dwdiag}{\mathbf{D}}
+
+\newcommand{\gradHistMatrix}{\boldsymbol{\Phi}}
 
 % \newcommand{\dummycite}[1]{
 %   {[{\bf CITE #1}]}}

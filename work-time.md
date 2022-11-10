@@ -16,4 +16,14 @@
 | 9/19/2022          | RNN section, pontificating | 53               | 120         | Transcend | No    |
 | 9/21/2022          | RNN section                | ?                | 300         | RLAI      | No    |
 | 9/22/2022          | Pred Persp                 | 62               | 180         | RLAI      | No    |
+| 9/28/2022          | Introduction               | 62               | 330         | RLAI      | No    |
+| 9/29/2022          | Introduction               | 62               | 300         | RLAI      | No    |
+| 10/03/2022         | Introduction               | ?                | 210         | RLAI      | No    |
+| 10/04/2022         | Introduction               | ?                | 240         | RLAI      | No    |
+| 10/05/2022         | Introduction               | ?                | 240         | RLAI      | No    |
+| 11/04/2022         | GVFNs                      | ?                | 240         | RLAI      | No    |
+| 11/05/2022         | Notes                      | ?                | 120         | Home      | No    |
+| 11/07/2022         | Notes                      | ?                | 120         | Home      | No    |
+| 11/08/2022         | ARNNs                      | ?                | 376         | RLAI      | No    |
+| 11/09/2022         | Bibliography               | 105              | 270         | Home      | No    |
 |                    |                            |                  |             |           |       |
