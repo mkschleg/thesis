@@ -26,4 +26,8 @@
 | 11/07/2022         | Notes                      | ?                | 120         | Home      | No    |
 | 11/08/2022         | ARNNs                      | ?                | 376         | RLAI      | No    |
 | 11/09/2022         | Bibliography               | 105              | 270         | Home      | No    |
+| 11/10/2022         | Bibliography               | 105              | 60          | Home      | No    |
+| 11/11/2022         | Bibliography               | 105              | 210         | RLAI      | No    |
+| 11/13/2022         | Bibliography               | 103              | 180         | Transcend | No    |
+| 11/14/2022         | Adding GVFN Appendix       | 111              | 180         | RLAI      | No    |
 |                    |                            |                  |             |           |       |

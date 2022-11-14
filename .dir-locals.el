@@ -1,2 +1,3 @@
-((org-mode . ((bibtex-completion-bibliography . "./thesis.bib"))))
+((org-mode . ((bibtex-completion-bibliography . ("./thesis.bib"
+                                                 "./me.bib")))))
 
