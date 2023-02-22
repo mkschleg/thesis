@@ -87,7 +87,7 @@ and sets formatting up for main text.
 
 
 
-* TODO Introduction
+* IN-PROGRESS Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
 :END:
@@ -101,14 +101,19 @@ and sets formatting up for main text.
 
 
 
+Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large, complex domains. For example, a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. Game playing systems such as StarCraft [[citep:&vinyals2019grandmaster]] provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
 
-Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large, complex domains. For example, a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. A game playing systems such as StarCraft [[citep:&vinyals2019grandmaster]] provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
+For a machine intelligent system with an egocentric perspective approximation strategies, learning and sufficiently summarizing the history of interactions is critical to success in its lifetime. While a unique state can be defined as the set of all histories which induce the same predictions over all futures {{{citeplease}}}, an agent only has a single lifetime {{{citeplease markring}}} and must make due without living through multiple histories. Awash in the stream of sensor readings available to the agent, it is not always clear what regularities are important for the agent to capture for long-term success in the world. While most approaches focus on the capability of the agent to predict the reward function to develop a policy of behavior, it is unclear if this approach will be sufficient for an agent if its rewards are non-stationary. Another idea is the agent's beliefs should be grounded in predictions about the sensorimotor stream directly. This includes predictions about the prescribed reward function, but also encompasses all real-valued signals for which the agent has access.
 
-Deep reinforcement learning has expanded reinforcement learning to wide spectrum of domains, specifically those with complex observations from the environment  [[cite:&mnih2015humanlevel;&vinyals2019grandmaster]]. Significant work has gone into engineering primarily non-recurrent networks [[cite:&hessel2018rainbow;&espeholt2018impala]]. Applications of recurrent networks to reinforcement learning problems typically apply the assumptions constructed in the supervised learning (SL) setting [[cite:&bakker2002reinforcement;&hausknecht2015deep;&onat1998recurrent;&kapturowski2019recurrent;&zhu2018improving]]. While the intuitions developed in SL set the stage for the reinforcement learning problem, many of these architectural assumptions might not translate to the new set of dynamics provided by reinforcement learning. For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn for more details).
+Deep reinforcement learning has expanded reinforcement learning to wide spectrum of domains, specifically those with complex observations from the environment  [[cite:&mnih2015humanlevel;&vinyals2019grandmaster]]. Significant work has gone into engineering primarily non-recurrent networks [[cite:&hessel2018rainbow;&espeholt2018impala]]. Applications of recurrent networks to reinforcement learning problems typically apply the assumptions constructed in the supervised learning (SL) setting [[cite:&bakker2002reinforcement;&hausknecht2015deep;&onat1998recurrent;&kapturowski2019recurrent;&zhu2018improving]]. While the intuitions developed in SL set the stage for the reinforcement learning problem, many of these architectural and algorithmic intuitions might not translate to the new set of dynamics provided by reinforcement learning. A unifying justification for this view is the effect behaving and acting in the world may have on perception. [[cite:&noe2004action]] lays out this point clearly, suggesting behavior and decision making are linked to our (and other biological system's) strategies for perception. This is re-iterated in the deep reinforcement learning context in [[cite:&ostrovski2021difficulty]], where they show the difficulty in learning a representation in a deep Q-network (DQN) to be difficult if done passively in tandem with a controlling DQN. Finally, a related line of reasoning argues intelligence arises from the interactions between the mind, body and environment {{{citeplease tonyc}}}. While a clear definition of what constitutes a body over just a separate part of the environment hasn't been discussed in the reinforcement learning context, the importance of agency and acting during the foundation of perception is still highlighted as critical.
 
-A critical architectural assumption is that state discovery is driven by the gradients (or the importance of features) of the system with respect to the error (i.e. the agent-state is free from constraints external to the main objective). An opposing idea is to search for agent-state through answering predictive questions of the agent's observations. Several approaches to state search using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience. 
+While we can use the intuitions built in the SL setting, we should set out to justify these intuitions as the problem setting changes to the continual learning or reinforcement learning setting. For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn for more details).
 
-This dissertation contributes to the problem of searching for agent-state update functions through careful empirical evaluation of current architectures and the development of new algorithmic and architectural approaches to agent-state construction. In this thesis, we primarily use gradients to inform our search, but the ideas and conclusions presented here are not restricted to search through gradient descent (see Section ref:sec:bg:perception:tempdepend).
+A critical algorithmic assumption in state construction is that search is driven by the gradients (or the importance of features) of the system with respect to the error (i.e. the agent-state is free from constraints external to the main objective). One opposing idea is to search for agent-state through answering predictive questions of the agent's observations. Several approaches to state search using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience. 
+
+This dissertation contributes to the problem of searching for agent-state update functions through careful empirical evaluation of current architectures and the development of new algorithmic and architectural approaches to agent-state construction. In this thesis, we use gradients and predictions (in the form of general value functions) to inform the search process, and investigate some of the underlying principles of using recurrent networks to form the basis of a history summary mechanism in reinforcement learning.
+
+# , but the ideas and conclusions presented here are not restricted to search through gradient descent (see Section ref:sec:bg:perception:tempdepend).
 
 ** Objective
 
@@ -262,7 +267,7 @@ What sections do I want to write?
 - Applying GVFs to learn state representations (10/11/12)
 - Future Work (13)
 
-* IN-PROGRESS [#A] [7/20] Background
+* IN-PROGRESS [#A] [7/14] Background
 
 In this thesis, we take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective continually. While this is not a particularly novel interpretation of the machine intelligence problem, it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
 
@@ -299,7 +304,80 @@ q(\State, \Action) = \Expected_\pi [ G_t | s_t = \State, a_t = \Action].
 \]
 This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections we will extend this framework to the partial observable case, and go into the specifics of the prediction problem and the control problem.
 
-** DONE [2/2] Perception and Partial Observability in Reinforcement Learning
+** IN-PROGRESS [1/4] Off-Policy Prediction
+
+*************** DONE Outline and lay foundation for prediction section :noexport:
+CLOSED: [2023-02-21 Tue 15:44]
+*************** END
+
+
+The prediction problem in RL is that of learning value functions effectively and efficiently. This process can be used to improve an agent's policy through value iteration {{{CITEPLEASE}}}, or to learn temporal abstractions of the sensorimotor stream through options or general value functions (see Section ref:sec:bg:temporal-abstractions for more details). A value function can be learned either on-policy or off-policy through temporal difference learning. In this section, we will be introducing the on and off-policy prediction problem as used throughout this text. To see a more complete treatment with respect to the deep reinforcement learning setting see Chapter ref:chap:resampling.
+
+As introduced above, a *value function* is a prediction of the future cumulative (discounted) reward received by following a policy \(\tpolicy\),
+\[
+V_\tpolicy(\State) = \Expected_\pi[ G_t | s_t = \State, a \sim \tpolicy(\cdot| S)]
+\]
+where \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} r_{t+i} \) is the return. The operator \(\mathbb{E}_{\tpolicy}\) indicates an expectation with actions selected according to policy $\tpolicy$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy \(\tpolicy\). These values are typically estimated using parametric function approximation, with weights \(\theta \in \RR^d\) defining approximate values \(\Value_\theta(\state)\). 
+
+The simplest algorithm to learn the value function is through Monte-Carlo sampling. The brief of the algorithm is to get samples of the return starting in state $\State$ following policy $\tpolicy$, which are then averaged to receive the return. This algorithm only requires the environment to be episodic (i.e. clear terminations) and converges to the true value function as the number of samples grows.
+
+*************** TODO Clean up history of learning value functions on-policy :noexport:
+*************** END
+
+Another way to learn the value function is by taking advantage of the Bellman equation through dynamic programming.
+
+Both of the above algorithms enforce restrictions on the types of problems addressable. Temporal-difference learning combines advantages of both the above algorithms, alleviating some of constraints imposed.
+
+The off-policy prediction problem is equally concerned with learning value functions of policy $\tpolicy$, but must use data generated from a separate behavior policy $\bpolicy$.
+
+*************** TODO Temporal-difference learning for on-policy prediction :noexport:
+*************** END
+
+In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
+To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update \(\alpha_t\delta_t\nabla_\theta \Value_{\theta}(s)\) for a given \(S_t = s\), for learning rate \(\alpha_t \in \RR^+$ and TD-error $\delta_t \defeq C_{t+1} + \gamma_{t+1}\Value_{\theta}(S_{t+1}) -  \Value_{\theta}(s)\). If actions are instead sampled according to a behavior policy \(\bpolicy: \States \times \Actions \rightarrow [0,1]\), then we can use importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\actionr_t | \stater_t)}{\bpolicy(\actionr_t | \stater_t)}$.  Given state $\stater_t = \state$, if $\bpolicy(a | s) > 0$ when $\tpolicy(a | s) > 0$, then the expected value of these two updates are equal. To see why, notice that
+{{{c}}}
+\begin{equation*}
+  \mathbb{E}_\mu\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]
+  =  \alpha_t\nabla_\theta \Value_{\theta}(s)\mathbb{E}_\mu\left[\rho_t\delta_t |S_t = s\right]
+\end{equation*}
+which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]$ because
+{{{c}}}
+\begin{align*}
+\mathbb{E}_\mu\left[\rho_t\delta_t |\stater_t = \state\right] 
+% &= \sum_{\action \in \Actions} \mu(\action | \state) \mathbb{E}\left[\rho_t\delta_t |\stater_t = \state, \actionr_t = \action \right]\\ 
+&= \sum_{\action \in \Actions} \mu(\action | \state) \frac{\tpolicy(\action | \state)}{\bpolicy(\action | \state)} \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right]
+% &= \sum_{\action \in \Actions} \tpolicy(\action | \state) \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right] \\
+= \ \mathbb{E}_\pi\left[\delta_t |\stater_t = \state\right].
+\end{align*}
+
+Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
+For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\). Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular \citep{precup2001offpolicy} and linear functions cite:&mahmood2014weighted;&mahmood2015off.
+
+*************** TODO Add information on other choices for off-policy prediction learning :noexport:
+*************** END
+
+
+Per decision corrections
+
+Lifetime corrections
+
+Semi-gradient Temporal-difference learning
+** DONE Control in Reinforcement Learning
+CLOSED: [2023-02-21 Tue 11:50]
+The bread and butter problem for reinforcement learning research is the control problem. The control problem is the process of searching (or learning) a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control (through q-learning) to direct policy optimization through policy gradient and actor critic methods. In this thesis, we are primarily concentrated on value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
+
+We again start with a value function, this time a state-action value function, as defined above
+\[
+q(\State, \Action) = \Expected_\optpolicy [ G_t | s_t = \State, a_t = \Action].
+\]
+where \(\optpolicy\) is the optimal policy. The goal of the agent is to search through the space of policies to maximize the total return the agent will receive from any state, or in other words to find the optimal policy \(\optpolicy\). In this thesis, our control experiments are restricted to Q-learning [[cite:&watkins1992qlearning;&mnih2015humanlevel]], an off-policy technique which learns the optimal policy. Q-learning, in its simplest form, is defined by the following set of updates
+\begin{align*}
+\delta_{t+1} &= Q_\theta (S_t, A_t) - (R_{t+1} + \gamma \max_a (Q_\theta(S_{t+1}, A_{t+1}))) \\
+\Delta \theta &= \delta_{t+1} \nabla_\theta Q_\theta(S_t, A_t)
+\end{align*}
+See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
+
+** DONE [3/3] Perception and Partial Observability in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:perception
 :END:
@@ -354,7 +432,8 @@ It is also possible to reduce or avoid the need for BPTT for modeling long-tempo
 
 Transformers [[cite:&vaswani2017attention]] are a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. Because of these compromises, it is still unclear if transformers are a viable solution to the state construction problem in continual reinforcement learning.
 
-** IN-PROGRESS Recurrent Neural Networks
+*** DONE Recurrent Neural Networks
+CLOSED: [2023-02-22 Wed 13:17]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:rnns
 :END:
@@ -364,19 +443,6 @@ Recurrent neural networks (RNNs) have been established as an important tool for 
 [[cite:&sutskever2011generating;&wu2016multiplicative]] which follows from what were known as Second-order RNNs [[cite:&goudreau1994firstorder]].
 
 In this Section we will outline the methods used to estimate gradients in recurrent neural networks in this thesis (Section ref:, discuss three major architectures applied in this thesis, and finally outline how we use recurrent neural networks in the reinforcement learning problem.
-
-*** IN-PROGRESS [1/2] Recurrent Neural Networks for learning agent-state in reinforcement learning
-:PROPERTIES:
-:CUSTOM_ID: sec:bg:rnns:rl
-:END:
-
-*************** DONE write section                              :noexport:
-CLOSED: [2023-02-21 Tue 12:04]
-*************** END
-
-*************** TODO edit and ensure consistent notation :
-*************** END
-
 
 For effective prediction and control, the agent requires a state representation \(\agentstate_t\) that is a sufficient statistic of the past: \(\Expected\left[ G^c_t | \agentstate_t \right] = \Expected\left[G^c_t | \agentstate_t, \history_t\right]\). When the agent learns such a state, it can build policies and value functions without the need to store any history. For example, for prediction, it can learn \(V(\agentstate_t) \approx \Expected\left[ G^c_t | \agentstate_t \right]\).
 
@@ -395,9 +461,15 @@ where \(\xvec_t = [\obs_t, \agentstate_{t-1}]\) and \(\sigma\) is any non-linear
 {{{c}}}
 Using this type of operation was initially called second-order RNNs [[cite:&goudreau1994firstorder]], and was also explored in one of the first landmark successes of RNNs [[cite:&sutskever2011generating]] in a character-level language modeling task.
 
+There are several known problems with simple recurrent units (and to a lesser extent other recurrent cells). The first is known as the vanishing and exploding gradient problem [[cite:&pascanu2013difficulty]]. In this, as gradients are multiplied together (via the chain rule in BPTT) the gradient can either become very large or vanish into nothing. In either case, the learned networks often cannot perform well and a number of practical tricks are applied to stabilize learning [[cite:&bengio2013advances]]. The second problem is called saturation. This occurs when the weights \(\weights\) become large and the activations of the hidden units are at the extremes of the transfer function. While not problematic for learning stability, this can limit the capacity of the network and make tracking changes in the environment dynamics more difficult [[cite:&chandar2019nonsaturating]].
 
-RNNs are typically trained through the use of back-propagation through time [[cite:&mozer1995focused]]. This algorithm effectively unrolls the network through the sequence and calculates the gradient as if it was one large network with shared weights.
-This unrolling is often truncated at some number of steps \(\tau\). While this alleviates computational-cost concerns, the learning performance can be sensitive to the truncation parameter [[cite:&pascanu2013difficulty]]. When calculating the gradients through time for a specific sample, we define our loss as
+The experiments presented in this work use three cell types. The first was the simple RNN introduced earlier in this section. The other cells used are Long-short term memory cells (LSTM) [[cite:&hochreiter1997long]], and gated-recurrent units (GRU) [[cite:&chung2014empirical]] which are standard cells used throughout sequence prediction in supervised learning. Long-short term memory cells (LSTM) were developed to address the issues with modeling long-temporal dependencies and the vanishing gradients problem observed in simple RNN cells. Gated-recurrent units (GRU) are a modification from the LSTM cell which maintains performance in many settings, improves ease of use, and improves computational footprint [[cite:&greff2017lstm]]. Many of the observations we make in the following thesis likely generalize beyond the specific cell architecture used.
+
+One issue with RNNs, however, is that training can be unstable and expensive [[cite:&pascanu2013difficulty]]. There are two well-known approaches to training RNNs. The first, Real Time Recurrent Learning (RTRL) \citep{williams1989alearning} relies on a recursive form to estimate gradients. This gradient computation is exact in the offline setting---when RNN parameters are fixed---but only an approximation when computing gradients online. RTRL is prohibitively expensive, requiring computation that is quartic in the hidden dimension size $\statesize$. Low-rank approximations have been developed \citep{tallec2018unbiased,mujika2018approximating,benzing2019optimal} to improve computational efficiency, but these approaches to training RNNs remain less popular than the simpler strategy of back-propagation through time.
+
+RNNs are typically trained through the use of back-propagation through time (BPTT) [[cite:&mozer1995focused]]. This algorithm effectively unrolls the network through the sequence and calculates the gradient as if it was one large network with shared weights. This unrolling is often truncated at some number of steps \(\tau\). While this alleviates computational-cost concerns, the learning performance can be sensitive to the truncation parameter [[cite:&pascanu2013difficulty]], particularly if the dependencies back-in-time are longer than the chosen $p$---as we reaffirm in our experiments.
+
+When calculating the gradients through time for a specific sample, we define our loss as
 {{{c}}}
 \[
   \mathcal{L}_{t}(\weights) = \sum_{i}^{N} (v_i(\agentstate_t(\weights)) - y_{t, i})^2
@@ -405,35 +477,21 @@ This unrolling is often truncated at some number of steps \(\tau\). While this a
 {{{c}}}
 where \(N\) is the size of the batch, and \(y\) is the target defined by the specific algorithm. This effectively means we are calculating the loss for a single step and calculating the gradients from that step only.
 
-*** TODO [0/2] Estimating Gradients for Recurrent Neural Networks
-:PROPERTIES:
-:CUSTOM_ID: sec:bg:rnns:grads
-:END:
+Details for these algorithms can be found in their respective papers, and in textbooks on deep learning. We refer to more specific modifications related to work in this thesis in later sections (see Section ref:sec:gvfn:gradbtt).
 
-*************** TODO write section on BPTT :noexport:
-*************** END
-
-*************** TODO write section of RTRL :noexport:
-*************** END
-
-*** IN-PROGRESS Various Recurrent Neural Network Architectures
-:PROPERTIES:
-:CUSTOM_ID: sec:bg:rnns:arch
-:END:
-
-There are several known problems with simple recurrent units (and to a lesser extent other recurrent cells). The first is known as the vanishing and exploding gradient problem [[cite:&pascanu2013difficulty]]. In this, as gradients are multiplied together (via the chain rule in BPTT) the gradient can either become very large or vanish into nothing. In either case, the learned networks often cannot perform well and a number of practical tricks are applied to stabilize learning [[cite:&bengio2013advances]]. The second problem is called saturation. This occurs when the weights \(\weights\) become large and the activations of the hidden units are at the extremes of the transfer function. While not problematic for learning stability, this can limit the capacity of the network and make tracking changes in the environment dynamics more difficult [[cite:&chandar2019nonsaturating]].
-
-# We focus our experiments around the simple recurrent cells (RNNs) and GRUs.
-Long-short term memory cells (LSTM) were developed to address the issues with modeling long-temporal dependencies.
-
-Gated-recurrent units (GRU) are a modification from the LSTM cell which maintains performance in many settings, improves ease of use, and improves computational footprint.
-
-*************** TODO [#B] Gated Recurrent Units, LSTMs
-*************** END
 
 ** IN-PROGRESS Temporal Abstractions in Reinforcement Learning
 
-One component that is thought to be an important part of the space of solutions is the ability for agents to reason in temporally abstract ways. Two objects in RL which enable agents to reason beyond the moment-to-moment stream of experience are known as *options* and *general value functions* (GVFs). Both of these construct can be wrapped in the framework of GVFs, through the idea of control demons and prediction demons respectively citep:&sutton2011horde. We use this framing here for simplicity, but the literature of options is rich and filled with insights applicable to both the prediction and control framing. 
+Reinforcement learning is built on predicting the effect of behavior on future observations and rewards. Many of our algorithms learn predictions of a cumulative sum of (discounted) future rewards, which is used as a bedrock for learning desirable policies. While reward has been the primary predictive target of focus, TD models [[cite:&sutton1995td]] lay out the use of temporal-difference learning to learn a world model through value function predictions. Temporal-difference networks [[cite:&tanner2005thesis;&sutton2005temporaldifference]] take advantage of this abstraction and build state and representations through predictions. [[citeauthor:&sutton2011horde]] ([[citeyear:&sutton2011horde]]) and [[citeauthor:&white2015developing]] (citeyear:&white2015developing) further the predictive perspective by developing a predictive approach to building world knowledge through general value functions (GVFs).
+
+*************** IN-PROGRESS [#A] Fix citations below              :noexport:
+*************** END
+
+GVFs have been pursued broadly in reinforcement learning: citeauthor:&gunther2016intelligent (citeyear:&gunther2016intelligent) used GVFs to build an open loop laser welder controller, [[citeauthor:&linke2020adapting]] ([[citeyear:&linke2020adapting]]) and [[citeauthor:&mcleod2021continual]] ([[citeyear:&mcleod2021continual]]) used predictions and their learning progress to develop an intrinsic reward, citeauthor:&edwards2016application (citeyear:&edwards2016application) used GVFs to build controllers for myoelectric prosthetics, using gvfs for auxiliary training tasks to improve representation learning [[cite:&jaderberg2017reinforcement;&veeriah2019discovery]], to extend a value function's approximation to generalize over goals as well as states [[cite:&schaul2015universal]], and to create a scheduled controller from a set of sub-tasks for sparse reward problems [[cite:&riedmiller2018learning]]. Successor representations and features are predictions of the state, learned or given, which have been shown to improve learning performance cite:&dayan1993;&russek2017;&barreto2018;&sherstan2018.
+
+# One component that is thought to be an important part of the space of solutions is the ability for agents to reason in temporally abstract ways.
+
+Two objects in RL which enable agents to reason beyond the moment-to-moment stream of experience are known as *options* and *general value functions* (GVFs). Both of these construct can be wrapped in the framework of GVFs, through the idea of control demons and prediction demons respectively citep:&sutton2011horde. We use this framing here for simplicity, but the literature of options is rich and filled with insights applicable to both the prediction and control framing. 
 
 We introduce GVFs citep:&sutton2011horde directly in the partially observable setting, to use them with RNNs in ref:GVFNs. This was first done in [[cite:&schlegel2021general]]. The first step is to replace state with histories using the definition of history in ref:sec:bg:perception.
 {{{c}}}
@@ -450,86 +508,13 @@ A GVF question is a tuple \((\tpolicy, \cumulant, \gamma)\) composed of a policy
 {{{c}}}
 The sums can be replaced with integrals if \(\Actions\) or \(\Observations\) are continuous sets. We assume that \(\Hist\) is a finite set, for simplicity; the definitions and theory, however, can be extended to infinite and uncountable sets.
 
+*************** TODO Difference between pred and control demons
+*************** END
+
 *Prediction demon vs Control demon*
 
 
 
-** IN-PROGRESS [1/4] Off-Policy Prediction
-
-*************** DONE Outline and lay foundation for prediction section :noexport:
-CLOSED: [2023-02-21 Tue 15:44]
-*************** END
-
-
-The prediction problem in RL is that of learning value functions effectively and efficiently. This process can be used to improve an agent's policy through value iteration {{{CITEPLEASE}}}, or to learn temporal abstractions of the sensorimotor stream through options or general value functions (see Section ref:sec:bg:temporal-abstractions for more details). A value function can be learned either on-policy or off-policy through temporal difference learning. In this section, we will be introducing the on and off-policy prediction problem as used throughout this text. To see a more complete treatment with respect to the deep reinforcement learning setting see Chapter ref:chap:resampling.
-
-As introduced above, a *value function* is a prediction of the future cumulative (discounted) reward received by following a policy \(\tpolicy\),
-\[
-V_\tpolicy(\State) = \Expected_\pi[ G_t | s_t = \State, a \sim \tpolicy(\cdot| S)]
-\]
-where \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} r_{t+i} \) is the return. The operator \(\mathbb{E}_{\tpolicy}\) indicates an expectation with actions selected according to policy $\tpolicy$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy \(\tpolicy\). These values are typically estimated using parametric function approximation, with weights \(\theta \in \RR^d\) defining approximate values \(\Value_\theta(\state)\). 
-
-The simplest algorithm to learn the value function is through Monte-Carlo sampling. The brief of the algorithm is to get samples of the return starting in state $\State$ following policy $\tpolicy$, which are then averaged to receive the return. This algorithm only requires the environment to be episodic (i.e. clear terminations) and converges to the true value function as the number of samples grows.
-
-*************** TODO Clean up history of learning value functions on-policy :noexport:
-*************** END
-
-Another way to learn the value function is by taking advantage of the Bellman equation through dynamic programming.
-
-Both of the above algorithms enforce restrictions on the types of problems addressable. Temporal-difference learning combines advantages of both the above algorithms, alleviating some of constraints imposed.
-
-The off-policy prediction problem is equally concerned with learning value functions of policy $\tpolicy$, but must use data generated from a separate behavior policy $\bpolicy$.
-
-*************** TODO Temporal-difference learning for on-policy prediction :noexport:
-*************** END
-
-In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
-To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update \(\alpha_t\delta_t\nabla_\theta \Value_{\theta}(s)\) for a given \(S_t = s\), for learning rate \(\alpha_t \in \RR^+$ and TD-error $\delta_t \defeq C_{t+1} + \gamma_{t+1}\Value_{\theta}(S_{t+1}) -  \Value_{\theta}(s)\). If actions are instead sampled according to a behavior policy \(\bpolicy: \States \times \Actions \rightarrow [0,1]\), then we can use importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\actionr_t | \stater_t)}{\bpolicy(\actionr_t | \stater_t)}$.  Given state $\stater_t = \state$, if $\bpolicy(a | s) > 0$ when $\tpolicy(a | s) > 0$, then the expected value of these two updates are equal. To see why, notice that
-{{{c}}}
-\begin{equation*}
-  \mathbb{E}_\mu\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]
-  =  \alpha_t\nabla_\theta \Value_{\theta}(s)\mathbb{E}_\mu\left[\rho_t\delta_t |S_t = s\right]
-\end{equation*}
-which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s) |S_t = s\right]$ because
-{{{c}}}
-\begin{align*}
-\mathbb{E}_\mu\left[\rho_t\delta_t |\stater_t = \state\right] 
-% &= \sum_{\action \in \Actions} \mu(\action | \state) \mathbb{E}\left[\rho_t\delta_t |\stater_t = \state, \actionr_t = \action \right]\\ 
-&= \sum_{\action \in \Actions} \mu(\action | \state) \frac{\tpolicy(\action | \state)}{\bpolicy(\action | \state)} \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right]
-% &= \sum_{\action \in \Actions} \tpolicy(\action | \state) \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right] \\
-= \ \mathbb{E}_\pi\left[\delta_t |\stater_t = \state\right].
-\end{align*}
-
-Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
-For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\).
-
-*************** TODO Add information on other choices for off-policy prediction learning :noexport:
-*************** END
-
-Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular \citep{precup2001offpolicy} and linear functions cite:&mahmood2014weighted;&mahmood2015off.
-We nonetheless use WIS as a baseline in the experiments and theory.
-
-
-Per decision corrections
-
-Lifetime corrections
-
-Semi-gradient Temporal-difference learning
-
-** DONE Control in Reinforcement Learning
-CLOSED: [2023-02-21 Tue 11:50]
-The bread and butter problem for reinforcement learning research is the control problem. The control problem is the process of searching (or learning) a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control (through q-learning) to direct policy optimization through policy gradient and actor critic methods. In this thesis, we are primarily concentrated on value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
-
-We again start with a value function, this time a state-action value function, as defined above
-\[
-q(\State, \Action) = \Expected_\optpolicy [ G_t | s_t = \State, a_t = \Action].
-\]
-where \(\optpolicy\) is the optimal policy. The goal of the agent is to search through the space of policies to maximize the total return the agent will receive from any state, or in other words to find the optimal policy \(\optpolicy\). In this thesis, our control experiments are restricted to Q-learning [[cite:&watkins1992qlearning;&mnih2015humanlevel]], an off-policy technique which learns the optimal policy. Q-learning, in its simplest form, is defined by the following set of updates
-\begin{align*}
-\delta_{t+1} &= Q_\theta (S_t, A_t) - (R_{t+1} + \gamma \max_a (Q_\theta(S_{t+1}, A_{t+1}))) \\
-\Delta \theta &= \delta_{t+1} \nabla_\theta Q_\theta(S_t, A_t)
-\end{align*}
-See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
 
 * IN-PROGRESS [#A] [11/14] Incorporating action into a recurrent network
 :PROPERTIES:
@@ -2065,16 +2050,110 @@ Another issue is the proxy used to determine a prediction's usefulness. Currentl
 Through testing GVFNs in several domains we have developed some rules of thumb for choosing GVFs which can be used today. In our time-series experiments, we found selecting GVFs with constant \(\gammaj{j} \in [1 - 2^{-j}]\) to be surprisingly effective across the settings with fixed policies---namely the time series datasets. This is encouraging as these specifications on the surface seem simpler to discover than something as complex as the Expert network in Compass World. A set of discounts selected linearly across a range was also effective. We also found that including GVFs which have a pseudo-termination at a known event (known due to expert knowledge) and a cumulant which is only active at this event improved learning performance considerably (see the performance of the Terminating-Horizon network in Section ref:sec:gvfn:emp:poorlyspecified).
 
 
-* TODO [#B] Composite General Value Functions
+* DONE Composite General Value Functions
+CLOSED: [2023-02-22 Wed 14:34]
 :PROPERTIES:
 :CUSTOM_ID: chap:composite
 :END:
 
 In Chapter ref:chap:gvfn:empirical, I explored several hand designed network configurations. This lead to several observations, including compositional GVFs have considerable representational power if the predictive questions can be answered. In the following Chapter, I focus on the open question of "what do GVFs composed together in chains predictively represent?" While I don't answer this question conclusively for all possible chains GVFs, I provide explorations for two important types of composite GVFs: those which have constant discounts, and those which have terminating discounts.
 
-** Defining Composite GVFs
-** Decomposing the effective discount variable for continuous discounts
-** Empirical explorations
+
+# Reinforcement learning is built on predicting the effect of behavior on future observations and rewards. Many of our algorithms learn predictions of a cumulative sum of (discounted) future rewards, which is used as a bedrock for learning desirable policies. While reward has been the primary predictive target of focus, TD models [[cite:&sutton1995td]] lay out the use of temporal-difference learning to learn a world model through value function predictions. Temporal-difference networks [[cite:&tanner2005thesis;&sutton2005temporaldifference]] take advantage of this abstraction and build state and representations through predictions. [[citeauthor:&sutton2011horde]] ([[citeyear:&sutton2011horde]]) and [[citeauthor:&white2015developing]] (citeyear:&white2015developing) further the predictive perspective by developing a predictive approach to building world knowledge through general value functions (GVFs).
+
+Learning predictions of any real-valued signal the agent has access to also opens the possibility of asking compositional predictive questions [[cite:&white2015developing]]. A compositional question is one whose target is dependent on another prediction internal to the agent. Compositions expand the possible range of predictive questions we can specify as a GVF [[cite:&sutton2005temporaldifference;&rafols2006temporal;&zheng2021learning;&white2015developing;&schlegel2021general]]. While this may suggest the GVF framework is limited in what questions can be asked, the limitations are necessary so the predictions can be trained /independent of span/ [[cite:&vanhasselt2015learning]]. Learning independent of span means the target can be learned using online algorithms regardless of the effective horizon of the prediction. Adding layers of compositional questions have improved the learning in predictive representations [[cite:&rafols2006temporal;&schlegel2021general]], and improved the performance of deep reinforcement learning through auxiliary tasks [[cite:&zheng2021learning]]. In the automatic specification of learning targets compositions are thought to provide a way for the agent to build complexity [[cite:&schlegel2021general;&veeriah2019discovery;&zheng2021learning;&kearney2022what]], but often these architectures don't leverage compositions for stability concerns [[cite:&tanner2005temporal;&tanner2005td;&schlegel2017stable;&schlegel2021general]]. 
+
+
+As well as improving behavior empirically, compositions can provide semantic depth. An excellent example of this can be seen in option-extended temporal difference networks [[cite:&rafols2006temporal]], and later explored again in [[cite:&schlegel2021general]]. The example is centered in an environment where the agent has a low-powered visual sensor and needs to learn its directionality from the painted walls. Each cardinal direction has a different colored wall. The first layer of predictions the agent makes is to predict what color it will observe if it were to drive straight. The second layer are myopic predictions which ask what the first layer's prediction will be after turning clockwise (or counter-clockwise). The second layer allows the agent to predict which walls are to its sides as well as the wall in the direction the agent is facing. These predictions cannot be specified in the usual GVF framework, but can be easily constructed through compositions. While this may be ``repeated information'' in a sense, the extra learning objectives makes the learning properties of the predictive representation better as compared to other specifications [[cite:&schlegel2021general]].
+
+As algorithms for the automatic discovery of complex question networks continue to push the boundaries of what questions are considered by the agent, the properties of compositions should be better studied. When searching for what to learn the questions an agent eventually retains will be dependent on the agent's ability to learn the predictions. While it is clear questions that naturally diverge (say setting the discount $\gamma=1$) should be avoided, other problems, such as the scale of a target, could be equally as problematic when using function approximation (i.e. end-to-end neural networks). This could mean important predictions are disregarded because the agent is unable to learn the answer without proper strategies to normalize the prediction's magnitude. Better strategies for learning and normalizing predictive targets will come from understanding the effective discount schedule (or emphasis) compositional predictions will have on the targets.
+
+In this report, we consider the effect of compositions on the sequence of discounts, and relegate the effect of off-policy importance weights to future work. We first analyze the sequence of discounts over any number of compositions and constant discounts. We then analyze this sequence to better understand how it emphasizes parts of the data stream. Surprisingly, the effective discount for constant discount compositions have a form which can be described analytically. While this does not include the full spectrum of discount functions, it provides a first step towards understanding compositions. Next we look at simulations using more complex state-dependent discount functions using a simple consistent sequence and two timeseries datasets. In these simulations we focus on the effect of applying the same discount function a large number of times, looking to see if the shape of the returns become regular over the compositions. Finally, several future directions and questions are posed.
+{{{c}}}
+{{{c}}}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{plots/compgvfs/seq_plus_cw.pdf}
+  \caption{(\textbf{left}) The effective discount for $n$ compositions
+    normalized by the maximum value found in section
+    \ref{sec:compgvfs:analyze}. (\textbf{middle, right}) The cycle world
+    simulations, with top graph as the cumulant and subsequent plots
+    $n$ compositions with constant and terminating discounts
+    respectively.} \label{fig:compgvfs:seq-cw}
+\end{figure}
+
+** Analyzing the sequence 
+:PROPERTIES:
+:CUSTOM_ID: sec:compgvfs:analyze
+:END:
+
+In this section, we restrict to the setting where we have an infinite sequence of sensor readings $\mathbf{x} = \{x[0], x[1], \ldots,
+x[t], \ldots, x[\infty]\}$ where $x[i] \in [x_{\text{min}} , x_{\text{max}}]$ and a constant discount $\gamma$. The return of this signal starting at a time step $t$ is
+{{{c}}}
+$V[t] = \sum_{k=0}^\infty x[k] \gamma[k-t]$
+{{{c}}}
+where $\gamma[k] = \gamma^{k-1}$ for $k >= 1$ and $0$ otherwise. This framing of the return is slightly different from the typical presentation. Specifically, we reinterpret the return as a convolution beteween $\gamma$ and $x$ [fn:: In digital signal processing [[cite:&oppenheim2010discrete]] often the convolution, in this case $\gamma$, is mirrored across $t$ and the inifinte sequence of sensor readings is $\mathbf{x} = \{x[-\infty], \ldots, x[t], \ldots, x[\infty]\}$. The corresponding convolution would be $V[t] = \sum_{k=-\infty}^\infty x[k] \gamma[t-k]$ which would change how we define the sequence of $\gamma$. To be consistent with the reinforcement learning literature, we don't follow this here and instead implicitly define $\gamma$ as the mirrored version and only consider the sequence starting at $k=0$.]
+and shift the discount sequence over the sensor readings. This implicitly defines an infinite sequence of predictions $V[t]$. In the above equation, if we replace the sequence $x$ with the sequence of predictions $V$, we get a new set of predictions and for any number of compositions $n$ we have
+{{{c}}}
+$V^n[t] = \sum_{k=0}^\infty V^{n-1}[k] \gamma[k-t]$.
+{{{c}}}
+Expanding this equation we can define the general sequence of effective discounts for $n$ compositions and the corresponding return as
+{{{c}}}
+{{{c}}}
+\[
+  \gamma^n[k] = \begin{cases}
+    0 \quad \mbox{ if } k < n \\
+    \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} \gamma^{k - n}
+  \end{cases} \quad\quad V^n[t] = \sum_{k=0}^\infty x[k] \gamma^n[k - t]
+\]
+{{{c}}}
+where $\gamma^1[k] = \gamma[k]$ defined above and $V^n[t]$ is the target of the $n$th composition at timestep $t$. For any value $n$ there are two sequences multiplied together. The original discounting shifted by the number of applications $\gamma^1[k-n]$ and a diverging series
+{{{c}}}
+\[
+  Q^n[k] = \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} = \frac{\Gamma(k)}{\Gamma(k-n+1)\Gamma(n)}
+\]
+{{{c}}}
+where $\Gamma(k) = (k-1)!$ for $k \in \mathbb{Z}$ is known as the Gamma function, and can be used to analyze the function with $k \in \mathbb{R}$.
+
+We know for any particular application of the convolution $\gamma$ on a series with known domain $[x_{\text{min}} , x_{\text{max}}]$ the value function can take values bounded by $V^1[t] \in [\frac{x_{\text{min}}}{1-\gamma}, \frac{x_{\text{max}}}{1-\gamma}]$. This extends to $n$ compositions in a straightforward way where the range of the value function becomes $V^n[t] \in [\frac{x_{\text{min}}}{(1-\gamma)^n}, \frac{x_{\text{max}}}{(1-\gamma)^n}]$. While normalizing the value function to take values within in the range $[0,1]$ has been used in various settings [[cite:&schlegel2021general]], as we add more compositions we see the effective range of values shrinking considerably.
+
+Given the effective discounting sequence above, we can begin to piece together the which observations are emphasized in the predictions. The first 100 steps of the effective discount function for several values of $n$ can be seen in figure ref:fig:compgvfs:seq-cw. These sequences are normalized to be in the range $[0,1]$ for a visual comparison. The emphasis becomes increasingly spread as $n$ increases, with the peak of this function moving further to the future at a consistent rate.
+
+To find the maximum value we take the derivative of the log of the sequence with respect to $k$ getting
+{{{c}}}
+\[\frac{\delta}{\delta k} \ln \gamma^n[k] = \psi(k) - \psi(k-n+1) + \ln\gamma\]
+{{{c}}}
+where $\psi(z+1) = H_{z} - C$ is the digamma function, $H_{z} = \sum_{i=1}^z \frac{1}{i} \leq \int_{1}^z \frac{1}{x} dx = ln(z)$ is the Euler harmonic number, and $C$ is the Euler-Mascheroni constant. Using the approximation above, we can find where we should expect the maximal value is (to an approximation) $k = hn - (h-1)=h(n-1)+1$, where $h=\frac{1}{1-\gamma}$ is sometimes known as the horizon of discount $\gamma$. Of course this is an approximation from above and the real value falls in $k \in [h(n-1), h(n-1) + 1)]$.
+
+** Empirical observations
+
+While we can describe the effective discount for composing constant discount predictions, the same techniques are difficult to apply to a non time-invariant discount (i.e. state-dependent discounts [[cite:&white2015developing;&white2017unifying;&sutton2011horde]]). Instead, in this section we look at the ideal returns of various signals using constant discounting and a terminating discounting functions. We use three datasets moving from highly synthetic to real-world robot sensori-motor data. The goal of this section is to show the non-intuitive behavior of compositions to motivate further analysis and exploration. All code can be found at \url{https://github.com/mkschleg/CompGVFs.jl}. Below $\gamma = 0.9$ unless otherwise stated.
+{{{c}}}
+{{{c}}}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{plots/compgvfs/mso_cb.pdf}
+  \caption{(\textbf{left two}) Returns of the multiple sinusoidal
+    oscillator (MSO) synthetic data set with constant and terminating
+    discount respectively. The gray vertical lines are where the
+    return terminates. (\textbf{right two}) Returns of Critterbot
+    data set over the light3 sensor with constant and terminating
+    discount respectively.} \label{fig:compgvfs:critterbot}
+\end{figure}
+{{{c}}}
+{{{c}}}
+The first series is based off the cycle world, where the agent observes a sequence of a single active bit followed by $9$ inactive bits, where the length of the sequence is $m=10$. The cumulant is the observation itself, and in this report we learn using TD($\lambda=0.9$) with learning rate $\alpha=0.1$ and an underlying tabular representation where each component is the place in the sequence. We learn two chains of compositions. The first is that of the continuous discounting described above, and the second is a series of discounts which terminate (i.e. $\gamma[t]=0$) when the observation is active. The predictions of a single run can be seen in figure ref:fig:compgvfs:seq-cw. For the constant discount, as the number of compositions increases we see the prediction sequence converge to what looks to be a sinusoid with frequency of $10$, and amplitude driven by the analysis above. We expect this to be the case following from the central limit theorem. For the terminating discount, the wave form is more interesting. The first layer of predictions look very similar to the constant discount with amplitude shifted by $\frac{\gamma^{m}}{1 - \gamma^{m}}$. But as there are more compositions the effect seems to be the prediction is at its height farther away from the active bit. As the agent gets closer to the observation, the sequence of summed values is shorter leading to smaller values. Given the sequence we use it is easy to mistake this as the agent creating a trace of the cumulant, but we must remember the prediction is about future cumulants.
+
+Next we use a subset of the Critterbot dataset [[cite:&modayil2014multitimescale;&white2015developing]], focusing on light sensor 3 in figure ref:fig:compgvfs:critterbot. This gives a sequence of spikes similar to the cycle world sequence and a long pause in-between consistent saturations of the light sensor. We are able to see with the current setting the predictions look more like shifted and spread spikes. But with many more compositions, the return reverts to a similar form as before. The terminating discounts (with termination at sensor saturation $x[t+1] > 0.99$) provides a nice demonstration of how the returns are predicting the signal, just with a decaying prediction instead of the usual growing prediction. The results are similar in the multiple sinusoidal oscillator [[cite:&jaeger2004harnessing]]. We use a slightly different terminating discount where the return terminates when the previous normalized prediction is $y^{n-1}[t+1] > 0.9$ rather than when the observation is saturated. While there are decays as the MSO sequence peaks, as we increase the depth of the composition, these periods are less frequent. Deep compositions may indicate parts of the sequence where there are fewer saturations in the original sequence.
+
+** Future Directions
+
+This work suggests a number of interesting research directions and questions. While we mostly analyzed the sequence on discrete steps and applications of the filter, the general form does lend itself to continuous and complex values of $n$ and $k$. In a similar vein, we focused on real valued exponential discounting while several discounting schemes exist which could be applied to our formulation. We are particularly interested in complex discounting [[cite:&deasis2018predicting]] and hyperbolic discounting [[cite:&ainslie1992hyperbolic;&fedus2019hyperbolic]]. Applying a diverse set of discounting schemes in compositions provide an interesting way to extend the power of value functions while maintaining learnability through efficient algorithms like temporal-difference learning. 
+
+The approach used in this paper is unable to analyze state-dependent discount functions. One way around this might be in analyzing truncated sequences and taking an expectation over a distribution of sequence lengths. This might lead to a expected effective discounting sequence, but how this will interact with an underlying Markov process is unclear. This is an important next step for understanding the effects of compositions in general value functions, and could also help in analyzing off-policy compositions.
+
+Finally, the return can be re-interpreted as a convolution over the infinite sequence of observations. While this interpretation was only used to better the notation in this manuscript, further connections to convolutions and digital signal processing should be explored. Better filter designs might inspire different discounting schedules to squeeze more information from the data stream. We also have only analyzed these convolutions in the time domain. The frequency domain might give us more insight into how consistent signals like the cycle world dataset will be effected by compositions. 
+
 * TODO [#B] Importance Resampling for Prediction in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: chap:resampling
