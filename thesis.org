@@ -1,4 +1,4 @@
-#+title: Exploring the Assumptions of Recurrent Networks in Reinforcement Learning
+#+title: Exploring the effectiveness of Recurrent Networks in Reinforcement Learning
 #+FILETAGS: :THESIS:
 #+author: Matthew Schlegel
 #+STARTUP: overview
@@ -99,40 +99,39 @@ and sets formatting up for main text.
 # - Architectural assumptions used from supervised learning for reinforcement learning
 # - This dissertation contributes (lay out contributions)
 
-
-
 Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large, complex domains. For example, a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. Game playing systems such as StarCraft [[citep:&vinyals2019grandmaster]] provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
-
-For a machine intelligent system with an egocentric perspective approximation strategies, learning and sufficiently summarizing the history of interactions is critical to success in its lifetime. While a unique state can be defined as the set of all histories which induce the same predictions over all futures {{{citeplease}}}, an agent only has a single lifetime {{{citeplease markring}}} and must make due without living through multiple histories. Awash in the stream of sensor readings available to the agent, it is not always clear what regularities are important for the agent to capture for long-term success in the world. While most approaches focus on the capability of the agent to predict the reward function to develop a policy of behavior, it is unclear if this approach will be sufficient for an agent if its rewards are non-stationary. Another idea is the agent's beliefs should be grounded in predictions about the sensorimotor stream directly. This includes predictions about the prescribed reward function, but also encompasses all real-valued signals for which the agent has access.
 
 Deep reinforcement learning has expanded reinforcement learning to wide spectrum of domains, specifically those with complex observations from the environment  [[cite:&mnih2015humanlevel;&vinyals2019grandmaster]]. Significant work has gone into engineering primarily non-recurrent networks [[cite:&hessel2018rainbow;&espeholt2018impala]]. Applications of recurrent networks to reinforcement learning problems typically apply the assumptions constructed in the supervised learning (SL) setting [[cite:&bakker2002reinforcement;&hausknecht2015deep;&onat1998recurrent;&kapturowski2019recurrent;&zhu2018improving]]. While the intuitions developed in SL set the stage for the reinforcement learning problem, many of these architectural and algorithmic intuitions might not translate to the new set of dynamics provided by reinforcement learning. A unifying justification for this view is the effect behaving and acting in the world may have on perception. [[cite:&noe2004action]] lays out this point clearly, suggesting behavior and decision making are linked to our (and other biological system's) strategies for perception. This is re-iterated in the deep reinforcement learning context in [[cite:&ostrovski2021difficulty]], where they show the difficulty in learning a representation in a deep Q-network (DQN) to be difficult if done passively in tandem with a controlling DQN. Finally, a related line of reasoning argues intelligence arises from the interactions between the mind, body and environment {{{citeplease tonyc}}}. While a clear definition of what constitutes a body over just a separate part of the environment hasn't been discussed in the reinforcement learning context, the importance of agency and acting during the foundation of perception is still highlighted as critical.
 
-While we can use the intuitions built in the SL setting, we should set out to justify these intuitions as the problem setting changes to the continual learning or reinforcement learning setting. For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn for more details).
+While we can--and arguably should--use the intuitions built in the SL setting, these intuitions must be tested and further justified as the problem setting changes to the continual learning or reinforcement learning setting. For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn for more details).
 
-A critical algorithmic assumption in state construction is that search is driven by the gradients (or the importance of features) of the system with respect to the error (i.e. the agent-state is free from constraints external to the main objective). One opposing idea is to search for agent-state through answering predictive questions of the agent's observations. Several approaches to state search using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience. 
+A critical structural assumption in agent-state construction is that search is driven by the gradients (or the importance of features) of the system with respect to the final error (i.e. the agent-state is free from constraints external to the main objective). One opposing idea is to search for agent-state through answering predictive questions of the agent's observations. Several approaches to state search using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience.
 
-This dissertation contributes to the problem of searching for agent-state update functions through careful empirical evaluation of current architectures and the development of new algorithmic and architectural approaches to agent-state construction. In this thesis, we use gradients and predictions (in the form of general value functions) to inform the search process, and investigate some of the underlying principles of using recurrent networks to form the basis of a history summary mechanism in reinforcement learning.
+Every approach to constructing state with predictions has three core components. 
+These are briefly listed here with an example using GVFNs, but leave a more detailed account in section \ref{sec:prback}. The first is how a predictive question is asked or phrased. This can have dramatic changes to the hypothesis/function class of the predictive state, and induce large differences in the underlying algorithmic assumptions used for training. The second is in how the questions will be answered. An approach must consider the base function classes used to represent answers, the abstractions (either temporally or otherwise), and the learning algorithms applied to the architecture. The third, and probably less studied, is that of discovery. Discovery is the automatic specification of predictive questions to use. GVFNs use general value functions (GVFs) to define predictive questions, and a simple recurrent neural network to answer these questions. And algorithmic approach to discovery is still largely unexplored, tied to the discovery of GVFs more broadly, with some efforts applied to a generate-and-test approach cite:&schlegel2021general.
 
-# , but the ideas and conclusions presented here are not restricted to search through gradient descent (see Section ref:sec:bg:perception:tempdepend).
+Given a predictive approach to state building requires consideration of these difficult algorithmic choices, a natural question arises ``Why shouldn't we use non-predictive subjective based approaches for learning state, such as the usual recurrent networks?''. While this thesis won't provide (or seek) a conclusive answer to this question, predictive approaches to state construction may have a positive effect on a system's ability to generalize and learn a state representation. This is stated in the /Predictive Representation Hypothesis/ cite:&schaul2013better:
 
-** Objective
+#+begin_quote
+  a(n) /(explicit) predictive representation of state/ will be able to continually construct useful generalizations of the regularities in an environment.
+#+end_quote
 
-The thesis seeks to explore solution methods and architectures for discovering agent-state through gradients and other methods. Particularly, we seek to confirm the thesis statement:
+An /(explicit) predictive representation of state/ is an algorithm, or architecture, which constrains the state to be predictions which minimize an objective separate (or jointly) from the agent's general goal in an environment. This class of algorithms includes PSRs, TDNs, GVFNs, and several others. Because the state will be made of small-specific predictive questions of the agent's sensory-motor stream, as the distributions of the underlying dynamics shift the answers to the questions should appropriately shift as well.
 
+# This is provided there is ample flexibility in the function class used to answer the state questions.
+# Also such generalizations could be generally useful for the agent's downstream objectives.
+
+# The /Predictive Representation Hypothesis/ is intuitively appealing with evidence provided through specific predictive approaches cite:&singh2004predictive;&sutton2004temporal;&sutton2005temporal;&schaul2013better;&sutton2011horde;&white2015thesis;&schlegel2021general. Unfortunately, finding sufficient evidence for this hypothesis is difficult, and likely future systems will need to leverage both predictive and memory based approaches (i.e. RNNs).  I believe the creation and study of approaches for state construction leveraging predictions will lead to a more nuanced understanding of what kinds of state are useful for agents. The following hypothesis emphasizes what explicit predictive representations may bring to state learning:
+
+This dissertation contributes to the problem of searching for agent-state update functions through careful empirical evaluation of current architectures and the development of new algorithmic and architectural approaches to agent-state construction. In this thesis, I use gradients and predictions (in the form of general value functions) to inform the search process, and investigate some of the underlying principles of using recurrent networks to form the basis of a history summary mechanism in reinforcement learning. Finally, I develop deeper intuitions in using predictions as the primary driver of summarizing histories, leading to several algorithmic and architectural improvements in this line of work.
+
+# ** Objective
+
+The thesis seeks to explore solution methods and architectures for discovering agent-state through gradients and other methods. Particularly, we seek to explore the consequences of the thesis statement:
 #+BEGIN_QUOTE
 The architectural intuitions and assumptions developed in supervised learning for agent-state search are limiting in the reinforcement learning and continual reinforcement learning settings.
 #+END_QUOTE
-
-The answer to this question has many facets, and we answer the question through a slow study of different assumptions in different conditions for a reinforcement learning agent. 
-
-** Approach
-
-The approach taken in this thesis centers on clearly formulating various architectures and algorithms for state search and developing in-depth investigative experiments to uncover the dynamics of these algorithms and the resulting state update functions.
-
-1. We approach discovery through gradient descent, articulating the differences between architectures and decisions. Using truncated BPTT (either through experience replay or full online systems) to estimate gradients.
-2. Clearly lay out literature in a digestible way to find interesting trends that need further investigation.
-3. Adopt the predictive perspecitve of Adam.
-4. Perform in-depth experiments in small illustrative domains rather than leaping directly to large domains.
+and begin to ask how recurrent networks might need to be adjusted for the reinforcement learning setting. The answer to this question has many facets, and we seek conclusive observations and evidence through a slow study of these assumptions in different conditions for a reinforcement learning agent. The approach taken in this thesis centers on clearly formulating various architectures and algorithms for state search and developing in-depth investigative experiments to uncover the dynamics of both predictive and non-predictive approaches. All work presented here uses gradient descent--using truncated BPTT (either through experience replay or full online systems) to estimate gradients--to clearly test different choices and architectures using a shared learning platform.
 
 ** Contributions
 
@@ -166,7 +165,6 @@ In this section, I outline the specific contributions made to the field of machi
 # - Extensive empirical analysis of various recurrent architectures for incorporating action.
 # - Formulating and empirically evaluating a novel predictive state representation, general value function networks (GVFNs), to learn long-temporal dependencies. The first comparison of a TDNet style architecture to a basic recurrent architecture.
 
-** Thesis Layout
 ** Graveyard                                                      :noexport:
 *** DONE [#B] What is my thesis statement now?
 CLOSED: [2022-09-06 Tue 13:59]
@@ -267,7 +265,7 @@ What sections do I want to write?
 - Applying GVFs to learn state representations (10/11/12)
 - Future Work (13)
 
-* IN-PROGRESS [#A] [7/14] Background
+* IN-PROGRESS [#A] [6/15] Background
 
 In this thesis, we take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective continually. While this is not a particularly novel interpretation of the machine intelligence problem, it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
 
@@ -377,13 +375,10 @@ where \(\optpolicy\) is the optimal policy. The goal of the agent is to search t
 \end{align*}
 See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
 
-** DONE [3/3] Perception and Partial Observability in Reinforcement Learning
+** IN-PROGRESS [3/4] Perception and Partial Observability in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:perception
 :END:
-
-
-In the previous section, we discussed the fully observable reinforcement learning problem. While this is used in some chapters in the following thesis, the main focus here is the partial observability setting. The 
 
 We consider a partially observable setting, where the observations are a function of an unknown, unobserved underlying state.
 The dynamics are specified by transition probabilities \(\Pfcn = \States \times \Actions \times \States \rightarrow [0,\infty)\) with state space \(\States\) and action-space \(\Actions\). On each time step the agent receives an observation vector \(\obs_t \in \Observations \subset \Reals^\obssize\), as a function \(\obs_t = \obs(\state_t)\) of the underlying state \(\state_t \in \States\). The agent only observes \(\obs_t\), not \(\state_t\), and then takes an action \(\action_t\), producing a sequence of observations and actions: \(\obs_{0}, a_{0}, \obs_{1}, a_1, \ldots\).
@@ -404,7 +399,9 @@ The goal for the agent under partial observability is to identify a state repres
 {{{c}}}
 {{{c}}}
 or so that statistics about the target are independent of history, such as \(\mathbb{E}[Y_{t} | \svec_t] = \mathbb{E}[Y_{t} | \svec_t, \hvec_t]\).
-Such a state summarizes the history, removing the need to store the entire (potentially infinite) history. 
+Such a state summarizes the history, removing the need to store the entire (potentially infinite) history.
+
+For a machine intelligent system with an egocentric perspective, sufficiently summarizing the history of interactions is critical to success in its lifetime. While a unique state can be defined as the set of all histories which induce the same predictions over all futures {{{citeplease}}}, an agent only has a single lifetime {{{citeplease markring}}} and must make due without living through multiple histories. Awash in the stream of sensor readings available to the agent, it is not always clear what regularities are important for the agent to capture for long-term success in the world or how to capture such regularities. Many other constrained definitions of a sufficient summary of state exists [[cite:&subramanian2022approximate]]. Many approaches focus on the capability of the agent to predict the reward function to develop a policy of behavior, but this approach might not be sufficient if its rewards are non-stationary or if the agent has multiple goals. Another idea is the agent's beliefs should be grounded in predictions about the sensorimotor stream directly. This includes predictions about the prescribed reward function, but also encompasses all real-valued signals for which the agent has access.
 
 *** DONE [1/1] Learning Long-temporal Dependencies
 :PROPERTIES:
@@ -479,6 +476,23 @@ where \(N\) is the size of the batch, and \(y\) is the target defined by the spe
 
 Details for these algorithms can be found in their respective papers, and in textbooks on deep learning. We refer to more specific modifications related to work in this thesis in later sections (see Section ref:sec:gvfn:gradbtt).
 
+*** IN-PROGRESS State Construction through Predictions
+   :PROPERTIES:
+   :CUSTOM_ID: sec:prback
+   :END:
+
+As mentioned in chapter ref:chap:introduction, predictive approaches to state construction have recurring shared components which shape the final properties of the algorithm. The first is how the predictions will be represented is how the predictive question is asked. PSRs use histories of action observation pairs to construct predictive question, where the answer is a representation of the probability of the sequence of observations being seen given a history and the agent follows the action sequence cite:&littman2002predictive;&singh2004predictive. TDNs use an /answer network/ which is a graph of target dependencies with the core nodes representing specific parts of the observational space. This graph can be many layers, and is acyclic with a single exception. Both TDNs and PSRs were originally defined only using primitive actions to ask questions, but were later extended to included temporally abstract options through option-conditional TDNs cite:&sutton2005temporaldifference;&rafols2006temporal and hierarchical PSRs (HPSRs) cite:&wolfe2006predictive. GVFNs are most similar to option-conditional TDNs, using general value functions (GVFs) to define predictive questions. While GVFNs and OCTDNs both can ask the same set of questions, GVFs are a more convenient language to express predictive questions. This representation also makes the modification and application of new methods for learning value functions more straightforward cite:&schlegel2021general, and analysis of the learning dynamics simpler cite:&schlegel2017stable.
+
+The second topic is that of learning and representing the answers of the predictive questions. While respectively different questions, they are deeply connected in the design of any system. The original work in PSRs restricted the sets of observations and actions to be finite. The reason this was needed was how the answers were represented, given a history and sequence of actions for the sequence of observations to not be trivially zero the observations must be sampled according to a mass function. This was addressed in later work using kernel density estimation and information-theoretic tools to realize PSRs in the case of continuous observations and actions cite:&wingate2007discovery. The answers were then represented as a matrix of predicted values for the core tests, which could be updated incrementally with new observations. TDNs use artificial neural networks to underly their representation of answers. While the organization of nodes is not restricted cite:&sutton2005temporaldifference, most of the empirical results shown can be described as using a recurrent neural network. cite:&schlegel2021general make this restriction more apparent, where they explicitly learn the predictive representation as the state of a recurrent network. This simplifies the comparison to non-predictive subjective state approaches (i.e. RNNs), while also enabling the application of backpropagation through time and real-time recurrent learning. In future work, we hope to expand on this simplified network architecture as discussed in chapter \ref{chap:proposal}.
+
+The third and final topic is that of discovery. Discovery is the automatic specification of predictive questions to use in learning the predictive state. PSRs approached discovery by exploring the set of tests to construct a core set that enables all other tests to be answered cite:&james2004learning;&mccracken2005online;&wingate2007discovery.
+This objective is trying to find a sufficient statistic of the history for all predictions, and has been discussed in various forms cite:&subramanian2022approximate. We conjecture that finding such a state is not feasible in large complex problems, and searching for such a state would be a poor use of a finite set of computational resources. Instead, the agent should focus on finding a set of questions which is useful for the agents overarching goals---for example, maximizing the return in the control problem.
+
+Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. While a reasonable starting algorithm, the lack of heuristic information to guide the search can often be slow cite:&schlegel2021general and possibly infeasible in an agent's lifetime. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017theoption;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
+
+Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes cite:&schutz2007prospective take the theory of prospection and encode future events as representations used for planning and simulation.
+
+While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations cite:&soga2009;&synofzik2013. While we focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
 
 ** IN-PROGRESS Temporal Abstractions in Reinforcement Learning
 
@@ -2154,12 +2168,12 @@ The approach used in this paper is unable to analyze state-dependent discount fu
 
 Finally, the return can be re-interpreted as a convolution over the infinite sequence of observations. While this interpretation was only used to better the notation in this manuscript, further connections to convolutions and digital signal processing should be explored. Better filter designs might inspire different discounting schedules to squeeze more information from the data stream. We also have only analyzed these convolutions in the time domain. The frequency domain might give us more insight into how consistent signals like the cycle world dataset will be effected by compositions. 
 
-* TODO [#B] Importance Resampling for Prediction in Reinforcement Learning
+* IN-PROGRESS [#B] Importance Resampling for Prediction in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: chap:resampling
 :END:
 
-One lingering issue that plagues not only GVFNs but also the community of learning answers to predictive questions generally is the variance induced by off-policy prediction through importance sampling. There have been several alternatives to straight importance sampling ratios, many of which have been proposed for a more standard policy evaluation setting (i.e. where the target and behavior policies are close together on the simplex). While these methods all can be more effective than raw importance sampling ratios, we propose a method which takes advantage of the experience replay buffer, improves sample efficiency, and reduces variance significantly.
+One lingering issue that plagues not only GVFNs but the community of learning answers to predictive questions generally is the variance induced by off-policy prediction through importance sampling. There have been several alternatives to straight importance sampling ratios, many of which have been proposed for a more standard policy evaluation setting (i.e. where the target and behavior policies are close together on the simplex). In this Chapter, I propose importance resampling as a off-policy prediction algorithm to mitigate the update variance of importance sampling while also being a consistent estimator.
 
 ** Introduction
 
@@ -2183,12 +2197,26 @@ A resampling strategy has several potential benefits for off-policy prediction.[
 In this work, we investigate the use of resampling for online off-policy prediction for known, unchanging target and behavior policies. We first introduce Importance Resampling (IR), which samples transitions from a buffer of (recent) transitions according to IS ratios. These sampled transitions are then used for on-policy updates. We show that IR has the same bias as WIS, and that it can be made unbiased and consistent with the inclusion of a batch correction term---even under a sliding window buffer of experience. We provide additional theoretical results characterizing when we might expect the variance to be lower for IR than IS. We then empirically investigate IR on three microworlds and a racing car simulator, learning from images, highlighting that (a) IR is less sensitive to learning rate than IS and V-trace (IS with clipping) and (b) IR converges more quickly in terms of the number of updates.
 
 
-* TODO [#B] [0/3] Conclusions and Final Remarks
- Evaluating the predictive perspective.
-** TODO Limitations, future avenues of research, and interesting questions
-*** Discovery
-** TODO Open Problems in learning state
-** TODO Open Problems for Recurrent Architectures in RL
+
+
+* TODO [#B] [0/5] Conclusions and Final Remarks
+
+This thesis set out to uncover some of the key discrepancies between how recurrent models work in the supervised learning setting and the continual reinforcement learning setting. In this chapter, I will summarize the main contributions made to agent-state construction in the continual RL setting. I will discuss potential future directions and propose open questions and directions for developing methods of agent-state construction based on the work presented in this thesis.
+
+** TODO Summary of Contributions
+
+- The work presented in this thesis can be seen in two parts
+1. Understanding how action embeddings effect state construction
+2. Developing a predictive approach in recurrent networks using general value functions
+   - Defining a structure to test this approach against RNNs
+   - Developing algorithms to learn with the induced constraints
+   - Comparing a series of predictive methods and "free" recurrent architectures in a set of continual prediction tasks
+   - Discussing possible directions for discovering important predictive questions for representation
+   - Exploring the consequences of composite GVFs and their associated targets
+   - Proposing an algorithm for estimating off-policy predictions.
+
+** TODO Future directions and work
+*** TODO Open Problems for Recurrent Architectures in RL
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:open-problems
 :END:
@@ -2236,7 +2264,7 @@ Even when analyzing the behavior of our agent, using the performance metric as t
 Because of the above challenges there are several lingering questions about these types of agents left unanswered in these domains. 1) Under what conditions will the agent's policy fail in an environment? 2) How robust are the policies to out-of-distribution events and how does this effect the hidden state?  3) What algorithms do the learning process discover to solve the domains reliably? 4) Is the model stable over a long training period or in a continual domain? 5) When does the agent make a decision, and does the agent stick to this decision? We believe answering these questions and more can lead to better understanding of recurrent agents as well as pathways to better algorithms for training such agents.
 
 
-*** Architectural Choices
+**** Architectural Choices
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:arch-choice
 :END:
@@ -2251,6 +2279,9 @@ Below are several architectural choices we made which should be empirically expl
 *To continually learning, or to not:* The trade-offs between a continually learning and non-continually learning agent is extremely important for both recurrent and feed-forward architectures. In this paper, we chose to report results when the agent is still learning, but only on stationary domains. Any learning system should track the environment as it changes, or as the agent experiences novel states. Recurrent architectures have an added problem that the hidden state is an accumulation of the agent's entire history, meaning novel observations could irreparably harm the hidden state if it is not reset at regular intervals (i.e. in an episodic domain). This will potentially harm the agent's performance for its entire lifetime if it is unable to adjust it's weights accordingly. This is not the case in a feed-forward network, where novel observations will not effect the long-term behavior of an agent in known parts of the state space. This effect is understudied in the literature for recurrent agents, but is an important aspect of deploying recurrent RL agents in real world systems.
 
 *Objectives matter:* It is known that some objective functions are more learnable in both the fully and partially observable settings citep:&mozer1991induction;&vanhasselt2015learning. Auxiliary tasks are often also used to augment the networks objective function citep:&jaderberg2017reinforcement, or to constrain the learned state citep:&schlegel2021general. Which objective functions, auxiliary tasks, and learning algorithms are more best when applied to training a recurrent networks?
+*** TODO Understanding the intersection between predictive and non-predictive agent-state construction
+*** TODO Discovery and the form of GVF prediction targets
+*** TODO Beyond a synchronous predictive network 
 
 * Postamble                                                          :ignore:
 
