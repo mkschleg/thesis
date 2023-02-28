@@ -108,12 +108,6 @@ While we can--and arguably should--use the intuitions built in the SL setting, t
 A critical structural assumption in agent-state construction is that search is driven by the gradients (or the importance of features) of the system with respect to the final error (i.e. the agent-state is free from constraints external to the main objective). One opposing idea is to search for agent-state through answering predictive questions of the agent's observations. Several approaches to state search using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience.
 
 
-
-
-
-# This is provided there is ample flexibility in the function class used to answer the state questions.
-# Also such generalizations could be generally useful for the agent's downstream objectives.
-
 # The /Predictive Representation Hypothesis/ is intuitively appealing with evidence provided through specific predictive approaches cite:&singh2004predictive;&sutton2004temporal;&sutton2005temporal;&schaul2013better;&sutton2011horde;&white2015thesis;&schlegel2021general. Unfortunately, finding sufficient evidence for this hypothesis is difficult, and likely future systems will need to leverage both predictive and memory based approaches (i.e. RNNs).  I believe the creation and study of approaches for state construction leveraging predictions will lead to a more nuanced understanding of what kinds of state are useful for agents. The following hypothesis emphasizes what explicit predictive representations may bring to state learning:
 
 This dissertation contributes to the problem of searching for agent-state update functions through careful empirical evaluation of current architectures and the development of new algorithmic and architectural approaches to agent-state construction. In this thesis, I use gradients and predictions (in the form of general value functions) to inform the search process, and investigate some of the underlying principles of using recurrent networks to form the basis of a history summary mechanism in reinforcement learning. Finally, I develop deeper intuitions in using predictions as the primary driver of summarizing histories, leading to several algorithmic and architectural improvements in this line of work.
@@ -132,14 +126,16 @@ and begin to ask how recurrent networks might need to be adjusted for the reinfo
 In this section, I outline the specific contributions made to the field of machine intelligence and reinforcement learning to satisfy the requirements of the doctoral degree at the University of Alberta.
 
 1. Developing and empirically validating recurrent cells which incorporate action into their agent-state update functions (Chapter ref:chap:arnn).
-2. Developing a predictive approach to learning agent-state update functions through learning answer to predictive questions posed by General Value Functions (Chapters ref:GVFNs, ref:chap:gvfn:algs, ref:chap:gvfn:empirical, ref:chap:gvfn:discovery).
-3. Deriving a gradient algorithm, from which several learning rules are generated, for learning GVFNs.
-4. Empirically validating the GVFN approach, comparing to other auxiliary task approaches in the prediction setting, and developing intuitions on suggested predictive questions to use.
-5. Outlining a baseline discovery algorithm for generating questions through experience online in GVFNs.
+   This contribution focuses on empirically evaluating several architectural choices in how the agent encodes action in the state-update function of a recurrent network. We start with an in-depth analysis of an agent's predictions and learned hidden state in a small example domain. We then explore when this choice is important for the control problem in a series of experiments using the DRQN [[cite:&hausknecht2015deep]] framework.
+2. Define a predictive approach to learning agent-state update functions through learning answer to predictive questions posed by General Value Functions (Chapter ref:chap:gvfn). This chapter defines the core framework of the general value function network (GVFN). The key contributions include the restriction of predictive questions to be composed in acyclic graphs, and extensions to include the set of predictions made by PSRs, TDNets, and other forecasting networks.
+3. Derive a gradient algorithm, from which several learning rules are generated, for learning GVFNs (Chapter [[ref:chap:gvfn:algs]]). The key contribution of this chapter is the derivation of gradient recurrent temporal-difference learning for GVFNs. This is a sound gradient algorithm taking into account the possible composite structure of questions and the recurrent nature of answering the questions. This algorithms is then simplified to produce a recurrent semi-gradient temporal-difference updating rule. Further details on calculating the gradient and Hessian of the value function back through time are included.
+4. Empirically validating the GVFN approach, comparing to other auxiliary task approaches in the prediction setting, and developing intuitions on suggested predictive questions to use (Chapter ref:chap:gvfn:empirical.
+5. Outlining a baseline discovery algorithm for generating questions through experience online in GVFNs (Chapter ref:chap:gvfn:discovery).
 6. Investigating and developing grounding for the targets of composite GVF questions ref:chap:composite.
 7. Contributing to learning predictions off-policy more efficiently in the deep learning setting through the use of importance resampling ref:chap:resampling.
 
 
+# (Chapters ref:GVFNs, ref:chap:gvfn:algs, ref:chap:gvfn:empirical, ref:chap:gvfn:discovery).
 
 
 # 1. Discuss prediction learning off-policy in light of the experience replay buffer. Investigate the first application of resampling in off-policy learning, and think about its consequences for future development.
@@ -258,9 +254,14 @@ What sections do I want to write?
 - Applying GVFs to learn state representations (10/11/12)
 - Future Work (13)
 
-* IN-PROGRESS [#A] [6/15] Background
+* IN-PROGRESS [#A] [10/15] Background
 
 In this thesis, we take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective continually. While this is not a particularly novel interpretation of the machine intelligence problem, it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
+
+#+caption: Diagram of the agent in the environment
+#+name: fig:bg:agent-env-interaction
+#+attr_latex: :width 0.8\linewidth
+[[./plots/world-body-agent-diagram.pdf]]
 
 The *agent* lives inside the *environment*, which is so large that the agent will never perceive the full set of experience the environment is capable of providing through its lifetime. This is also known as the big world hypothesis {{{citeplease sutton}}}. The agent observes the environment from an egocentric perspective, meaning the agent doesn't observe the full set of hidden properties of the environment and must maintain its current beliefs of the world internally through what is referred to as *agent-state* (we use state and agent-state interchangeably, making sure to emphasize when discussing the environment state where necessary). The environment's dynamics evolve according to internal properties unknown to the agent, and the agent can influence this through its decisions (or actions). On every interaction with the environment the agent observes through its senses and takes an action to maximize a notion of the cumulative sum of rewards.
 
@@ -295,7 +296,7 @@ q(\State, \Action) = \Expected_\pi [ G_t | s_t = \State, a_t = \Action].
 \]
 This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections we will extend this framework to the partial observable case, and go into the specifics of the prediction problem and the control problem.
 
-** IN-PROGRESS [1/4] Off-Policy Prediction
+** IN-PROGRESS [3/4] Prediction
 
 *************** DONE Outline and lay foundation for prediction section :noexport:
 CLOSED: [2023-02-21 Tue 15:44]
@@ -310,18 +311,39 @@ V_\tpolicy(\State) = \Expected_\pi[ G_t | s_t = \State, a \sim \tpolicy(\cdot| S
 \]
 where \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} r_{t+i} \) is the return. The operator \(\mathbb{E}_{\tpolicy}\) indicates an expectation with actions selected according to policy $\tpolicy$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy \(\tpolicy\). These values are typically estimated using parametric function approximation, with weights \(\theta \in \RR^d\) defining approximate values \(\Value_\theta(\state)\). 
 
-The simplest algorithm to learn the value function is through Monte-Carlo sampling. The brief of the algorithm is to get samples of the return starting in state $\State$ following policy $\tpolicy$, which are then averaged to receive the return. This algorithm only requires the environment to be episodic (i.e. clear terminations) and converges to the true value function as the number of samples grows.
+The simplest algorithm to learn the value function is through Monte-Carlo sampling. The brief of the algorithm is to get samples of the return starting in state $\State$ following policy $\tpolicy$, which are then averaged to receive the expected return. You can use the trajectories to estimate the returns for either first-visit to a specific state or on every visit, see cite:&singh1996reinforcementa;&sutton2018reinforcement for more details. This algorithm only requires the environment to be episodic (i.e. clear terminations) and converges to the true value function as the number of rollouts grow. Another approach to learning value functions is known.
 
-*************** TODO Clean up history of learning value functions on-policy :noexport:
+Another approach to learning value functions is to take advantage of the Bellman equation through dynamic programming. The Bellman equation for the value function $V_\tpolicy(\State)$
+\begin{align*}
+V^\pi(\State) &= \Expected_\tpolicy[G_t | s_t = \State, a \sim \tpolicy(\cdot | S)] \\
+&= \Expected_\tpolicy[r_t + \gamma G_{t+1} | s_t = \State, a \sim \tpolicy(\cdot | S)] \\
+&= \overline{R}(\State, \pi(\State)) + \gamma \sum_{\State^\prime} P(\State^\prime | \State, a \sim \tpolicy(\State)) V^\tpolicy(\State^\prime)
+\end{align*}
+where $\overline{R}(\State, \tpolicy(\State)$ is the expected one-step reward for policy $\tpolicy$ in state $\State$. The algorithm uses the transition dynamics of the environment $P$ to iteratively calculate the value function through dynamic programming [[cite:&sutton2018reinforcement]].
+
+Temporal-difference learning combines advantages of both these algorithms, eliminating the need for environment dynamics of dynamic programming and episodic environments for Monte-Carlo sampling. For tabular settings, TD learning follows the update rule
+\[
+\hat{V}_{t+1}(\State) \rightarrow \hat{V}_t(\State) + \alpha (r_t + \gamma \hat{V}_t(\State^\prime) - \hat{V}_t(\State)).
+\]
+The target for the temporal-difference learning algorithm is known as the TD target \(r_t + \gamma \hat{V}_t(\State^\prime)\). TD bootstraps using the previous estimate of the return on the next state \(\hat{V}_t(\State^\prime)\) (like dynamic programming) while sampling transitions from the environment following \(\tpolicy\) (like Monte-Carlo rollouts). When using function approximation, the preferred approach is to follow the gradient taken of the value function with respect to the parameters of your function. This is known as the semi-gradient TD learning algorithm
+\[
+\weights_{t+1} \rightarrow V(\State; \weights_t) + \alpha (r_t + \gamma V(\State^\prime; \weights_t) - V(\State; \weights)) \nabla_\weights V(\State; \weights).
+\]
+This update can be seen as minimizing the mean squared TD objective \(\scrL(\State, \State^\prime, r_t) = \Vert U_t - V(\State; \weights) \Vert^2_2\) assuming the bootstrapped target \(U_t = r_t + \gamma V(\State^\prime; \weights_t)\) has gradient \(\nabla_\weights U_t = 0\). 
+
+
+*************** DONE Clean up history of learning value functions on-policy :noexport:
+CLOSED: [2023-02-28 Tue 14:23]
 *************** END
 
-Another way to learn the value function is by taking advantage of the Bellman equation through dynamic programming.
+# Another way to learn the value function is by taking advantage of the Bellman equation through dynamic programming.
 
-Both of the above algorithms enforce restrictions on the types of problems addressable. Temporal-difference learning combines advantages of both the above algorithms, alleviating some of constraints imposed.
+# Both of the above algorithms enforce restrictions on the types of problems addressable. Temporal-difference learning combines advantages of both the above algorithms, alleviating some of constraints imposed.
 
-The off-policy prediction problem is equally concerned with learning value functions of policy $\tpolicy$, but must use data generated from a separate behavior policy $\bpolicy$.
+# The off-policy prediction problem is equally concerned with learning value functions of policy $\tpolicy$, but must use data generated from a separate behavior policy $\bpolicy$.
 
-*************** TODO Temporal-difference learning for on-policy prediction :noexport:
+*************** DONE Temporal-difference learning for on-policy prediction :noexport:
+CLOSED: [2023-02-28 Tue 14:23]
 *************** END
 
 In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
@@ -344,15 +366,16 @@ which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\t
 Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
 For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\). Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular \citep{precup2001offpolicy} and linear functions cite:&mahmood2014weighted;&mahmood2015off.
 
-*************** TODO Add information on other choices for off-policy prediction learning :noexport:
+*************** TODO Fill in TDC update rule                      :noexport:
 *************** END
 
+While the above objectives have been shown to effectively work in a wide range of problem settings, there are a series of known counter examples where these algorithms do not converge. This is due to what is known as the deadly-triad in off-policy semi-gradient TD: off-policy, function approximation, and bootstrapping. Removing any of these properties results in a convergent learning rule. Instead we can also define another objective known as the /mean squared projected Bellmen error/ (MSPBE). This objective minimizes the full Bellman error through a projection operator [[cite:&sutton2009fast;&maei2009convergent]]. Minimizing this objective results in several algorithms including one known as temporal-difference with corrections (TDC).
+\begin{align*}
+\weights_{t+1} &\rightarrow \ldots\\
+\secweights_{t+1} &\rightarrow \ldots.
+\end{align*}
+This algorithm can be extended to non-linear function approximation [[cite:&maei2009convergent]].
 
-Per decision corrections
-
-Lifetime corrections
-
-Semi-gradient Temporal-difference learning
 ** DONE Control in Reinforcement Learning
 CLOSED: [2023-02-21 Tue 11:50]
 The bread and butter problem for reinforcement learning research is the control problem. The control problem is the process of searching (or learning) a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control (through q-learning) to direct policy optimization through policy gradient and actor critic methods. In this thesis, we are primarily concentrated on value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
@@ -368,7 +391,7 @@ where \(\optpolicy\) is the optimal policy. The goal of the agent is to search t
 \end{align*}
 See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
 
-** IN-PROGRESS [3/4] Perception and Partial Observability in Reinforcement Learning
+** DONE [4/4] Perception and Partial Observability in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:perception
 :END:
@@ -469,7 +492,8 @@ where \(N\) is the size of the batch, and \(y\) is the target defined by the spe
 
 Details for these algorithms can be found in their respective papers, and in textbooks on deep learning. We refer to more specific modifications related to work in this thesis in later sections (see Section ref:sec:gvfn:gradbtt).
 
-*** IN-PROGRESS State Construction through Predictions
+*** DONE State Construction through Predictions
+CLOSED: [2023-02-28 Tue 14:26]
    :PROPERTIES:
    :CUSTOM_ID: sec:bg:predreps
    :END:
@@ -486,9 +510,7 @@ Choosing the semantics of how predictive questions are asked will have major eff
 The second topic is that of learning and representing the answers of the predictive questions. While respectively different questions, they are deeply connected in the design of any system. The original work in PSRs restricted the sets of observations and actions to be finite. The reason this was needed was how the answers were represented, given a history and sequence of actions for the sequence of observations to not be trivially zero the observations must be sampled according to a mass function. This was addressed in later work using kernel density estimation and information-theoretic tools to realize PSRs in the case of continuous observations and actions cite:&wingate2007discovery. The answers were then represented as a matrix of predicted values for the core tests, which could be updated incrementally with new observations. TDNs use artificial neural networks to underly their representation of answers. While the organization of nodes is not restricted cite:&sutton2005temporaldifference, most of the empirical results shown can be described as using a recurrent neural network. cite:&schlegel2021general make this restriction more apparent, where they explicitly learn the predictive representation as the state of a recurrent network. This simplifies the comparison to non-predictive subjective state approaches (i.e. RNNs), while also enabling the application of backpropagation through time and real-time recurrent learning. In future work, we hope to expand on this simplified network architecture as discussed in chapter \ref{chap:proposal}.
 
 The third and final topic is that of discovery. Discovery is the automatic specification of predictive questions to use in learning the predictive state. PSRs approached discovery by exploring the set of tests to construct a core set that enables all other tests to be answered cite:&james2004learning;&mccracken2005online;&wingate2007discovery.
-This objective is trying to find a sufficient statistic of the history for all predictions, and has been discussed in various forms cite:&subramanian2022approximate. We conjecture that finding such a state is not feasible in large complex problems, and searching for such a state would be a poor use of a finite set of computational resources. Instead, the agent should focus on finding a set of questions which is useful for the agents overarching goals---for example, maximizing the return in the control problem.
-
-Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. While a reasonable starting algorithm, the lack of heuristic information to guide the search can often be slow cite:&schlegel2021general and possibly infeasible in an agent's lifetime. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017theoption;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
+This objective is trying to find a sufficient statistic of the history for all predictions, and has been discussed in various forms cite:&subramanian2022approximate. We conjecture that finding such a state is not feasible in large complex problems, and searching for such a state would be a poor use of a finite set of computational resources. Instead, the agent should focus on finding a set of questions which is useful for the agents overarching goals---for example, maximizing the return in the control problem. Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. While a reasonable starting algorithm, the lack of heuristic information to guide the search can often be slow cite:&schlegel2021general and possibly infeasible in an agent's lifetime. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017theoption;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
 
 Given a predictive approach to state building requires consideration of these difficult algorithmic choices, a natural question arises ``Why shouldn't we use non-predictive subjective based approaches for learning state, such as the usual recurrent networks?''. While this thesis won't provide (or seek) a conclusive answer to this question, predictive approaches to state construction may have a positive effect on a system's ability to generalize and learn a state representation. This is stated in the /Predictive Representation Hypothesis/ cite:&schaul2013better:
 
@@ -498,9 +520,7 @@ Given a predictive approach to state building requires consideration of these di
 
 An /(explicit) predictive representation of state/ is an algorithm, or architecture, which constrains the state to be predictions which minimize an objective separate (or jointly) from the agent's general goal in an environment. This class of algorithms includes PSRs, TDNs, GVFNs, and several others. Because the state will be made of small-specific predictive questions of the agent's sensory-motor stream, as the distributions of the underlying dynamics shift the answers to the questions should appropriately shift as well.
 
-Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes cite:&schutz2007prospective take the theory of prospection and encode future events as representations used for planning and simulation.
-
-While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations cite:&soga2009;&synofzik2013. While we focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
+Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes cite:&schutz2007prospective take the theory of prospection and encode future events as representations used for planning and simulation. While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations cite:&soga2009;&synofzik2013. While we focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
 
 ** IN-PROGRESS Temporal Abstractions in Reinforcement Learning
 
@@ -538,7 +558,7 @@ The sums can be replaced with integrals if \(\Actions\) or \(\Observations\) are
 
 
 
-* IN-PROGRESS [#A] [11/14] Incorporating action into a recurrent network
+* DONE [#A] [14/14] Incorporating action into a recurrent network
 :PROPERTIES:
 :CUSTOM_ID: chap:arnn
 :END:
@@ -547,18 +567,21 @@ The sums can be replaced with integrals if \(\Actions\) or \(\Observations\) are
 # #+NAME: fig:viz_rnn
 # [[./plots/arnns/figures/RNN.pdf]]
 
-*************** TODO [#B] Deal with the appendix from paper
+*************** DONE [#B] Deal with the appendix from paper :noexport:
+CLOSED: [2023-02-24 Fri 09:21]
 *************** END
 
 
-In this chapter, I will introduce different mechanisms for incorporating action into a recurrent cell. Some of these mechanisms have been introduced in other parts of the reinforcement learning literature, while some are novel to this thesis. These mechanisms can be applied broadly in any recurrent architecture. In this thesis, I focus on empirically evaluating the difference approaches in simple RNNs and in GRUs, leaving other cells to future work. The goal of this chapter is to bring together these difference mechanisms and perform a rigorous empirical evaluation.
+# In this chapter, I will introduce different mechanisms for incorporating action into a recurrent cell. Some of these mechanisms have been introduced in other parts of the reinforcement learning literature, while some are novel to this thesis. These mechanisms can be applied broadly in any recurrent architecture. In this thesis, I focus on empirically evaluating the difference approaches in simple RNNs and in GRUs, leaving other cells to future work. The goal of this chapter is to bring together these difference mechanisms and perform a rigorous empirical evaluation.
+
+In this Chapter, we focus on several architectures for incorporating action into the state-update function of an RNN in partially observable RL settings. Many of these architectures have been proposed previously for recurrent architectures (i.e. cite:&zhu2018improving;&schlegel2021general), and others are either related to or obvious extensions of those architectures. We perform an in-depth empirical evaluation on several illustrative domains, and outline the relationship between the domain and architectures. Finally, we discuss future work in developing recurrent architectures designed for the RL problem and discuss challenges specific to the RL setting needing investigation in the future.
 
 
-** DONE Introduction
-CLOSED: [2023-01-18 Wed 13:57]
-:PROPERTIES:
-:CUSTOM_ID: sec:arnn:intro
-:END:
+# ** DONE Introduction
+# CLOSED: [2023-01-18 Wed 13:57]
+# :PROPERTIES:
+# :CUSTOM_ID: sec:arnn:intro
+# :END:
 
 # Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large complex domains. For example, a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. A game playing systems such as StarCraft citep:&vinyals2019grandmaster provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
 
@@ -569,13 +592,11 @@ Recurrent neural networks (RNNs) have been established as an important tool for 
 
 One important design decision is the strategy used to incorporate action in the state update function which can have a large impact on the agent's ability to predict and control (see Figure ref:fig:arnn:ring-world-example). This has been noted before, cite:&zhu2018improving provides a discussion on the importance of these choices developing an architecture which encodes the action through several layers before concatenating with the observation encoding. Other types of action encodings have been used for the state update in RNNs for RL citep:&schaefer2007recurrent;&zhu2018improving;&schlegel2021general, but without an in-depth discussion or focus on the ramifications of the particular choice of architecture.  In other cases, action has seemingly been omitted citep:&oh2015actionconditional;&hausknecht2015deep;&espeholt2018impala. Other state construction approaches also see action as a primary component, predictive representations of state encode predictions as the likelihood of seeing action-observation pairs given a history citep:&littman2002predictive.
 
-#+CAPTION: Learning Curves for various RNN cells in Ring World using experience replay and three strategies to incorporate action into an RNN. The agent learns 20 GVF predictions for 300k steps and we report root mean squared value error averaged over 50 runs with \(95\%\) confidence intervals with window averaging over 1000 steps. See Section \ref{sec:learnability} for full details.
+#+CAPTION: Learning Curves for various RNN cells in Ring World using experience replay and three strategies to incorporate action into an RNN. The agent learns 20 GVF predictions for 300k steps and we report root mean squared value error averaged over 50 runs with \(95\%\) confidence intervals with window averaging over 1000 steps. See Section ref:sec:arnn:learnability for full details.
 #+NAME: fig:arnn:ring-world-example
 [[./plots/arnns/figures/ringworld_example_lc.pdf]]
 
 Action plays an important role in perception in cognitive sciences. [[citeauthor:&noe2004action]] ([[citeyear:&noe2004action]]) proposed that perception is dependent on the actions we can take and have taken on the world around us. In effect, one can look at the objective of a reinforcement learning agent as the desire to control and predict the experience (or data) stream, which inevitably means we must model our agency on the data stream. Action has also played an important part in understanding representations (or codings) in the brain through common coding citeauthor:&prinz1990common (citeyear:&prinz1990common), and in the larger interplay between prediction and action in the brain citep:&clark2013whatever. While the RNN architecture is not exactly reminiscent of these cognitive models, the role of action in perception further motivates the need to study the role action plays in an RL agent's perceptual system more in-depth.
-
-In this Chapter, we focus on several architectures for incorporating action into the state-update function of an RNN in partially observable RL settings. Many of these architectures have been proposed previously for recurrent architectures (i.e. cite:&zhu2018improving;&schlegel2021general), and others are either related to or obvious extensions of those architectures. We perform an in-depth empirical evaluation on several illustrative domains, and outline the relationship between the domain and architectures. Finally, we discuss future work in developing recurrent architectures designed for the RL problem and discuss challenges specific to the RL setting needing investigation in the future.
 
 ** DONE Problem Setting :noexport:
 CLOSED: [2023-01-18 Wed 13:57]
@@ -593,9 +614,10 @@ To estimate the value function we use off-policy semi-gradient TD(0) citep:&sutt
 ** DONE Constructing State with Recurrent Networks
 CLOSED: [2023-01-18 Wed 13:57]
 
-For effective prediction and control, the agent requires a state
-representation \(\state_t \in \Reals^\statesize\) that is a sufficient statistic of the past: \( \Expected\left[ G^c_t | \state_t \right] = \Expected\left[G^c_t | \state_t, \hvec_t\right]\). When the agent learns such a state, it can build policies and value functions without the need to store any history. For example, for prediction, it can learn \(V(\state_t) \approx \Expected\left[ G^c_t | \state_t \right]\). In this section, we describe the strategies used in this work to learn state.
+For convenience we reiterate the methods used to learning a state-update function using recurrent neural networks. Much of the content is the same as found in Section ref:sec:bg:perception, but we include details specific to this contribution. Specifically, we discuss the details needed for incorporating RNNs into the deep Q-network framework as originally discussed by [[citeauthor:&hausknecht2015deep]] ([[citeyear:&hausknecht2015deep]]).
 
+For effective prediction and control, the agent requires a state
+representation \(\state_t \in \Reals^\statesize\) that is a sufficient statistic of the past: \( \Expected\left[ G^c_t | \state_t \right] = \Expected\left[G^c_t | \state_t, \hvec_t\right]\). When the agent learns such a state, it can build policies and value functions without the need to store any history. For example, for prediction, it can learn \(V(\state_t) \approx \Expected\left[ G^c_t | \state_t \right]\). In this section, we describe the strategies used in this chapter to learn state.
 
 An RNN provides one such solution to learning \(\state_t\) and associated state update function. The simplest RNN is one which learns the parameters \(\weights \in \Reals^\numparams\) recursively
 \[
@@ -606,7 +628,6 @@ where \(\xvec_t = [\obs_t, \state_{t-1}]\) and \(\sigma\) is any non-linear tran
   (\state_t)_i = \sigma\left(\sum_{j=1}^M \sum_{k=1}^N\weights_{ijk} (\obs_t)_j (\state_{t-1})_k + \bvec_i\right) \quad\quad \triangleright \text{ where } \weights \in \Reals^{|\state| \times |\obs| \times |\state| }.
 \]
 Using this type of operation was initially called second-order RNNs cite:&goudreau1994firstorder, and was also explored in one of the first landmark successes of RNNs citep:&sutskever2011generating in a character-level language modeling task.
-
 
 RNNs are typically trained through the use of back-propagation through time (BPTT) citep:&mozer1995focused. This algorithm effectively unrolls the network through the sequence and calculates the gradient as if it was one large network with shared weights.
 This unrolling is often truncated at some number of steps \(\tau\). While this alleviates computational-cost concerns, the learning performance can be sensitive to the truncation parameter citep:&pascanu2013difficulty. When calculating the gradients through time for a specific sample, we follow citep:&schlegel2021general and define our loss as
@@ -620,6 +641,77 @@ There are several known problems with simple recurrent units (and to a lesser ex
 
 
 Finally, to improve sample efficiency we incorporate experience replay (ER), a critical part of a deep (recurrent) system in RL citep:&mnih2015humanlevel;&hausknecht2015deep. There are two key choices here: how states are stored and updated in the buffer and how sequences are sampled citep:&kapturowski2019recurrent. We store the hidden state of the cell in the experience replay buffer as apart of the experience tuple. This is then used to initialize the state when we sample from the buffer for both the target and non-target networks. We pass back gradients to the stored state to update them along with our model parameters, see a full discussion in Section ref:sec:arnn:open-problems. We also stored a separate initial state for the beginning of episodes, which was updated with gradients. We slightly differ from the approach taken by cite:&kapturowski2019recurrent, but expect this architectural choice to have little impact on our discussion in this paper. If we sampled the beginning of an episode from the replay we used the most up to date version of this vector to initialize the hidden state. For sampling, we allowed the agent to sample states across the episode. For samples at the end of the episode, we simply use a shorter sequence length than \(\tau\).
+
+** DONE Tensors and Low-Rank Decompositions
+CLOSED: [2023-02-24 Fri 10:08]
+:PROPERTIES:
+:CUSTOM_ID: sec:bg:tensor
+:END:
+
+#  I introduce notation used in the next section as well as some details on low-rank decompositions used in some of the architectures.
+
+Before getting to the details of how we encode actions in the state-update function, first I provide the required background on Tensors. The simplest, albeit slightly inaccurate, way to describe and use a tensor is as a multi-dimensional array of numbers (either real or complex) which transform under coordinate changes in predictable ways. In this chapter, we will be considering tensors as multi-dimensional arrays using Einstein summation notation. The ith, jth, kth component of an order-3 tensor will be denoted with lower indices \(\weightmat_{ijk} \in \Reals\) with associated dimension size denoted with corresponding uppercase letters as \(\weightmat \in \Reals^{I\times J\times K}\). 
+
+Like matrices, tensors have a number of decompositions which can prove useful. For example, every tensor can be factorized using canonical polyadic decomposition (CP decomposition), which decomposes an order-N tensor \(\weightmat \in \Reals^{I_1 \times I_2 \times \ldots \times I_N}\) into N matrices as follows
+{{{c}}}
+\begin{align*}
+  \weightmat_{i_1, i_2, \ldots} &= \sum_{r=1}^R \lambda_r \weightmat^{(1)}_{i_1, r}  \weightmat^{(2)}_{i_2, r}  \ldots \weightmat^{(N)}_{i_N, r} \\
+  &= \lambda_r \weightmat^{(1)}_{i_1, r}  \weightmat^{(2)}_{i_2, r} \ldots \weightmat^{(N)}_{i_N, r} \quad \triangleright \text{Explicit summation over $r\in\{1,\ldots,R\}$.}
+\end{align*}
+{{{c}}}
+{{{c}}}
+where \(\weightmat^{(j)} \in \Reals^{I_j \times R}\), and \(R\) is the rank of the tensor. This is a generalization of matrix rank decomposition, and exists for all tensors with finite dimensions.
+
+Working with tensors takes a bit more care in deciding which fibers (generalization of row and column) the product should be over. One type of product is known as the n-mode product which is defined as follows 
+{{{c}}}
+\[
+  (\weightmat \times_n \vvec)_{i_1, i_2, \ldots, i_{n-1}, j, i_{n+1}, \ldots i_{N}}
+      = \weightmat_{i_1, i_2, \ldots, i_{n-1}, i_n, i_{n+1}, \ldots i_{N}} \vvec_{j, i_n}
+\]
+{{{c}}}
+where \(\vvec \in \Reals^{J, I_n}\).
+
+An important property, which will be used later in this chapter, are simplifications we can make when considering n-mode products with their rank decomposition. In this thesis, we only consider order 3 tensors and all further calculations will use order 3 tensors for simplicity. Specifically, \(\weightmat \in \Reals^{IJK}\), with CP-decomposition \(\weightmat_{ijk} = \lambda_{r}a_{ir}b_{jr}c_{kr}\) and vector over a strand \(\vvec^{M} = \vvec^{(1, M)} \in \Reals^{1 \times M}\)).
+{{{c}}}
+\begin{align*}
+  (\weightmat \times_2 \vvec^{J} \times_3 \vvec^{K})_{i,1,1}
+  &= \sum_{k=1}^K \left(\sum_{j=1}^J\weightmat_{ijk} \vvec^{J}_{1j}\right) \vvec^{K}_{1k} \\
+  &= \sum_{k=1}^K\sum_{j=1}^J \left(\sum_{r=1}^R\lambda_{r}a_{ir}b_{jr}c_{kr}\right) \vvec^{J}_{1j} \vvec^{K}_{1k}\\
+  &= \sum_{r=1}^R \lambda_{r} a_{ir}
+    \left(\sum_{j=1}^J b_{jr}\vvec^{J}_{1j}\right)
+    \left(\sum_{k=1}^K c_{kr}\vvec^{K}_{1k}\right)\\
+  &=  \sum_{r=1}^R \lambda_{r} a_{ir}\left(\vvec^{J} \Bmat \odot \vvec^{K} \Cmat\right)_{1r} \\
+  \weightmat \times_2 \vvec^{J} \times_3 \vvec^{K}
+  &= \boldsymbol{\lambda} \Amat \left(\vvec^{J}\Bmat \odot \vvec^{K}\Cmat\right)^\trans
+     \quad \triangleright \boldsymbol{\lambda}_{i,i} = \lambda_i
+\end{align*}
+
+Similarly to CP decomposition, Tucker rank decomposition can be used to create a similar operation. Tucker rank decomposition decomposes an order-N tensor \(\weightmat \in \Reals^{I_1 \times I_2 \times \ldots \times I_N}\) into N matrices another order-N tensor \(G \in \Reals^{R_1 \times R_2 \times \ldots \times R_N}\) as follows
+
+\begin{align*}
+  \weightmat_{i_1, i_2, \ldots i_N} &= \sum_{r_1=1}^{R_1} \sum_{r_1=1}^{R_1} \ldots
+  \sum_{r_1=1}^{R_1} g_{r_1 r_2 \ldots r_N} \weightmat^{(1)}_{i_1, r_1}
+  \weightmat^{(2)}_{i_2, r_2}  \ldots \weightmat^{(N)}_{i_N, r_N}.
+\end{align*}
+
+With similar simplifications to CP decomposition,
+
+\begin{align*}
+  (\weightmat \times_2 \vvec^{J} \times_3 \vvec^{K})_{i,1,1}
+  &= \sum_{k=1}^K \left(\sum_{j=1}^J\weightmat_{ijk} \vvec^{J}_{1j}\right) \vvec^{K}_{1k} \\
+  &= \sum_{k=1}^K\sum_{j=1}^J \left(\sum_{p=1}^P \sum_{q=1}^Q \sum_{r=1}^R g_{pqr} a_{ip} b_{jq} c_{kr}\right) \vvec^{J}_{1j} \vvec^{K}_{1k}\\
+  &= \sum_{p=1}^P \sum_{q=1}^Q \sum_{r=1}^R g_{pqr} a_{ip}
+    \left(\sum_{j=1}^J b_{jq}\vvec^{J}_{1j}\right)
+    \left(\sum_{k=1}^K c_{kr}\vvec^{K}_{1k}\right)\\
+  &= \sum_{p=1}^P \sum_{q=1}^Q \sum_{r=1}^R g_{pqr} a_{ip} \left(\vvec^{J}  \Bmat\right)_{1q} \left(\vvec^{K} \Cmat\right)_{1r} \\
+  \weightmat \times_2 \vvec^{J} \times_3 \vvec^{K}
+  &= G \times_1 \Amat^\trans \times_2 \left(\vvec^{J}\Bmat\right)^\trans \times_3 \left(\vvec^{K}\Cmat\right)^\trans \\
+  &= \Amat \left[\left(G ^\trans \times_2 \left(\vvec^{J}\Bmat\right)^\trans\right) \left(\vvec^{K}\Cmat\right)^\trans \right].
+\end{align*}
+
+One interesting property of this operation is now each of the dimensions can have a separately tuned rank, giving the system designer more discretion on where to focus representational resources.
+
+Using a lower rank approximation of a multiplicative operation has been derived before several times. A multiplicative update was used to make action-conditional video predictions in Atari [[cite:&oh2015actionconditional]].  This operation also appears in a lower-rank approximation defined by Predictive State RNN hidden state update [[cite:&downey2017predictive]], albeit never performed as well as the full rank version. We find similarly that both factorizations perform below the full tensor version (i.e. the multiplicative). We don't report results for the Tucker rank decomposition as it performed similarly to the CP decomposition. 
 
 ** DONE Architectural Designs for Incorporating Action
 CLOSED: [2023-01-18 Wed 13:57]
@@ -657,7 +749,7 @@ The second category is inspired by second-order RNNs citep:&goudreau1994firstord
   \state_t = \sigma\left(\Wmat \times_2 \xvec_{t} \times_3 \avec_{t-1}\right),  \tag*{\bf (Multiplicative)}
 \end{align*}
 {{{c}}} 
-where \(\Wmat \in \Reals^{|\state_t| \times |\xvec_t| \times |\avec_{t-1}|}\) and \(\times_n\) is the \(n\)-mode product, which we detail in Appendix \ref{app:tensors}. This type of operation is known to expand the types of functions learnable by a single layer RNN citep:&goudreau1994firstorder;&sutskever2011generating, and decreases the networks sensitivity to truncation citep:&schlegel2021general. 
+where \(\Wmat \in \Reals^{|\state_t| \times |\xvec_t| \times |\avec_{t-1}|}\) and \(\times_n\) is the \(n\)-mode product, which we detail in Appendix ref:sec:bg:tensor. This type of operation is known to expand the types of functions learnable by a single layer RNN citep:&goudreau1994firstorder;&sutskever2011generating, and decreases the networks sensitivity to truncation citep:&schlegel2021general. 
 
 While this type of update has very clear advantages, there is also a tradeoff in terms of number of parameters and potential re-learning depending on the granularity of the action representation. For example, in the Ring World experiment above the RNN cell with additive used 285 parameters with hidden state size of \(15\). The multiplicative version would have used 510 parameters with the same hidden state size. While this doesn't seem like a lot, if we compare what it would be in a domain like Atari (with 18 actions, 1024 inputs, and \(|s_t| = 1024\)) the number of parameters would be ~2 million vs ~38 million respectively. As shown below in the empirical study, the size of the state can be significantly reduced when using a multiplicative update. In any case, it would be worthwhile to develop strategies to reduce the number of parameters, which we discuss next.
 
@@ -669,7 +761,7 @@ The first way we can reduce the number of parameters is by using a low-rank appr
   \Wmat_{i_1, i_2, \ldots} &= \sum_{r=1}^\factors \lambda_r \Wmat^{(1)}_{i_1, r}  \Wmat^{(2)}_{i_2, r}  \ldots \Wmat^{(N)}_{i_N, r}
 \end{align*}
 {{{c}}}
-where \(\Wmat^{(j)} \in \Reals^{I_j \times \factors}\), \(\lambda_r \in \Reals\) is the weighting for factor \(r\), and \(\factors\) is the rank of the tensor. This is a generalization of matrix rank decomposition and exists for all tensors with finite dimensions, see Appendix \ref{app:tensors} for more details. We can make several simplifications using the properties of n-mode products. Using the  definition of the multiplicative RNN update,
+where \(\Wmat^{(j)} \in \Reals^{I_j \times \factors}\), \(\lambda_r \in \Reals\) is the weighting for factor \(r\), and \(\factors\) is the rank of the tensor. This is a generalization of matrix rank decomposition and exists for all tensors with finite dimensions, see Appendix ref:sec:bg:tensor for more details. We can make several simplifications using the properties of n-mode products. Using the  definition of the multiplicative RNN update,
 {{{c}}}
 \begin{align*}
   \Wmat \times_2 \xvec_t \times_3 \avec_{t-1}
@@ -679,10 +771,11 @@ where \(\Wmat^{(j)} \in \Reals^{I_j \times \factors}\), \(\lambda_r \in \Reals\)
 
 Previous work explored using a low-rank approximation of a multiplicative operation. A multiplicative update was used to make action-conditional video predictions in Atari citep:&oh2015actionconditional.  This operation also appears in a Predictive State RNN hidden state update citep:&downey2017predictive, albeit it never performed as well as the full rank version. Our low rank approximation is also similar to the network used in cite:&sutskever2011generating, where they mention optimization issues (which were overcome through the use of quasi-second order methods).
 
-*************** TODO [#B] Deal with deep action appendix section
+*************** DONE [#B] Deal with deep action appendix section :noexport:
+CLOSED: [2023-02-24 Fri 09:29]
 *************** END
 
-Another approach to reducing the number of parameters required---and to reduce redundant learning---by using an action embedding rather than a one-hot encoding. For example, in Pong it is known that only ~5 actions matter. By taking advantage of the structure of the action space we could potentially further reduce the number of parameters required to get these benefits. We explore this architecture briefly in Section \ref{app:sec:deep_action}. While this is an important piece of the puzzle, we do not focus on learning good action embeddings in this paper and leave it to future work.
+Another approach to reducing the number of parameters required---and to reduce redundant learning---by using an action embedding rather than a one-hot encoding. For example, in Pong it is known that only ~5 actions matter. By taking advantage of the structure of the action space we could potentially further reduce the number of parameters required to get these benefits. We explore this architecture briefly in Section ref:app:arnns:deep-action. While this is an important piece of the puzzle, we do not focus on learning good action embeddings in this paper and leave it to future work.
 
 ** DONE Empirical Questions
 CLOSED: [2023-01-18 Wed 13:57]
@@ -691,7 +784,7 @@ CLOSED: [2023-01-18 Wed 13:57]
 :END:
 
 
-#+caption: The illustrative environments used in Section \ref{sec:learnability} and Section \ref{sec:control} respectively. (*left*) The Ring World environment with 6 states is depicted, where the observation the agent receives is denoted in each of the circles, available actions denoted by the red arrows, and the agent's current location denoted by a double line. (*right*) The base TMaze environments are depicted with the available actions denoted below and labeled according to the Bakker's TMaze and Directional TMaze used in Section \ref{sec:control}.
+#+caption: The illustrative environments used in Section ref:sec:arnn:learnability and Section ref:sec:arnn:control respectively. (*left*) The Ring World environment with 6 states is depicted, where the observation the agent receives is denoted in each of the circles, available actions denoted by the red arrows, and the agent's current location denoted by a double line. (*right*) The base TMaze environments are depicted with the available actions denoted below and labeled according to the Bakker's TMaze and Directional TMaze used in Section ref:sec:arnn:control.
 #+name: fig:arnn:envs
 [[./plots/arnns/figures/environments.pdf]]
 
@@ -707,7 +800,7 @@ There are several properties we are interested in when analyzing the learning ca
 
 *Question 2:*
 
-The second question is more straightforward than the first, and requires a complete empirical investigation of all the variants on a set of problems with a diverse set of underlying dynamics and characteristics. You can see this question as an extension of the hypothesis implied by Figure \ref{fig:ring_world_example} and cite:&schlegel2021general:
+The second question is more straightforward than the first, and requires a complete empirical investigation of all the variants on a set of problems with a diverse set of underlying dynamics and characteristics. You can see this question as an extension of the hypothesis implied by Figure ref:fig:arnn:ring-world-example and cite:&schlegel2021general:
 {{{c}}}
 \begin{quote}
   The multiplicative update outperforms the other variants in the reinforcement learning setting for both control and prediction.
@@ -718,10 +811,11 @@ While we cannot confirm the above hypothesis empirically, if question 2 is affir
 
 *Other details:*
 
-*************** TODO [#B] Deal with ARNN appendix empirical section
+*************** DONE [#B] Deal with ARNN appendix empirical section :noexport:
+CLOSED: [2023-02-24 Fri 09:28]
 *************** END
 
-In all control experiments, we use an \(\epsilon\)-greedy policy with \(\epsilon=0.1\). All networks are initialized using a uniform Xavier strategy citep:&glorot2010understanding, with the multiplicative operation independently normalizing across the action dimension (i.e. each matrix associated with an action in the tensor is independently sampled using the Xavier distribution). Unless otherwise stated, we performed a hyperparameter search for all models using a grid search over various parameters (listed appropriately in the Appendix \ref{app:emp}). To best to our ability we kept the number of hyperparameter settings to be equivalent across all models, except the factored variants which use several combinations of hidden state size and number of factors. The best settings were selected and reported using independent runs with seeds different from those used in the hyperparameter search, unless otherwise specified. We controlled all the network sizes such that they had an approximately equal number of free parameters. All final network sizes can be found in Appendix \ref{app:emp}.
+In all control experiments, we use an \(\epsilon\)-greedy policy with \(\epsilon=0.1\). All networks are initialized using a uniform Xavier strategy citep:&glorot2010understanding, with the multiplicative operation independently normalizing across the action dimension (i.e. each matrix associated with an action in the tensor is independently sampled using the Xavier distribution). Unless otherwise stated, we performed a hyperparameter search for all models using a grid search over various parameters (listed appropriately in the Appendix ref:app:arnns:emp). To best to our ability we kept the number of hyperparameter settings to be equivalent across all models, except the factored variants which use several combinations of hidden state size and number of factors. The best settings were selected and reported using independent runs with seeds different from those used in the hyperparameter search, unless otherwise specified. We controlled all the network sizes such that they had an approximately equal number of free parameters. All final network sizes can be found in Appendix ref:app:arnns:emp.
 
 All experiments were run using an off-site cluster.
 In total, for all sweeps and final experiments we used \(\sim 20\) cpu years, which was approximated based off the logging information used by the off-site cluster. 
@@ -813,9 +907,9 @@ In this section, we investigate learning behavior in two environments with sligh
 #   \caption{{\bf (left)} Bakker's TMaze box plots and violin plots over the performance averaged over the final $10\%$ with 50 independent runs. Trained over 300k steps with $\tau=10$. All GRUs use a state size 6, while RNNs use a state size 20. The deep additive used an action encoding of $|\avec|=4$. {\bf (right)} Directional TMaze comparison over the performance averaged over the final $10\%$ of episodes with 100 independent runs trained over 300k steps with $\tau=12$ for CELL (hidden size): RNN (30), AARNN (30), MARNN (18), DARNN (25, $|\avec|=15$), GRU (17), AAGRU (17), MAGRU (10), DAGRU (15, $|\avec|=8$).} 
 # \end{figure}
 
-Our control agents are constructed similarly to those used in the Ring World environment. The agent's network is a single recurrent layer followed by a linear layer. We perform a sweep over the size of the hidden state and learning rates, and selected all variants of a cell type to have the same value. We train our network over 300000 steps with further details reported in appendix ref:app:emp_tm. We report the learned policy's performance over the final \(10\%\) of episodes by averaging the agent success in reaching the correct goal. We report our results using a box and whisker plot with the distribution. The upper and lower edges of the box represent the upper and lower quartiles respectively, with the median denoted by a line. The whiskers denote the maximum and minimum values, excluding outliers which are marked.
+Our control agents are constructed similarly to those used in the Ring World environment. The agent's network is a single recurrent layer followed by a linear layer. We perform a sweep over the size of the hidden state and learning rates, and selected all variants of a cell type to have the same value. We train our network over 300000 steps with further details reported in appendix ref:app:arnns. We report the learned policy's performance over the final \(10\%\) of episodes by averaging the agent success in reaching the correct goal. We report our results using a box and whisker plot with the distribution. The upper and lower edges of the box represent the upper and lower quartiles respectively, with the median denoted by a line. The whiskers denote the maximum and minimum values, excluding outliers which are marked.
 
-Shown in Figure ref:fig:arnn:tmazes (left), all the cells have similar median performance with the GRU (with no action input) performing the best with the least amount of spread. This conclusion is the same across the size of the hidden state, where the multiplicative and factored variants performed poorly (see Appendix ref:app:emp for factored results). While this initially suggests the action embedding is not important beyond our simple Ring World experiment, notice the difference in how the environment's dynamics interact with the agent's action. In the TMaze, the underlying position of the agent is affected by only two of the actions (the East and West action), while the North and South actions only transition to a different state at the very end of the maze. Also, the agent's actions do not affect needs to be remembered, no matter what trajectory the agent sees the meaning of the first observation is always the same. Thus, these results are much less surprising. For example, the multiplicative variants will have to learn the update dynamics multiple times for the North and South actions.
+Shown in Figure ref:fig:arnn:tmazes (left), all the cells have similar median performance with the GRU (with no action input) performing the best with the least amount of spread. This conclusion is the same across the size of the hidden state, where the multiplicative and factored variants performed poorly (see Appendix ref:app:arnns for factored results). While this initially suggests the action embedding is not important beyond our simple Ring World experiment, notice the difference in how the environment's dynamics interact with the agent's action. In the TMaze, the underlying position of the agent is affected by only two of the actions (the East and West action), while the North and South actions only transition to a different state at the very end of the maze. Also, the agent's actions do not affect needs to be remembered, no matter what trajectory the agent sees the meaning of the first observation is always the same. Thus, these results are much less surprising. For example, the multiplicative variants will have to learn the update dynamics multiple times for the North and South actions.
 
 #+caption: Sensitivity curves over number of factors \(\factors\) with standard error for the *(top)* FacRNN (30) and *(bottom)* FacGRU (17). All agents were trained over 300k steps. See Appendix ref:app:emp_dtm for sweeps over different state sizes. We use the data generated by a sweep over the learning rate with 40 runs and compare to the data in figure ref:fig:arnn:tmazes. The red labels on the x-axis indicate when the network has the same number of parameters as the multiplicative.
 #+name: fig:arnn:dirtmaze-fac
@@ -831,7 +925,7 @@ Shown in Figure ref:fig:arnn:tmazes (left), all the cells have similar median pe
 To better replicate these dynamics in TMaze we add a direction component to the underlying state. For example, many robotics systems must be able to orient and turn to progress in a maze, which we hypothesize actions will be critical for modeling the state.  The agent can take an action moving forward, turning clockwise, or turning counter-clockwise. Instead of the observations only being a function of the position, the agents direction plays a critical role. In the first state, the agent receives the goal observation \([1, 1, 0]\) when facing the wall corresponding to the goal's direction. All other walls have the observation \([0, 1, 0]\), and when not facing a wall the agent receives the observation \([0, 0, 1]\). In DirectionalTMaze the agent is forced to contextualize its observation by the action it takes before or after seeing the observation. We evaluate the state updates using the same settings as in the TMaze with results reported in Figure ref:fig:arnn:tmazes (right).
 
 
-Now that the agent must be mindful of its orientation, the action again becomes a critical component in learning. We see the multiplicative variants outperforming all other variants in this domain. Without action, the GRU and RNN are unable to learn, and even the additive and deep additive versions are unable to learn in 300000 steps. We also sweep over the number of factors and report the performance compared to the multiplicative and additive variants as shown in Figure ref:fig:arnn:dirtmaze-fac}. We found that as the factors increase, generally the performance increases as well. This matches our expectations, as with increased factors the factored variants should better approximate the multiplicative variances. But there is a tradeoff when adding too many factors, causing performance to decrease substantially. While the factored variant has some interesting properties, we decide to focus the remaining experiments using the base architectures (NA, MA, AA, DA) and report full results with the factored variant in Appendix ref:app:emp.
+Now that the agent must be mindful of its orientation, the action again becomes a critical component in learning. We see the multiplicative variants outperforming all other variants in this domain. Without action, the GRU and RNN are unable to learn, and even the additive and deep additive versions are unable to learn in 300000 steps. We also sweep over the number of factors and report the performance compared to the multiplicative and additive variants as shown in Figure ref:fig:arnn:dirtmaze-fac}. We found that as the factors increase, generally the performance increases as well. This matches our expectations, as with increased factors the factored variants should better approximate the multiplicative variances. But there is a tradeoff when adding too many factors, causing performance to decrease substantially. While the factored variant has some interesting properties, we decide to focus the remaining experiments using the base architectures (NA, MA, AA, DA) and report full results with the factored variant in Appendix ref:app:arnns.
 
 ** DONE Combining Cell Architectures
 CLOSED: [2023-01-20 Fri 15:45]
@@ -864,11 +958,11 @@ We compare these combinations to the original architectures in TMaze and Directi
 ** DONE Learning State Representations from Pixels
 CLOSED: [2023-01-20 Fri 15:49]
 
-Finally, we perform an empirical study in two environments with non-binary observations. We are particularly interested in whether the recurrent architectures perform comparably when the observation needs to be transformed by fully connected layers, or when the observation is an image. We only use the GRU cells in these experiments. Full details can be found in Appendix ref:app:emp.
+Finally, we perform an empirical study in two environments with non-binary observations. We are particularly interested in whether the recurrent architectures perform comparably when the observation needs to be transformed by fully connected layers, or when the observation is an image. We only use the GRU cells in these experiments. Full details can be found in Appendix ref:app:arnns:emp.
 
 The first domain we consider is a version of DirectionalTMaze which uses images instead of bit observations. The agent receives a gray scale image observation on every step of size \(28\times28\). The agent sees a fully black screen when looking down the hallway, and a half white half black screen when looking at a wall. The agent observes an even (or odd) number sampled from the MNIST citep:&lecun2010mnist dataset when facing the direction of (or opposite of) the goal. The  rewards are -1 on every step and 4 or -4 for entering the correct and incorrect goal position respectively. We report the same statistic as in the prior TMaze environments, with the environment size set to 6. Notice the hallway size is smaller and the negative reward is larger, this was to speed up learning for all architectures.
 
-Results for the Image DirectionalTMaze can be seen in Figure ref:fig:arnn:scaling-up}. In this domains, the multiplicative performs quite well, although not as well as in the simple version. The AAGRU is unable to learn in this setting, and the deep additive variant performs slightly better than the additive.
+Results for the Image DirectionalTMaze can be seen in Figure ref:fig:arnn:scaling-up. In this domains, the multiplicative performs quite well, although not as well as in the simple version. The AAGRU is unable to learn in this setting, and the deep additive variant performs slightly better than the additive.
 
 #+caption: *(left)* Image Directional TMaze percent success over the final \(10\%\) of episodes for 20 runs for CELL (hidden size): AAGRU (70), MAGRU (32), DAGRU (45, \(|\avec| = 128\)). Using ADAM trained over 400k steps, \((\tau = 20)\). GRU omitted due to prior performance. *(center) Lunar Lander average reward over all episodes for CELL (hidden size): GRU (154), AAGRU (152), MAGRU (64), DAGRU (152, \(|\avec|=64\)) and \((\tau = 16)$. {\bf (right)} Lunar Lander learning curves over total reward. Ribbons show standard error and a window averaging over 100k steps was used. Lunar Lander agents were trained for 20 independent runs for 4M steps.
 #+name: fig:arnn:scaling-up
@@ -885,9 +979,30 @@ Results for the Image DirectionalTMaze can be seen in Figure ref:fig:arnn:scalin
 ** DONE Learning State Representations from Agent-Centric Sensors
 CLOSED: [2023-01-23 Mon 12:56]
 
-The second domain is a partially observable version of the LunarLander-v2 environment from OpenAI Gym cite:&brockman2016openai. The goal is to land a lander on the moon within a landing area. Further details and results can be found in Appendix ref:app:emp_ll. To make the observation partially we remove the anglular speed, and we filter the angle \(\theta\) such that it is 1 if \(-7.5 \le \theta \le 7.5\) and 0 otherwise. We report the average reward obtained over all episodes, and learning curves.
+The second domain is a partially observable version of the LunarLander-v2 environment from OpenAI Gym cite:&brockman2016openai. The goal is to land a lander on the moon within a landing area. Further details and results can be found in Appendix ref:app:arnns:emp. To make the observation partially we remove the anglular speed, and we filter the angle \(\theta\) such that it is 1 if \(-7.5 \le \theta \le 7.5\) and 0 otherwise. We report the average reward obtained over all episodes, and learning curves.
 
-As seen in Figure ref:fig:arnn:scaling-up, our findings generalize to this domain as well. The multiplicative variant improves over the factored (see Appendix ref:app:emp, additive, and deep additive variants significantly. In the LunarLander environment the multiplicative learns faster, reaching a policy which receives on average 100 total reward per episode. Both the additive and factored eventually learn similar policies, while the standard GRU seems to perform less well (although not statistically significant from the additive variant). The average return is ~100 less than some of the best agents on this domains. When we look at the individual median curves we see the agent does this well \(50\%\) of the time (see Appendix ref:app:emp). This difference can be explained by the failure start states being more frequent than in the fully observed case.
+As seen in Figure ref:fig:arnn:scaling-up, our findings generalize to this domain as well. The multiplicative variant improves over the factored (see Appendix ref:app:arnns), additive, and deep additive variants significantly. In the LunarLander environment the multiplicative learns faster, reaching a policy which receives on average 100 total reward per episode. Both the additive and factored eventually learn similar policies, while the standard GRU seems to perform less well (although not statistically significant from the additive variant). The average return is ~100 less than some of the best agents on this domains. When we look at the individual median curves in Figure ref:fig:arnn:lunar-median we see the agent does this well \(50\%\) of the time. This difference can be explained by the failure start states being more frequent than in the fully observed case.
+
+\begin{figure}
+  \centering
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_gru.pdf}
+      \caption{GRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_magru.pdf}
+      \caption{MAGRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_aagru.pdf}
+      \caption{AAGRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_daagru.pdf}
+      \caption{DAAGRU}
+    \end{subfigure}
+  \caption{Individual learning curves. Line is the median over 1000 episodes, with the shaded region as the 1st and 3rd quantile over the same window.} \label{fig:arnn:lunar-median}
+\end{figure}
 
 ** DONE Summary and Conclusions
 CLOSED: [2023-01-23 Mon 12:57]
@@ -895,11 +1010,14 @@ CLOSED: [2023-01-23 Mon 12:57]
 This chapter empirically evaluated several strategies for incorporating the previous action into the state update of a recurrent neural network.
 The impact of this choice was shown to have a large impact on an RL agent's performance in several environments from several observation types. These empirical results suggest that the multiplicative operation performs the best even when using a smaller state vector, and the factored and the deep additive versions perform marginally better than the additive versions in most domains.
 
-While the multiplicative seems to be the clear winner on the tested domains, it is important to note not all domains require this architecture. One interesting strategy could be to use the softmax combined cells to decide which cell to use in your final architecture (by looking at the softmax weighting). One could also imagine an architecture which is able to learn which cell to use conditioned on the history of the agent (see Section ref:app:sec:learning_bias). Until better architectures for RL are defined this choice is left to system designers. While the additive and deep additive versions under-performed compared to the other encodings, it still out-performed naively using RNNs without action input.
+While the multiplicative seems to be the clear winner on the tested domains, it is important to note not all domains require this architecture. One interesting strategy could be to use the softmax combined cells to decide which cell to use in your final architecture (by looking at the softmax weighting). One could also imagine an architecture which is able to learn which cell to use conditioned on the history of the agent (see Section ref:sec:conc:arnnbias). Until better architectures for RL are defined this choice is left to system designers. While the additive and deep additive versions under-performed compared to the other encodings, it still out-performed naively using RNNs without action input.
 
-What is apparent in these experiments and other empirical evidence recently gathered on the performance of recurrent architectures in the online setting citep:&rafiee2022eyeblinks;&schlegel2021general is that the methods and architectures developed and utilized by supervised learning might not be suitable for the reinforcement learning problem. This paper uncovered a simple choice can have a large impact, and provides some evidence that the assumptions made in supervised learning might be holding back recurrent architectures in the reinforcement learning setting (see Appendix ref:app:arch_choice for details). Small, focused studies using recurrent agents in controlled experiments will continue to produce insights on the limitations of the base algorithms and continue to inspire future algorithm developments.
+What is apparent in these experiments and other empirical evidence recently gathered on the performance of recurrent architectures in the online setting citep:&rafiee2022eyeblinks;&schlegel2021general is that the methods and architectures developed and utilized by supervised learning might not be suitable for the reinforcement learning problem. This paper uncovered a simple choice can have a large impact, and provides some evidence that the assumptions made in supervised learning might be holding back recurrent architectures in the reinforcement learning setting (see Section  [[ref:sec:conc:arnn:open-problems]] for details). Small, focused studies using recurrent agents in controlled experiments will continue to produce insights on the limitations of the base algorithms and continue to inspire future algorithm developments.
 
 * General Value Function Networks
+:PROPERTIES:
+:CUSTOM_ID: chap:gvfn
+:END:
 
 
 In this chapter, we introduce a predictive state representation approach known as General Value Function Networks. In short, these networks constrain the state of a recurrent network to answer predictive questions in the form of GVFs. In later chapters we will derive a set of learning algorithms for these architectures (Chapter ref:chap:gvfn:algs), and then empirical evaluate these architectures along several dimensions (Chapter ref:chap:gvfn:empirical).
@@ -1984,6 +2102,106 @@ Figure \ref{fig:ring} shows the results of the Ring World experiments for trunca
 
 This chapter contains some initial evidence to the effect of using GVFs to constrain the state of a recurrent network. While this provides some evidence for the /Prediction Representation hypothesis/, we do not perform a explicit test of this hypothesis. While these experiments show the initial promise of the GVFN approach to learning a state-update function, they are not extensive. In all the empirical results, the agent's were trained in a sequential manner without experience replay buffers. This possibly limited the performance possible for both the RNNs and GVFNs. The results also relied on hand designed GVFs. While several networks used simple heuristics to construct a collection of GVFs, it is yet to be tested whether these results generalize beyond the simple bit domains and synthetic forecasting domains used here.
 
+* DONE Composite General Value Functions
+CLOSED: [2023-02-22 Wed 14:34]
+:PROPERTIES:
+:CUSTOM_ID: chap:composite
+:END:
+
+In Chapter ref:chap:gvfn:empirical, I explored several hand designed network configurations. This lead to several observations, including compositional GVFs have considerable representational power if the predictive questions can be answered. In the following Chapter, I focus on the open question of "what do GVFs composed together in chains predictively represent?" While I don't answer this question conclusively for all possible chains GVFs, I provide explorations for two important types of composite GVFs: those which have constant discounts, and those which have terminating discounts.
+
+Learning predictions of any real-valued signal the agent has access to also opens the possibility of asking compositional predictive questions [[cite:&white2015developing]]. A compositional question is one whose target is dependent on another prediction internal to the agent. Compositions expand the possible range of predictive questions we can specify as a GVF [[cite:&sutton2005temporaldifference;&rafols2006temporal;&zheng2021learning;&white2015developing;&schlegel2021general]]. While this may suggest the GVF framework is limited in what questions can be asked, the limitations are necessary so the predictions can be trained /independent of span/ [[cite:&vanhasselt2015learning]]. Learning independent of span means the target can be learned using online algorithms regardless of the effective horizon of the prediction. Adding layers of compositional questions have improved the learning in predictive representations [[cite:&rafols2006temporal;&schlegel2021general]], and improved the performance of deep reinforcement learning through auxiliary tasks [[cite:&zheng2021learning]]. In the automatic specification of learning targets compositions are thought to provide a way for the agent to build complexity [[cite:&schlegel2021general;&veeriah2019discovery;&zheng2021learning;&kearney2022what]], but often these architectures don't leverage compositions for stability concerns [[cite:&tanner2005temporal;&tanner2005td;&schlegel2017stable;&schlegel2021general]]. 
+
+
+As well as improving behavior empirically, compositions can provide semantic depth. An excellent example of this can be seen in option-extended temporal difference networks [[cite:&rafols2006temporal]], and later explored again in [[cite:&schlegel2021general]]. The example is centered in an environment where the agent has a low-powered visual sensor and needs to learn its directionality from the painted walls. Each cardinal direction has a different colored wall. The first layer of predictions the agent makes is to predict what color it will observe if it were to drive straight. The second layer are myopic predictions which ask what the first layer's prediction will be after turning clockwise (or counter-clockwise). The second layer allows the agent to predict which walls are to its sides as well as the wall in the direction the agent is facing. These predictions cannot be specified in the usual GVF framework, but can be easily constructed through compositions. While this may be ``repeated information'' in a sense, the extra learning objectives makes the learning properties of the predictive representation better as compared to other specifications [[cite:&schlegel2021general]].
+
+As algorithms for the automatic discovery of complex question networks continue to push the boundaries of what questions are considered by the agent, the properties of compositions should be better studied. When searching for what to learn the questions an agent eventually retains will be dependent on the agent's ability to learn the predictions. While it is clear questions that naturally diverge (say setting the discount $\gamma=1$) should be avoided, other problems, such as the scale of a target, could be equally as problematic when using function approximation (i.e. end-to-end neural networks). This could mean important predictions are disregarded because the agent is unable to learn the answer without proper strategies to normalize the prediction's magnitude. Better strategies for learning and normalizing predictive targets will come from understanding the effective discount schedule (or emphasis) compositional predictions will have on the targets.
+
+In this chapter, I consider the effect of compositions on the sequence of discounts, and relegate the effect of off-policy importance weights to future work. I first analyze the sequence of discounts over any number of compositions and constant discounts. I then analyze this sequence to better understand how it emphasizes parts of the data stream. Surprisingly, the effective discount for constant discount compositions have a form which can be described analytically. While this does not include the full spectrum of discount functions, it provides a first step towards understanding compositions. Next I evaluate more complex state-dependent discount functions using a simple consistent sequence and two timeseries datasets in empirical simulations. In these simulations we focus on the effect of applying the same discount function a large number of times, looking to see if the shape of the returns become regular over the compositions.
+{{{c}}}
+{{{c}}}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{plots/compgvfs/seq_plus_cw.pdf}
+  \caption{(\textbf{left}) The effective discount for $n$ compositions
+    normalized by the maximum value found in section
+    \ref{sec:compgvfs:analyze}. (\textbf{middle, right}) The cycle world
+    simulations, with top graph as the cumulant and subsequent plots
+    $n$ compositions with constant and terminating discounts
+    respectively.} \label{fig:compgvfs:seq-cw}
+\end{figure}
+
+** Analyzing the sequence 
+:PROPERTIES:
+:CUSTOM_ID: sec:compgvfs:analyze
+:END:
+
+In this section, we restrict to the setting where we have an infinite sequence of sensor readings $\mathbf{x} = \{x[0], x[1], \ldots,
+x[t], \ldots, x[\infty]\}$ where $x[i] \in [x_{\text{min}} , x_{\text{max}}]$ and a constant discount $\gamma$. The return of this signal starting at a time step $t$ is
+{{{c}}}
+$V[t] = \sum_{k=0}^\infty x[k] \gamma[k-t]$
+{{{c}}}
+where $\gamma[k] = \gamma^{k-1}$ for $k >= 1$ and $0$ otherwise. This framing of the return is slightly different from the typical presentation. Specifically, we reinterpret the return as a convolution beteween $\gamma$ and $x$ [fn:: In digital signal processing [[cite:&oppenheim2010discrete]] often the convolution, in this case $\gamma$, is mirrored across $t$ and the inifinte sequence of sensor readings is $\mathbf{x} = \{x[-\infty], \ldots, x[t], \ldots, x[\infty]\}$. The corresponding convolution would be $V[t] = \sum_{k=-\infty}^\infty x[k] \gamma[t-k]$ which would change how we define the sequence of $\gamma$. To be consistent with the reinforcement learning literature, we don't follow this here and instead implicitly define $\gamma$ as the mirrored version and only consider the sequence starting at $k=0$.]
+and shift the discount sequence over the sensor readings. This implicitly defines an infinite sequence of predictions $V[t]$. In the above equation, if we replace the sequence $x$ with the sequence of predictions $V$, we get a new set of predictions and for any number of compositions $n$ we have
+{{{c}}}
+$V^n[t] = \sum_{k=0}^\infty V^{n-1}[k] \gamma[k-t]$.
+{{{c}}}
+Expanding this equation we can define the general sequence of effective discounts for $n$ compositions and the corresponding return as
+{{{c}}}
+{{{c}}}
+\[
+  \gamma^n[k] = \begin{cases}
+    0 \quad \mbox{ if } k < n \\
+    \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} \gamma^{k - n}
+  \end{cases} \quad\quad V^n[t] = \sum_{k=0}^\infty x[k] \gamma^n[k - t]
+\]
+{{{c}}}
+where $\gamma^1[k] = \gamma[k]$ defined above and $V^n[t]$ is the target of the $n$th composition at timestep $t$. For any value $n$ there are two sequences multiplied together. The original discounting shifted by the number of applications $\gamma^1[k-n]$ and a diverging series
+{{{c}}}
+\[
+  Q^n[k] = \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} = \frac{\Gamma(k)}{\Gamma(k-n+1)\Gamma(n)}
+\]
+{{{c}}}
+where $\Gamma(k) = (k-1)!$ for $k \in \mathbb{Z}$ is known as the Gamma function, and can be used to analyze the function with $k \in \mathbb{R}$.
+
+We know for any particular application of the convolution $\gamma$ on a series with known domain $[x_{\text{min}} , x_{\text{max}}]$ the value function can take values bounded by $V^1[t] \in [\frac{x_{\text{min}}}{1-\gamma}, \frac{x_{\text{max}}}{1-\gamma}]$. This extends to $n$ compositions in a straightforward way where the range of the value function becomes $V^n[t] \in [\frac{x_{\text{min}}}{(1-\gamma)^n}, \frac{x_{\text{max}}}{(1-\gamma)^n}]$. While normalizing the value function to take values within in the range $[0,1]$ has been used in various settings [[cite:&schlegel2021general]], as we add more compositions we see the effective range of values shrinking considerably.
+
+Given the effective discounting sequence above, we can begin to piece together the which observations are emphasized in the predictions. The first 100 steps of the effective discount function for several values of $n$ can be seen in figure ref:fig:compgvfs:seq-cw. These sequences are normalized to be in the range $[0,1]$ for a visual comparison. The emphasis becomes increasingly spread as $n$ increases, with the peak of this function moving further to the future at a consistent rate.
+
+To find the maximum value we take the derivative of the log of the sequence with respect to $k$ getting
+{{{c}}}
+\[\frac{\delta}{\delta k} \ln \gamma^n[k] = \psi(k) - \psi(k-n+1) + \ln\gamma\]
+{{{c}}}
+where $\psi(z+1) = H_{z} - C$ is the digamma function, $H_{z} = \sum_{i=1}^z \frac{1}{i} \leq \int_{1}^z \frac{1}{x} dx = ln(z)$ is the Euler harmonic number, and $C$ is the Euler-Mascheroni constant. Using the approximation above, we can find where we should expect the maximal value is (to an approximation) $k = hn - (h-1)=h(n-1)+1$, where $h=\frac{1}{1-\gamma}$ is sometimes known as the horizon of discount $\gamma$. Of course this is an approximation from above and the real value falls in $k \in [h(n-1), h(n-1) + 1)]$.
+
+** Empirical observations
+
+While we can describe the effective discount for composing constant discount predictions, the same techniques are difficult to apply to a non time-invariant discount (i.e. state-dependent discounts [[cite:&white2015developing;&white2017unifying;&sutton2011horde]]). Instead, in this section we look at the ideal returns of various signals using constant discounting and a terminating discounting functions. We use three datasets moving from highly synthetic to real-world robot sensori-motor data. The goal of this section is to show the non-intuitive behavior of compositions to motivate further analysis and exploration. All code can be found at \url{https://github.com/mkschleg/CompGVFs.jl}. Below $\gamma = 0.9$ unless otherwise stated.
+{{{c}}}
+{{{c}}}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{plots/compgvfs/mso_cb.pdf}
+  \caption{(\textbf{left two}) Returns of the multiple sinusoidal
+    oscillator (MSO) synthetic data set with constant and terminating
+    discount respectively. The gray vertical lines are where the
+    return terminates. (\textbf{right two}) Returns of Critterbot
+    data set over the light3 sensor with constant and terminating
+    discount respectively.} \label{fig:compgvfs:critterbot}
+\end{figure}
+{{{c}}}
+{{{c}}}
+The first series is based off the cycle world, where the agent observes a sequence of a single active bit followed by $9$ inactive bits, where the length of the sequence is $m=10$. The cumulant is the observation itself, and in this report we learn using TD($\lambda=0.9$) with learning rate $\alpha=0.1$ and an underlying tabular representation where each component is the place in the sequence. We learn two chains of compositions. The first is that of the continuous discounting described above, and the second is a series of discounts which terminate (i.e. $\gamma[t]=0$) when the observation is active. The predictions of a single run can be seen in figure ref:fig:compgvfs:seq-cw. For the constant discount, as the number of compositions increases we see the prediction sequence converge to what looks to be a sinusoid with frequency of $10$, and amplitude driven by the analysis above. We expect this to be the case following from the central limit theorem. For the terminating discount, the wave form is more interesting. The first layer of predictions look very similar to the constant discount with amplitude shifted by $\frac{\gamma^{m}}{1 - \gamma^{m}}$. But as there are more compositions the effect seems to be the prediction is at its height farther away from the active bit. As the agent gets closer to the observation, the sequence of summed values is shorter leading to smaller values. Given the sequence we use it is easy to mistake this as the agent creating a trace of the cumulant, but we must remember the prediction is about future cumulants.
+
+Next we use a subset of the Critterbot dataset [[cite:&modayil2014multitimescale;&white2015developing]], focusing on light sensor 3 in figure ref:fig:compgvfs:critterbot. This gives a sequence of spikes similar to the cycle world sequence and a long pause in-between consistent saturations of the light sensor. We are able to see with the current setting the predictions look more like shifted and spread spikes. But with many more compositions, the return reverts to a similar form as before. The terminating discounts (with termination at sensor saturation $x[t+1] > 0.99$) provides a nice demonstration of how the returns are predicting the signal, just with a decaying prediction instead of the usual growing prediction. The results are similar in the multiple sinusoidal oscillator [[cite:&jaeger2004harnessing]]. We use a slightly different terminating discount where the return terminates when the previous normalized prediction is $y^{n-1}[t+1] > 0.9$ rather than when the observation is saturated. While there are decays as the MSO sequence peaks, as we increase the depth of the composition, these periods are less frequent. Deep compositions may indicate parts of the sequence where there are fewer saturations in the original sequence.
+
+** Future Directions
+
+This work suggests a number of interesting research directions and questions. While we mostly analyzed the sequence on discrete steps and applications of the filter, the general form does lend itself to continuous and complex values of $n$ and $k$. In a similar vein, we focused on real valued exponential discounting while several discounting schemes exist which could be applied to our formulation. We are particularly interested in complex discounting [[cite:&deasis2018predicting]] and hyperbolic discounting [[cite:&ainslie1992hyperbolic;&fedus2019hyperbolic]]. Applying a diverse set of discounting schemes in compositions provide an interesting way to extend the power of value functions while maintaining learnability through efficient algorithms like temporal-difference learning. 
+
+The approach used in this paper is unable to analyze state-dependent discount functions. One way around this might be in analyzing truncated sequences and taking an expectation over a distribution of sequence lengths. This might lead to a expected effective discounting sequence, but how this will interact with an underlying Markov process is unclear. This is an important next step for understanding the effects of compositions in general value functions, and could also help in analyzing off-policy compositions.
+
+Finally, the return can be re-interpreted as a convolution over the infinite sequence of observations. While this interpretation was only used to better the notation in this manuscript, further connections to convolutions and digital signal processing should be explored. Better filter designs might inspire different discounting schedules to squeeze more information from the data stream. We also have only analyzed these convolutions in the time domain. The frequency domain might give us more insight into how consistent signals like the cycle world dataset will be effected by compositions. 
 * Discovery of GVFNs through Generate and Test
 :PROPERTIES:
 :CUSTOM_ID: chap:gvfn:discovery
@@ -2071,111 +2289,6 @@ Another issue is the proxy used to determine a prediction's usefulness. Currentl
 ** Heuristics to specify GVFNs
 Through testing GVFNs in several domains we have developed some rules of thumb for choosing GVFs which can be used today. In our time-series experiments, we found selecting GVFs with constant \(\gammaj{j} \in [1 - 2^{-j}]\) to be surprisingly effective across the settings with fixed policies---namely the time series datasets. This is encouraging as these specifications on the surface seem simpler to discover than something as complex as the Expert network in Compass World. A set of discounts selected linearly across a range was also effective. We also found that including GVFs which have a pseudo-termination at a known event (known due to expert knowledge) and a cumulant which is only active at this event improved learning performance considerably (see the performance of the Terminating-Horizon network in Section ref:sec:gvfn:emp:poorlyspecified).
 
-
-* DONE Composite General Value Functions
-CLOSED: [2023-02-22 Wed 14:34]
-:PROPERTIES:
-:CUSTOM_ID: chap:composite
-:END:
-
-In Chapter ref:chap:gvfn:empirical, I explored several hand designed network configurations. This lead to several observations, including compositional GVFs have considerable representational power if the predictive questions can be answered. In the following Chapter, I focus on the open question of "what do GVFs composed together in chains predictively represent?" While I don't answer this question conclusively for all possible chains GVFs, I provide explorations for two important types of composite GVFs: those which have constant discounts, and those which have terminating discounts.
-
-
-# Reinforcement learning is built on predicting the effect of behavior on future observations and rewards. Many of our algorithms learn predictions of a cumulative sum of (discounted) future rewards, which is used as a bedrock for learning desirable policies. While reward has been the primary predictive target of focus, TD models [[cite:&sutton1995td]] lay out the use of temporal-difference learning to learn a world model through value function predictions. Temporal-difference networks [[cite:&tanner2005thesis;&sutton2005temporaldifference]] take advantage of this abstraction and build state and representations through predictions. [[citeauthor:&sutton2011horde]] ([[citeyear:&sutton2011horde]]) and [[citeauthor:&white2015developing]] (citeyear:&white2015developing) further the predictive perspective by developing a predictive approach to building world knowledge through general value functions (GVFs).
-
-Learning predictions of any real-valued signal the agent has access to also opens the possibility of asking compositional predictive questions [[cite:&white2015developing]]. A compositional question is one whose target is dependent on another prediction internal to the agent. Compositions expand the possible range of predictive questions we can specify as a GVF [[cite:&sutton2005temporaldifference;&rafols2006temporal;&zheng2021learning;&white2015developing;&schlegel2021general]]. While this may suggest the GVF framework is limited in what questions can be asked, the limitations are necessary so the predictions can be trained /independent of span/ [[cite:&vanhasselt2015learning]]. Learning independent of span means the target can be learned using online algorithms regardless of the effective horizon of the prediction. Adding layers of compositional questions have improved the learning in predictive representations [[cite:&rafols2006temporal;&schlegel2021general]], and improved the performance of deep reinforcement learning through auxiliary tasks [[cite:&zheng2021learning]]. In the automatic specification of learning targets compositions are thought to provide a way for the agent to build complexity [[cite:&schlegel2021general;&veeriah2019discovery;&zheng2021learning;&kearney2022what]], but often these architectures don't leverage compositions for stability concerns [[cite:&tanner2005temporal;&tanner2005td;&schlegel2017stable;&schlegel2021general]]. 
-
-
-As well as improving behavior empirically, compositions can provide semantic depth. An excellent example of this can be seen in option-extended temporal difference networks [[cite:&rafols2006temporal]], and later explored again in [[cite:&schlegel2021general]]. The example is centered in an environment where the agent has a low-powered visual sensor and needs to learn its directionality from the painted walls. Each cardinal direction has a different colored wall. The first layer of predictions the agent makes is to predict what color it will observe if it were to drive straight. The second layer are myopic predictions which ask what the first layer's prediction will be after turning clockwise (or counter-clockwise). The second layer allows the agent to predict which walls are to its sides as well as the wall in the direction the agent is facing. These predictions cannot be specified in the usual GVF framework, but can be easily constructed through compositions. While this may be ``repeated information'' in a sense, the extra learning objectives makes the learning properties of the predictive representation better as compared to other specifications [[cite:&schlegel2021general]].
-
-As algorithms for the automatic discovery of complex question networks continue to push the boundaries of what questions are considered by the agent, the properties of compositions should be better studied. When searching for what to learn the questions an agent eventually retains will be dependent on the agent's ability to learn the predictions. While it is clear questions that naturally diverge (say setting the discount $\gamma=1$) should be avoided, other problems, such as the scale of a target, could be equally as problematic when using function approximation (i.e. end-to-end neural networks). This could mean important predictions are disregarded because the agent is unable to learn the answer without proper strategies to normalize the prediction's magnitude. Better strategies for learning and normalizing predictive targets will come from understanding the effective discount schedule (or emphasis) compositional predictions will have on the targets.
-
-In this report, we consider the effect of compositions on the sequence of discounts, and relegate the effect of off-policy importance weights to future work. We first analyze the sequence of discounts over any number of compositions and constant discounts. We then analyze this sequence to better understand how it emphasizes parts of the data stream. Surprisingly, the effective discount for constant discount compositions have a form which can be described analytically. While this does not include the full spectrum of discount functions, it provides a first step towards understanding compositions. Next we look at simulations using more complex state-dependent discount functions using a simple consistent sequence and two timeseries datasets. In these simulations we focus on the effect of applying the same discount function a large number of times, looking to see if the shape of the returns become regular over the compositions. Finally, several future directions and questions are posed.
-{{{c}}}
-{{{c}}}
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{plots/compgvfs/seq_plus_cw.pdf}
-  \caption{(\textbf{left}) The effective discount for $n$ compositions
-    normalized by the maximum value found in section
-    \ref{sec:compgvfs:analyze}. (\textbf{middle, right}) The cycle world
-    simulations, with top graph as the cumulant and subsequent plots
-    $n$ compositions with constant and terminating discounts
-    respectively.} \label{fig:compgvfs:seq-cw}
-\end{figure}
-
-** Analyzing the sequence 
-:PROPERTIES:
-:CUSTOM_ID: sec:compgvfs:analyze
-:END:
-
-In this section, we restrict to the setting where we have an infinite sequence of sensor readings $\mathbf{x} = \{x[0], x[1], \ldots,
-x[t], \ldots, x[\infty]\}$ where $x[i] \in [x_{\text{min}} , x_{\text{max}}]$ and a constant discount $\gamma$. The return of this signal starting at a time step $t$ is
-{{{c}}}
-$V[t] = \sum_{k=0}^\infty x[k] \gamma[k-t]$
-{{{c}}}
-where $\gamma[k] = \gamma^{k-1}$ for $k >= 1$ and $0$ otherwise. This framing of the return is slightly different from the typical presentation. Specifically, we reinterpret the return as a convolution beteween $\gamma$ and $x$ [fn:: In digital signal processing [[cite:&oppenheim2010discrete]] often the convolution, in this case $\gamma$, is mirrored across $t$ and the inifinte sequence of sensor readings is $\mathbf{x} = \{x[-\infty], \ldots, x[t], \ldots, x[\infty]\}$. The corresponding convolution would be $V[t] = \sum_{k=-\infty}^\infty x[k] \gamma[t-k]$ which would change how we define the sequence of $\gamma$. To be consistent with the reinforcement learning literature, we don't follow this here and instead implicitly define $\gamma$ as the mirrored version and only consider the sequence starting at $k=0$.]
-and shift the discount sequence over the sensor readings. This implicitly defines an infinite sequence of predictions $V[t]$. In the above equation, if we replace the sequence $x$ with the sequence of predictions $V$, we get a new set of predictions and for any number of compositions $n$ we have
-{{{c}}}
-$V^n[t] = \sum_{k=0}^\infty V^{n-1}[k] \gamma[k-t]$.
-{{{c}}}
-Expanding this equation we can define the general sequence of effective discounts for $n$ compositions and the corresponding return as
-{{{c}}}
-{{{c}}}
-\[
-  \gamma^n[k] = \begin{cases}
-    0 \quad \mbox{ if } k < n \\
-    \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} \gamma^{k - n}
-  \end{cases} \quad\quad V^n[t] = \sum_{k=0}^\infty x[k] \gamma^n[k - t]
-\]
-{{{c}}}
-where $\gamma^1[k] = \gamma[k]$ defined above and $V^n[t]$ is the target of the $n$th composition at timestep $t$. For any value $n$ there are two sequences multiplied together. The original discounting shifted by the number of applications $\gamma^1[k-n]$ and a diverging series
-{{{c}}}
-\[
-  Q^n[k] = \frac{\prod_{i=1}^{n-1} (k-i)}{(n-1)!} = \frac{\Gamma(k)}{\Gamma(k-n+1)\Gamma(n)}
-\]
-{{{c}}}
-where $\Gamma(k) = (k-1)!$ for $k \in \mathbb{Z}$ is known as the Gamma function, and can be used to analyze the function with $k \in \mathbb{R}$.
-
-We know for any particular application of the convolution $\gamma$ on a series with known domain $[x_{\text{min}} , x_{\text{max}}]$ the value function can take values bounded by $V^1[t] \in [\frac{x_{\text{min}}}{1-\gamma}, \frac{x_{\text{max}}}{1-\gamma}]$. This extends to $n$ compositions in a straightforward way where the range of the value function becomes $V^n[t] \in [\frac{x_{\text{min}}}{(1-\gamma)^n}, \frac{x_{\text{max}}}{(1-\gamma)^n}]$. While normalizing the value function to take values within in the range $[0,1]$ has been used in various settings [[cite:&schlegel2021general]], as we add more compositions we see the effective range of values shrinking considerably.
-
-Given the effective discounting sequence above, we can begin to piece together the which observations are emphasized in the predictions. The first 100 steps of the effective discount function for several values of $n$ can be seen in figure ref:fig:compgvfs:seq-cw. These sequences are normalized to be in the range $[0,1]$ for a visual comparison. The emphasis becomes increasingly spread as $n$ increases, with the peak of this function moving further to the future at a consistent rate.
-
-To find the maximum value we take the derivative of the log of the sequence with respect to $k$ getting
-{{{c}}}
-\[\frac{\delta}{\delta k} \ln \gamma^n[k] = \psi(k) - \psi(k-n+1) + \ln\gamma\]
-{{{c}}}
-where $\psi(z+1) = H_{z} - C$ is the digamma function, $H_{z} = \sum_{i=1}^z \frac{1}{i} \leq \int_{1}^z \frac{1}{x} dx = ln(z)$ is the Euler harmonic number, and $C$ is the Euler-Mascheroni constant. Using the approximation above, we can find where we should expect the maximal value is (to an approximation) $k = hn - (h-1)=h(n-1)+1$, where $h=\frac{1}{1-\gamma}$ is sometimes known as the horizon of discount $\gamma$. Of course this is an approximation from above and the real value falls in $k \in [h(n-1), h(n-1) + 1)]$.
-
-** Empirical observations
-
-While we can describe the effective discount for composing constant discount predictions, the same techniques are difficult to apply to a non time-invariant discount (i.e. state-dependent discounts [[cite:&white2015developing;&white2017unifying;&sutton2011horde]]). Instead, in this section we look at the ideal returns of various signals using constant discounting and a terminating discounting functions. We use three datasets moving from highly synthetic to real-world robot sensori-motor data. The goal of this section is to show the non-intuitive behavior of compositions to motivate further analysis and exploration. All code can be found at \url{https://github.com/mkschleg/CompGVFs.jl}. Below $\gamma = 0.9$ unless otherwise stated.
-{{{c}}}
-{{{c}}}
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{plots/compgvfs/mso_cb.pdf}
-  \caption{(\textbf{left two}) Returns of the multiple sinusoidal
-    oscillator (MSO) synthetic data set with constant and terminating
-    discount respectively. The gray vertical lines are where the
-    return terminates. (\textbf{right two}) Returns of Critterbot
-    data set over the light3 sensor with constant and terminating
-    discount respectively.} \label{fig:compgvfs:critterbot}
-\end{figure}
-{{{c}}}
-{{{c}}}
-The first series is based off the cycle world, where the agent observes a sequence of a single active bit followed by $9$ inactive bits, where the length of the sequence is $m=10$. The cumulant is the observation itself, and in this report we learn using TD($\lambda=0.9$) with learning rate $\alpha=0.1$ and an underlying tabular representation where each component is the place in the sequence. We learn two chains of compositions. The first is that of the continuous discounting described above, and the second is a series of discounts which terminate (i.e. $\gamma[t]=0$) when the observation is active. The predictions of a single run can be seen in figure ref:fig:compgvfs:seq-cw. For the constant discount, as the number of compositions increases we see the prediction sequence converge to what looks to be a sinusoid with frequency of $10$, and amplitude driven by the analysis above. We expect this to be the case following from the central limit theorem. For the terminating discount, the wave form is more interesting. The first layer of predictions look very similar to the constant discount with amplitude shifted by $\frac{\gamma^{m}}{1 - \gamma^{m}}$. But as there are more compositions the effect seems to be the prediction is at its height farther away from the active bit. As the agent gets closer to the observation, the sequence of summed values is shorter leading to smaller values. Given the sequence we use it is easy to mistake this as the agent creating a trace of the cumulant, but we must remember the prediction is about future cumulants.
-
-Next we use a subset of the Critterbot dataset [[cite:&modayil2014multitimescale;&white2015developing]], focusing on light sensor 3 in figure ref:fig:compgvfs:critterbot. This gives a sequence of spikes similar to the cycle world sequence and a long pause in-between consistent saturations of the light sensor. We are able to see with the current setting the predictions look more like shifted and spread spikes. But with many more compositions, the return reverts to a similar form as before. The terminating discounts (with termination at sensor saturation $x[t+1] > 0.99$) provides a nice demonstration of how the returns are predicting the signal, just with a decaying prediction instead of the usual growing prediction. The results are similar in the multiple sinusoidal oscillator [[cite:&jaeger2004harnessing]]. We use a slightly different terminating discount where the return terminates when the previous normalized prediction is $y^{n-1}[t+1] > 0.9$ rather than when the observation is saturated. While there are decays as the MSO sequence peaks, as we increase the depth of the composition, these periods are less frequent. Deep compositions may indicate parts of the sequence where there are fewer saturations in the original sequence.
-
-** Future Directions
-
-This work suggests a number of interesting research directions and questions. While we mostly analyzed the sequence on discrete steps and applications of the filter, the general form does lend itself to continuous and complex values of $n$ and $k$. In a similar vein, we focused on real valued exponential discounting while several discounting schemes exist which could be applied to our formulation. We are particularly interested in complex discounting [[cite:&deasis2018predicting]] and hyperbolic discounting [[cite:&ainslie1992hyperbolic;&fedus2019hyperbolic]]. Applying a diverse set of discounting schemes in compositions provide an interesting way to extend the power of value functions while maintaining learnability through efficient algorithms like temporal-difference learning. 
-
-The approach used in this paper is unable to analyze state-dependent discount functions. One way around this might be in analyzing truncated sequences and taking an expectation over a distribution of sequence lengths. This might lead to a expected effective discounting sequence, but how this will interact with an underlying Markov process is unclear. This is an important next step for understanding the effects of compositions in general value functions, and could also help in analyzing off-policy compositions.
-
-Finally, the return can be re-interpreted as a convolution over the infinite sequence of observations. While this interpretation was only used to better the notation in this manuscript, further connections to convolutions and digital signal processing should be explored. Better filter designs might inspire different discounting schedules to squeeze more information from the data stream. We also have only analyzed these convolutions in the time domain. The frequency domain might give us more insight into how consistent signals like the cycle world dataset will be effected by compositions. 
-
 * IN-PROGRESS [#B] Importance Resampling for Prediction in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: chap:resampling
@@ -2226,7 +2339,7 @@ This thesis set out to uncover some of the key discrepancies between how recurre
 ** TODO Future directions and work
 *** TODO Open Problems for Recurrent Architectures in RL
 :PROPERTIES:
-:CUSTOM_ID: sec:arnn:open-problems
+:CUSTOM_ID: sec:conc:arnn:open-problems
 :END:
 
 Recurrent architectures are often taken off-the-shelf from the supervised learning setting for use in reinforcement learning. While this has been moderately successful, the RL problem poses challenges not often considered by supervised learning. Below we discuss three interesting properties of an RL system, and how they affect learning using recurrent networks.
@@ -2271,8 +2384,7 @@ Even when analyzing the behavior of our agent, using the performance metric as t
 
 Because of the above challenges there are several lingering questions about these types of agents left unanswered in these domains. 1) Under what conditions will the agent's policy fail in an environment? 2) How robust are the policies to out-of-distribution events and how does this effect the hidden state?  3) What algorithms do the learning process discover to solve the domains reliably? 4) Is the model stable over a long training period or in a continual domain? 5) When does the agent make a decision, and does the agent stick to this decision? We believe answering these questions and more can lead to better understanding of recurrent agents as well as pathways to better algorithms for training such agents.
 
-
-**** Architectural Choices
+*** Architectural Choices for Recurrent Networks in RL
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:arch-choice
 :END:
@@ -2287,6 +2399,32 @@ Below are several architectural choices we made which should be empirically expl
 *To continually learning, or to not:* The trade-offs between a continually learning and non-continually learning agent is extremely important for both recurrent and feed-forward architectures. In this paper, we chose to report results when the agent is still learning, but only on stationary domains. Any learning system should track the environment as it changes, or as the agent experiences novel states. Recurrent architectures have an added problem that the hidden state is an accumulation of the agent's entire history, meaning novel observations could irreparably harm the hidden state if it is not reset at regular intervals (i.e. in an episodic domain). This will potentially harm the agent's performance for its entire lifetime if it is unable to adjust it's weights accordingly. This is not the case in a feed-forward network, where novel observations will not effect the long-term behavior of an agent in known parts of the state space. This effect is understudied in the literature for recurrent agents, but is an important aspect of deploying recurrent RL agents in real world systems.
 
 *Objectives matter:* It is known that some objective functions are more learnable in both the fully and partially observable settings citep:&mozer1991induction;&vanhasselt2015learning. Auxiliary tasks are often also used to augment the networks objective function citep:&jaderberg2017reinforcement, or to constrain the learned state citep:&schlegel2021general. Which objective functions, auxiliary tasks, and learning algorithms are more best when applied to training a recurrent networks?
+*** TODO Learning how to encode action in recurrent architecture through experience
+:PROPERTIES:
+:CUSTOM_ID: sec:conc:arnnbias
+:END:
+
+So far, we've focused on architectures which have static architectures, where the agent has no agency in learning the appropriate structure. While this strategy seems to be reasonable as a starting point, in the future an architecture which can learn these different networks would be more desirable. We propose one such architecture here and an initial empirical evaluation of this architecture, leading to a discussion on the problematic properties such an algorithm might have.
+
+\begin{align*}
+  \interstate_t^i &= f_{\text{update}}(\weights, \xvec_{t}, \avec_{t-1}) \\
+  \psi_t &= f_{\text{GN}}(\xvec_t, \avec_{t-1}) \\
+  \state_t &= \interstate_t \odot psi_t.
+\end{align*}
+
+Where $f_{\text{GN}}: \Actions \times \States \times \Observations \rightarrow \Reals^{|\state|}$ is a parameterized function which is used to create a mixture over the experts state $\interstate \in \Reals ^{|\state|}$ produced by a state update function $f_{\text{update}}$. Both the gating function and the expert rnn state update function can be arbitrarily constructed. In this section we focus on the simple RNN update and a feed forward ANN with relu activations and a softmax activation on the final layer.
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.95\linewidth]{plots/arnns/figures/moe.pdf}
+  \caption{ Directional TMaze sweep over size of the gating network (i.e how many units in a single hidden layer with relu activations and an output network w/ softmax output) for ({\bf left}) RNN and ({\bf right}) GRU. All experiments follow the procedures from previous results, except the MoE networks use 20 runs.}
+\label{fig:moe}
+\end{figure}
+
+The results are presented in Figure \ref{fig:moe}. A sweep over various number of experts and a simple gating network with a single layer and softmax activation. As compared to the additive and multiplicative the mixture of experts RNN network performs in-between the two networks. The GRU, on the other hand, fails to perform well in this domain. This might be related to the results seen in section \ref{sec:combining}, where both the combined GRUs failed to outperform the multiplicative.
+
+
 *** TODO Understanding the intersection between predictive and non-predictive agent-state construction
 *** TODO Discovery and the form of GVF prediction targets
 *** TODO Beyond a synchronous predictive network 
@@ -2304,7 +2442,350 @@ Below are several architectural choices we made which should be empirically expl
 #+end_export
 
 * TODO [#B] Details and extended ideas for incorporating actions in recurrent networks
+:PROPERTIES:
+:CUSTOM_ID: app:arnns
+:END:
 
+** Online Setting
+# \subsection{Online Setting} \label{app:online}
+
+In this section, we test to see if our conclusions from the previous sections generalize to the fully online setting. We report some results for Ring World and DirectionalTMaze here, with further results in appendix \ref{app:emp_rw} and \ref{app:emp_dtm} respectively.
+For both environments, all applicable settings are the same as in the replay counter parts. The only difference is in how the network is updated. Instead of sampling from an experience replay, we store a history of the truncation length and update the network on every step using the same semi-gradient updates.
+
+We present the results for the online setting in figure ref:app:arnns:fig:online. Compared to the replay setting, we can see all the variants performed worse across the board. For DirectionalTMaze the AAGRU and MAGRU have a reasonable median performance. The MARNN and FacGRU are the only other cells which have runs reaching good performance, but overall perform poorly. We expect initialization plays a large role in the networks performance and should be investigated. We also see similar trends in Ring World, except the RNN variants outperform the GRUs. Another interesting consequence in the online setting, is the need to increase the truncation value and hidden state size to perform reasonably for both DirectionalTMaze and Ring World.
+
+\begin{figure}[t]
+  \centering
+    \includegraphics[width=\linewidth]{plots/figures/Online.pdf}
+  \caption{ Online: {\bf (left + middle) } Directional TMaze percent success in reaching the goal over the final $10\%$ of episodes with 100 independent runs for CELL (hidden size): RNN (46), AARNN (46), MARNN (27), FacRNN (46) $\factors=24$, GRU (26), AAGRU (26), MAGRU (15), FacGRU (26) $\factors=21$. {\bf (right)} Ring World learning curves over RMSVE with 100 independent runs for: RNN (20), AARNN (20), MARNN (15), GRU (12), AAGRU (12), MAGRU (9). Ribbons show standard error and a window averaging over 10k steps was used. Factored variants were excluded for clarity, due to high variance results. All agents were trained over 300k steps.}
+\label{app:arnns:fig:online}
+\end{figure}
+
+** Masked Grid World
+
+
+\begin{wrapfigure}[21]{l}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{plots/arnns/figures/masked_gw.pdf}
+  \caption{Average number of steps to goal over truncation for Masked Grid World {\bf left} over the entire
+    learning process {\bf right} from a set of representative states after
+    training. Cell (state size) {\bf top} RNN (24), AARNN (20),
+    MARNN (10) {\bf bottom} GRU (24), AAGRU (20), MAGRU (10).}\label{fig:maskedgw}
+\end{wrapfigure}
+
+While the TMaze and DirTMaze give some insight into when different encodings might be preferable, the DirTMaze and Ring World share similar dynamics in how the actions effect the unobserved state of the MDP. Specifically, there are two actions which effect a state component symmetrically. This prompts the question on whether this property is driving the benefits of the multiplicative update's success, or whether there are other scenarios where the multiplicative does better. We propose a new environment which is a simple grid world with border wrapping. The agent can take a step in all the cardinal directions, and observes when it enters a random subset of the states (all aliased together). The goal state is also randomly selected at the beginning of an agent's life. This creates random action observation patterns the agent must notice and act on to get to the goal. The border wrapping prevents the agent from moving to a corner of the environment and then going to the goal.
+
+
+In figure \ref{fig:maskedgw}, we confirm the hypothesis that the improvement with multiplicative update can be meaningful even when the state-action sequences are randomly placed in the environment. While the improvement is much less drastic than the Ring World and DirTMaze, the improvement is still significant with standard error bars. Another interesting observation is the difference matters much more for the simple recurrent update than the GRU.
+
+** Further Results for the Deep Additive and Deep Multiplicative Architectures
+:PROPERTIES:
+:CUSTOM_ID: app:arnns:deep-action
+:END:
+# \subsection{Further Results for the Deep Additive and Deep Multiplicative Architectures}\label{app:sec:deep_action}
+
+\begin{figure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{plots/arnns/figures/dirtmaze_deep_a_layers.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\linewidth]{plots/arnns/figures/dirtmaze_deep_multiplicative.pdf}
+  \end{subfigure}
+  \caption{{\bf (left)} Resulting average success over the last $10\%$ of episodes for various number of hidden units in the action encoding network for the deep additive networks with standard error intervals. Each layer (denoted by the title of the plot) contains the number of hidden denoted by the x-axis. {\bf (right)} Comparing the deep multiplicative operation with the base cells used in the main text. }\label{app:arnns:fig:deep_action}
+\end{figure}
+
+We provide two more experiments with results reported in figure \ref{app:arnns:fig:deep_action}. First we provide results over various action encoding sizes for the Directional TMaze environment using the Deep Additive network from the main paper. Overall, we found the size of the encoding network to not make a large difference in the final performance. In effect, this result suggests there is still a core limitation with the deep additive operation that can't be overcome by larger encoding networks. We also provide an experiment in the Directional TMaze for a \textbf{deep multiplicative} update. The deep multiplicative update uses the multiplicative update as a base cell but first passes the action through a feed forward network like the deep additive network. The results of this network were quite poor overall, likely as a result of having to learn the action encoding rather than being given it as prior information. From these results we decided to abandon the deep multiplicative extension of \cite{zhu2017improving}. Future work should consider how to better learn action encodings for such a network.
+
+** TODO Further Empirical Details
+:PROPERTIES:
+:CUSTOM_ID: app:arnns:emp
+:END:
+
+# \section{Further Empirical Details} \label{app:emp}
+In this section we discuss the experiments from the paper in greater detail. In the following tables the common programming notation $(x:y:z)$ is used to denote an array of elements starting from $x$ increasing by $y$ until $z$. For example $(1:2:5) = [1, 3, 5]$. When an operation is performed on an array it is done element wise. For example $2^{(1:2:5)} = [2, 4, 32]$. All hyperparameters are reported in agent steps (which are the same as environment steps for all domains).
+
+*** Ring World
+:PROPERTIES:
+:CUSTOM_ID: app:arnns:emp:rw
+:END:
+
+\begin{wrapfigure}[10]{r}{0.4\textwidth}
+  \vspace{-1cm}
+  \begin{tabular}{l | r}  
+    Parameter & Value \\ [0.5ex] 
+    \hline
+    Steps & 300,000 steps \\
+    Optimizer & RMSprop \\
+    RMSProp $\eta$ & $0.1 \times 1.6^{(-16:3:-2)}$ \\ %$\eta$ & $0.01*(2.0.^{(-11:2:-2)})$\\
+    RMSprop $\rho$ & 0.9\\
+    Buffer Size & 1000 \\
+    Buffer Warmup & 1000 \\
+    Batch Size & 4 \\
+    Update freq & 4 steps \\
+    Target Network Freq & 1000 steps \\
+    Independent Runs & 50 \\
+  \end{tabular}
+  \caption{Ring World Hyperparameters} \label{app:fig:ringworld_params}
+\end{wrapfigure}
+
+Table \ref{app:fig:ringworld_params} gives the hyperparameters used in the ringworld experiments. We also provide full sensitivity curves over truncation for all cell types and hidden state sizes tested in Figure \ref{fig:app_er_rw_sens}. 
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{plots/arnns/ringworld/ringworld_er_truncation_sens.pdf}
+  \caption{Truncation sensitivity curves for the Experience Replay setting in ring world. Results are RMSVE and error bars are $95\%$ confidence, as in the main paper.)}\label{fig:app_er_rw_sens}
+\end{figure}
+
+*** TMaze
+:PROPERTIES:
+:CUSTOM_ID: app:arnns:emp:tm
+:END:
+
+# \subsection{TMaze} \label{app:emp_tm}
+
+In Figure \ref{fig:app_er_tm} we provide details of the experience
+replay of the Bakker's TMaze experiments.
+
+*** DirectionalTMaze
+:PROPERTIES:
+:CUSTOM_ID: app:arnns:emp:dtm
+:END:
+# \subsection{DirectionalTMaze} \label{app:emp_dtm}
+
+The experiments presented in the paper used an experience replay buffer size of 10000 for all the cells. We also ran experiments using an experience replay size of 20000 with similar conclusions. These results (and the associated parameters) can be found in Figure \ref{fig:app_er_dtm}
+
+*** Image Directional TMaze
+# \subsection{Image Directional TMaze} \label{app:emp_idtm}
+
+We detail all hyperparameter settings, and give results for different network sizes and truncation values in Figure \ref{fig:app_idtm}.
+
+*** Lunar Lander
+# \subsection{Lunar Lander} \label{app:emp_ll}
+
+We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further results (Figures \ref{fig:app_ll_mr} and \ref{fig:app_ll_median})
+
+\begin{figure}
+  \begin{subfigure}{0.5\textwidth}
+    \begin{tabular}{l | r}  
+     Parameter & Value \\ [0.5ex] 
+     \hline
+      Steps & 300,000 steps \\
+      Optimizer & RMSprop \\
+     % RMSprop learning rate & $0.1 \times 1.6^{(-16:3:-4)}$ \\
+      RMSProp RNN: $\eta$ & $0.01 \times (2.0^{(-11:2:-2)})$\\
+      RMSProp GRU: $\eta$ & $0.01 \times (2.0^{(-11:2:-6)})$ \\
+      RMSprop $\rho$ & 0.99\\
+      Discount $\gamma$ & 0.99 \\
+      Truncation $\tau$ & 12 \\
+      Buffer Size & 10000 \\
+      Batch Size & 8 \\
+      Update freq & 4 steps \\
+      Target Network Freq & 1000 steps \\
+      Independent Runs & 50 \\
+
+    \end{tabular}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\linewidth]{plots/arnns/figures/tmaze_with_fac.pdf}
+    \end{subfigure}
+    
+  \begin{subfigure}{1\textwidth}
+    \centering
+  \begin{tabular}{l | c | c | c}  
+   Cell & RMSprop Learning Rate & Hidden State Size & Number of Model Parameters \\ [0.5ex] 
+   \hline
+    GRU    & 0.005     & 6          & 214 \\
+    AAGRU  & 0.0003125 & 6          & 286 \\
+    MAGRU  & 0.0003125 & 6          & 754 \\
+    FacGRU & 0.0003125 & 6, $M=21$  & 757 \\
+    DAGRU  & 0.00125   & 6, $a=4$   & 306 \\
+    RNN    & 7.8125e-5 & 20         & 584 \\
+    AARNN  & 7.8125e-5 & 20         & 664 \\
+    MARNN  & 7.8125e-5 & 20         & 2024\\
+    FacRNN & 0.0003125 & 20, $M=40$ & 2064\\
+    DARNN  & 7.8125e-5 & 20, $a=4$  & 684 \\
+   \end{tabular}
+\end{subfigure}
+  \caption{TMaze Experience Replay experiments: {\bf (top left)} The hyperparameters used across all cells {\bf (bottom)} The cell specific hyperparameters {\bf (top right)} Percent success over the final $10\%$ of episodes. Same as Figure \ref{fig:tmazes}}%
+\label{fig:app_er_tm}
+\end{figure}
+
+
+\begin{figure}
+  \begin{subfigure}{0.49\textwidth}
+  \includegraphics[width=0.95\linewidth]{plots/arnns/figures/dirtmaze_with_fac_10k.pdf}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+  \includegraphics[width=0.95\linewidth]{plots/arnns/figures/dirtmaze_with_fac_20k.pdf}
+\end{subfigure}
+
+  \begin{subfigure}[l]{0.4\textwidth}
+    \begin{tabular}{l | r}  
+      Parameter & Value \\ [0.5ex] 
+      \hline
+      Steps & 300,000 steps \\
+      Optimizer & RMSprop \\
+      RMSprop $\eta$ & $0.01 \times 2.0^{(-11:2:-2)}$ \\
+      RMSprop $\rho$ & 0.99\\
+      Discount $\gamma$ & 0.99 \\
+      Truncation $\tau$ & 12 \\
+      Buffer Size & [10000, 20000] \\
+      Batch Size & 8 \\
+      Update freq & 4 steps \\
+      Target update freq & 1000 steps \\
+      Independent Runs & 100 \\
+    \end{tabular}
+  \end{subfigure}  
+  \begin{subfigure}[r]{0.5\textwidth}
+  \begin{tabular}{l | c | c | c }  
+   Cell & $\eta$ & Hidden State Size & Num Weights \\ [0.5ex] 
+   \hline
+    GRU    & 0.00125   & 17         & 1142 \\
+    AAGRU  & 0.0003125 & 17         & 1295 \\
+    MAGRU  & 0.0003125 & 10         & 1303 \\
+    FacGRU & 0.0003125 & 15, $M=17$ & 1320 \\
+    DAGRU  & 0.0003125 & 15, $a=8$  & 1310 \\
+    RNN    & 0.00125   & 30         & 1143 \\
+    AARNN  & 0.0003125 & 30         & 1233 \\
+    MARNN  & 7.8125e-5 & 18         & 1263 \\
+    FacRNN & 0.0003125 & 25, $M=15$ & 1018 \\
+    DARNN  & 0.0003125 & 25, $a=15$ & 1263 \\
+   \end{tabular}
+ \end{subfigure} 
+  \caption{Directional TMaze Experience Replay results: {\bf (top right)} Percent success over the final $10\%$ of episodes for buffer size of 10000 {\bf (bottom right)} for buffer size of 20000. Learning rates chosen from best final performance on the final $10\%$ of episodes for 20 runs. Results for buffer size of 10000 are over 100 independent runs, with  buffer size of 20000 in appendix only over the 20 seeds used for the sweep. {\bf (bottom left)} The hyperparameters used across all cells. {\bf (bottom right)} The cell specific hyperparameters.}
+\label{fig:app_er_dtm}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}{1\textwidth}
+    \includegraphics[width=0.95\linewidth]{plots/arnns/figures/idtm.pdf} 
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+     \centering
+     \begin{tabular}{l | r}  
+       Parameter & Value \\ [0.5ex] 
+       \hline
+       Steps & 400,000 \\
+       Optimizer & RMSprop \\
+       ADAM $\eta$ & $2.0^{(-20:2:0)}$ \\
+       ADAM $\beta$ & 0.9, 0.999\\
+       Discount $\gamma$ & 0.99 \\
+       Truncation $\tau$ & 12 (20) \\
+       Warm up & 1000 steps \\
+       Replay Size & 50,000 \\
+       Batch size & 16 \\
+       Target update freq & 10000 \\ 
+       Update freq & 4 \\ 
+       Runs & 20 \\
+     \end{tabular}
+   \end{subfigure}
+   \begin{subfigure}{0.5\textwidth}
+     \centering
+     \begin{tabular}{l | c | c | c | c}  
+       Cell & $\eta$ $\tau=12 (20)$ & $|s|$ + M & $|\weights|$ \\ [0.5ex] 
+       \hline
+       MAGRU & 9.76e-4 (9.76e-4)  & 32          & 154247 \\
+       MAGRU & 9.76e-4 (9.76e-4)  & 64          & 223175 \\
+       AAGRU & 2.44e-4 (0.0625)   & 70          & 155201\\
+       AAGRU & 9.76e-4 (0.0156)   & 132         & 225323 \\
+       FacGRU & 0.0625 (2.44e-4)  & 32, M=259   & 154224 \\
+       FacGRU & 9.76e-4 (2.44e-4) & 64, M=350   & 223009 \\
+       FacGRU & 9.76e-4 (2.44e-4) & 70, M=164   & 155041 \\
+       FacGRU & 9.76e-4 (2.44e-4) & 132, M=208  & 225515\\
+       DAGRU & 9.76e-4  (9.76e-4) & 45,  a=128  & 150838 \\
+       DAGRU & 9.76e-4  (9.76e-4) & 55,  a=64   & 152022 \\
+       DAGRU & 9.76e-4  (9.76e-4) & 60,  a=32   & 151399 \\
+       DAGRU & 9.76e-4  (9.76e-4) & 100, a=128  & 224263 \\
+       DAGRU & 9.76e-4  (9.76e-4) & 112, a=64   & 220935 \\
+       DAGRU & 9.76e-4  (9.76e-4) & 122, a=32   & 223195 \\
+     \end{tabular}
+   \end{subfigure}
+   \caption{Image Directional TMaze: {\bf (top)} Percent success over final $10\%$ of episodes for the image tmaze for $\tau=12$ and $\tau=20$ (labeled). See labels for size of hidden state with left being small networks, and right being larger. {\bf (bottom left)} The hyperparameters used across all cells in Image Directional TMaze {\bf (bottom right)} The cell specific hyperparameters.} \label{fig:app_idtm}
+\end{figure}
+
+
+\begin{figure}
+  \begin{subfigure}{0.5\textwidth}
+    \begin{tabular}{l | r}  
+     Parameter & Value \\ [0.5ex] 
+     \hline
+     Steps & 4,000,000 steps \\
+     Steps before learning starts & 1000 steps \\
+     Optimizer & RMSprop \\
+     RMSprop $\eta$ & $0.1 \times 1.6^{(-20:2:-6)}$ \\
+     RMSprop $\rho$ & 0.99\\
+     Discount $\gamma$ & 0.99 \\
+     Truncation $\tau$ & 16 \\
+     Replay Size & 100,000 \\
+     Batch size & 32 \\
+     Target update freq & 1000 steps \\ 
+     Update frequency & 8 steps\\ 
+     Hidden state learnable & True \\ 
+     Independent Runs & 20 \\
+    \end{tabular}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+  \includegraphics[width=\linewidth]{plots/arnns/figures/lunarlander_with_fac.pdf}
+\end{subfigure}
+\begin{subfigure}{\textwidth}
+  \begin{tabular}{l | c | c | c | c}  
+   Cell & RMSprop Learning Rate & Hidden State Size (Factors/Action Encoding) & Number of Model Parameters \\ [0.5ex] 
+   \hline
+    GRU    & 0.0003553   & 154          & 156,414 \\
+    AAGRU  & 0.0001387   & 152          & 155,004 \\
+    MAGRU  & 0.0003553   & 64           & 153,732 \\
+    FacGRU & 0.0001387   & 152 (M=170)  & 152,668 \\
+    FacGRU & 0.0003553   & 100 (M=265)  & 153,808 \\
+    FacGRU & 0.0003553   & 64 (M=380)   & 153,716 \\
+    DAAGRU & 0.000138778 & 152 (a=64) & 182,684 \\
+  \end{tabular}
+\end{subfigure}
+\caption{Lunar Lander experimental details: {\bf (top left)} The hyperparameters used across all cells in Lunar Lander {\bf (bottom)} The cell specific hyperparameters  {\bf (top right)} Average final reward over all episodes (same as figure \ref{fig:scaling_up})}
+\label{fig:app_ll}%
+\end{figure}
+
+
+\begin{figure}
+  \centering
+    \begin{subfigure}{0.49\textwidth}
+\includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_steps_curve_sans_fac.pdf}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+\includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_steps_curve_fac.pdf} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+\includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_lr_sensitivity.pdf} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_lc_fac_only.pdf} 
+    \end{subfigure}
+  \caption{Lunar Lander further results: {\bf (top left) } Average final reward over the final $10\%$ of episodes for 20 runs {\bf (top middle) } Total steps per episode for non-factored cells for 20 runs {\bf (top right) } Total steps per episode for factored cells for 20 runs  {\bf (bottom left) } learning rate sensitivity curves for 10 runs {\bf (bottom middle)} Learning curves per episode for non-factored cells over total reward for 20 runs {\bf (bottom right)} Learning curves per episode for factored cells over total reward for 20 runs} \label{fig:app_ll_mr}
+\end{figure}
+
+
+
+\begin{figure}
+  \centering
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_gru.pdf}
+      \caption{GRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_magru.pdf}
+      \caption{MAGRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_aagru.pdf}
+      \caption{AAGRU}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=0.95\linewidth]{plots/arnns/lunarlander/lunar_lander_ind_daagru.pdf}
+      \caption{DAAGRU}
+    \end{subfigure}
+  \caption{Individual learning curves. Line is the median over 1000 episodes, with the shaded region as the 1st and 3rd quantile over the same window.} \label{fig:app_ll_median}
+\end{figure}
 
 * Graveyard                                                        :noexport:
 ** Background graveyard
