@@ -254,7 +254,7 @@ What sections do I want to write?
 - Applying GVFs to learn state representations (10/11/12)
 - Future Work (13)
 
-* IN-PROGRESS [#A] [10/15] Background
+* DONE [#A] [16/16] Background
 
 In this thesis, we take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective continually. While this is not a particularly novel interpretation of the machine intelligence problem, it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
 
@@ -296,7 +296,7 @@ q(\State, \Action) = \Expected_\pi [ G_t | s_t = \State, a_t = \Action].
 \]
 This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections we will extend this framework to the partial observable case, and go into the specifics of the prediction problem and the control problem.
 
-** IN-PROGRESS [3/4] Prediction
+** DONE [4/4] Prediction
 
 *************** DONE Outline and lay foundation for prediction section :noexport:
 CLOSED: [2023-02-21 Tue 15:44]
@@ -329,7 +329,7 @@ The target for the temporal-difference learning algorithm is known as the TD tar
 \[
 \weights_{t+1} \rightarrow V(\State; \weights_t) + \alpha (r_t + \gamma V(\State^\prime; \weights_t) - V(\State; \weights)) \nabla_\weights V(\State; \weights).
 \]
-This update can be seen as minimizing the mean squared TD objective \(\scrL(\State, \State^\prime, r_t) = \Vert U_t - V(\State; \weights) \Vert^2_2\) assuming the bootstrapped target \(U_t = r_t + \gamma V(\State^\prime; \weights_t)\) has gradient \(\nabla_\weights U_t = 0\). 
+This update can be seen as minimizing the mean squared TD objective \(\loss(\State, \State^\prime, r_t) = \Vert U_t - V(\State; \weights) \Vert^2_2\) assuming the bootstrapped target \(U_t = r_t + \gamma V(\State^\prime; \weights_t)\) has gradient \(\nabla_\weights U_t = 0\). 
 
 
 *************** DONE Clean up history of learning value functions on-policy :noexport:
@@ -364,20 +364,24 @@ which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\t
 \end{align*}
 
 Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
-For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\). Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular \citep{precup2001offpolicy} and linear functions cite:&mahmood2014weighted;&mahmood2015off.
+For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\). Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular cite:&precup2001offpolicy and linear functions cite:&mahmood2014weighted;&mahmood2015off.
 
-*************** TODO Fill in TDC update rule                      :noexport:
+*************** DONE Fill in TDC update rule                      :noexport:
+CLOSED: [2023-03-01 Wed 12:12]
 *************** END
 
-While the above objectives have been shown to effectively work in a wide range of problem settings, there are a series of known counter examples where these algorithms do not converge. This is due to what is known as the deadly-triad in off-policy semi-gradient TD: off-policy, function approximation, and bootstrapping. Removing any of these properties results in a convergent learning rule. Instead we can also define another objective known as the /mean squared projected Bellmen error/ (MSPBE). This objective minimizes the full Bellman error through a projection operator [[cite:&sutton2009fast;&maei2009convergent]]. Minimizing this objective results in several algorithms including one known as temporal-difference with corrections (TDC).
+While the above objectives have been shown to effectively work in a wide range of problem settings, there are a series of known counter examples where these algorithms do not converge. This is due to what is known as the deadly-triad in off-policy semi-gradient TD: off-policy, function approximation, and bootstrapping. Removing any of these properties results in a convergent learning rule. Instead we can also define another objective known as the /mean squared projected Bellmen error/ (MSPBE). This objective minimizes the full Bellman error through a projection operator [[cite:&sutton2009fast;&maei2009convergent]]. Minimizing this objective results in several algorithms including one known as temporal-difference with corrections (TDC). For linear function approximation $V(\State_t; \weights_t) = \weights_t^\trans \phi_t$ (where \(\phi_t\) is the features corresponding to state \(\State_t\)
 \begin{align*}
-\weights_{t+1} &\rightarrow \ldots\\
-\secweights_{t+1} &\rightarrow \ldots.
+\weights_{t+1} &\leftarrow \weights_{t} + \alpha \delta_t \phi_t - \alpha \gamma \phi_{t+1} (\phi_t^\trans \secweights_{t}) \\
+\secweights_{t+1} &\leftarrow \secweights_t + \beta(\delta_t - \phi_t^\trans \secweights_t) \phi_t \\
 \end{align*}
-This algorithm can be extended to non-linear function approximation [[cite:&maei2009convergent]].
+where \(\alpha\) and \(\beta\) are learning rates which can also be set per time-step. This algorithm can also be derived when the value function is non-linear [[cite:&maei2009convergent]]. See Chapter ref:chap:gvfn:algs for a non-linear derivation with added constraints.
 
 ** DONE Control in Reinforcement Learning
 CLOSED: [2023-02-21 Tue 11:50]
+:PROPERTIES:
+:CUSTOM_ID: sec:bg:control
+:END:
 The bread and butter problem for reinforcement learning research is the control problem. The control problem is the process of searching (or learning) a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control (through q-learning) to direct policy optimization through policy gradient and actor critic methods. In this thesis, we are primarily concentrated on value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
 
 We again start with a value function, this time a state-action value function, as defined above
@@ -522,18 +526,24 @@ An /(explicit) predictive representation of state/ is an algorithm, or architect
 
 Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes cite:&schutz2007prospective take the theory of prospection and encode future events as representations used for planning and simulation. While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations cite:&soga2009;&synofzik2013. While we focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
 
-** IN-PROGRESS Temporal Abstractions in Reinforcement Learning
+** DONE [3/3] Temporal Abstractions in Reinforcement Learning
+
+*************** DONE Fill in initial section                      :noexport:
+CLOSED: [2023-02-28 Tue 19:21]
+*************** END
+
 
 Reinforcement learning is built on predicting the effect of behavior on future observations and rewards. Many of our algorithms learn predictions of a cumulative sum of (discounted) future rewards, which is used as a bedrock for learning desirable policies. While reward has been the primary predictive target of focus, TD models [[cite:&sutton1995td]] lay out the use of temporal-difference learning to learn a world model through value function predictions. Temporal-difference networks [[cite:&tanner2005thesis;&sutton2005temporaldifference]] take advantage of this abstraction and build state and representations through predictions. [[citeauthor:&sutton2011horde]] ([[citeyear:&sutton2011horde]]) and [[citeauthor:&white2015developing]] (citeyear:&white2015developing) further the predictive perspective by developing a predictive approach to building world knowledge through general value functions (GVFs).
 
-*************** IN-PROGRESS [#A] Fix citations below              :noexport:
+*************** DONE [#A] Fix citations below                     :noexport:
+CLOSED: [2023-03-01 Wed 12:28]
 *************** END
 
-GVFs have been pursued broadly in reinforcement learning: citeauthor:&gunther2016intelligent (citeyear:&gunther2016intelligent) used GVFs to build an open loop laser welder controller, [[citeauthor:&linke2020adapting]] ([[citeyear:&linke2020adapting]]) and [[citeauthor:&mcleod2021continual]] ([[citeyear:&mcleod2021continual]]) used predictions and their learning progress to develop an intrinsic reward, citeauthor:&edwards2016application (citeyear:&edwards2016application) used GVFs to build controllers for myoelectric prosthetics, using gvfs for auxiliary training tasks to improve representation learning [[cite:&jaderberg2017reinforcement;&veeriah2019discovery]], to extend a value function's approximation to generalize over goals as well as states [[cite:&schaul2015universal]], and to create a scheduled controller from a set of sub-tasks for sparse reward problems [[cite:&riedmiller2018learning]]. Successor representations and features are predictions of the state, learned or given, which have been shown to improve learning performance cite:&dayan1993;&russek2017;&barreto2018;&sherstan2018.
+# GVFs have been pursued broadly in reinforcement learning: citeauthor:&gunther2016intelligent (citeyear:&gunther2016intelligent) used GVFs to build an open loop laser welder controller, [[citeauthor:&linke2020adapting]] ([[citeyear:&linke2020adapting]]) and [[citeauthor:&mcleod2021continual]] ([[citeyear:&mcleod2021continual]]) used predictions and their learning progress to develop an intrinsic reward, citeauthor:&edwards2016application (citeyear:&edwards2016application) used GVFs to build controllers for myoelectric prosthetics, using gvfs for auxiliary training tasks to improve representation learning [[cite:&jaderberg2017reinforcement;&veeriah2019discovery]], to extend a value function's approximation to generalize over goals as well as states [[cite:&schaul2015universal]], and to create a scheduled controller from a set of sub-tasks for sparse reward problems [[cite:&riedmiller2018learning]]. Successor representations and features are predictions of the state, learned or given, which have been shown to improve learning performance [[cite:&dayan1993improving;&russek2017predictive;&barreto2018successor;&sherstan2018acceleratinga]]. 
 
-# One component that is thought to be an important part of the space of solutions is the ability for agents to reason in temporally abstract ways.
+Two objects in RL which enable agents to reason beyond the moment-to-moment stream of experience are known as *options* [[cite:&precup1998theoretical]] and *general value functions* (GVFs) [[cite:&sutton2011horde]]. In this thesis, we focus on learning and applying GVFs to the state construction problem and leave the incorporation of options for future work. GVFs have been pursued broadly in reinforcement learning: citeauthor:&gunther2016intelligent (citeyear:&gunther2016intelligent) used GVFs to build an open loop laser welder controller, [[citeauthor:&linke2020adapting]] ([[citeyear:&linke2020adapting]]) and [[citeauthor:&mcleod2021continual]] ([[citeyear:&mcleod2021continual]]) used predictions and their learning progress to develop an intrinsic reward, citeauthor:&edwards2016application (citeyear:&edwards2016application) used GVFs to build controllers for myoelectric prosthetics, using gvfs for auxiliary training tasks to improve representation learning [[cite:&jaderberg2017reinforcement;&veeriah2019discovery]], to extend a value function's approximation to generalize over goals as well as states [[cite:&schaul2015universal]], and to create a scheduled controller from a set of sub-tasks for sparse reward problems [[cite:&riedmiller2018learning]]. Successor representations and features are predictions of the state, learned or given, which have been shown to improve learning performance [[cite:&dayan1993improving;&russek2017predictive;&barreto2018successor;&sherstan2018acceleratinga]]. 
 
-Two objects in RL which enable agents to reason beyond the moment-to-moment stream of experience are known as *options* and *general value functions* (GVFs). Both of these construct can be wrapped in the framework of GVFs, through the idea of control demons and prediction demons respectively citep:&sutton2011horde. We use this framing here for simplicity, but the literature of options is rich and filled with insights applicable to both the prediction and control framing. 
+# Both of these construct can be wrapped in the framework of GVFs, through the idea of control demons and prediction demons respectively citep:&sutton2011horde. We use this framing here for simplicity, but the literature of options is rich and filled with insights applicable to both the prediction and control framing.
 
 We introduce GVFs citep:&sutton2011horde directly in the partially observable setting, to use them with RNNs in ref:GVFNs. This was first done in [[cite:&schlegel2021general]]. The first step is to replace state with histories using the definition of history in ref:sec:bg:perception.
 {{{c}}}
@@ -550,13 +560,11 @@ A GVF question is a tuple \((\tpolicy, \cumulant, \gamma)\) composed of a policy
 {{{c}}}
 The sums can be replaced with integrals if \(\Actions\) or \(\Observations\) are continuous sets. We assume that \(\Hist\) is a finite set, for simplicity; the definitions and theory, however, can be extended to infinite and uncountable sets.
 
-*************** TODO Difference between pred and control demons
+*************** DONE Difference between pred and control demons
+CLOSED: [2023-03-01 Wed 13:15]
 *************** END
 
-*Prediction demon vs Control demon*
-
-
-
+Above we introduced GVFs in the context of prediction (i.e. as a prediction demon). This object can be used to in both prediction (as described above) and for control (similarly to options). A control demon is encoded into a state-action value function and learned through Q-learning [[cite:&watkins1992qlearning]] or Sarsa [[cite:&rummery1994line]] to maximize the return. This is similar to the control problem (Section ref:sec:bg:control)--where the objective is to use value iteration to learn a policy--but often the behavior policy is arbitrarily different from the current policy of the demon. While these objects present unique sets of predictive information, our focus in the thesis will be on prediction demons throughout the thesis and consider the incorporation of control demons in future work.
 
 * DONE [#A] [14/14] Incorporating action into a recurrent network
 :PROPERTIES:
