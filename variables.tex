@@ -66,6 +66,7 @@
 % misc linear algebra
 \newcommand{\trans}{\top}
 \newcommand{\transpose}{{\raisebox{.2ex}{$\scriptscriptstyle\top$}}}
+\DeclareMathOperator{\tr}{tr}
 \newcommand{\inv}{{\raisebox{.2ex}{$\scriptscriptstyle-1$}}}
 \newcommand{\invt}{{\raisebox{.2ex}{$\scriptscriptstyle-\top$}}}
 \newcommand{\pinv}{{\raisebox{.2ex}{$\scriptscriptstyle\dagger$}}}
@@ -135,8 +136,10 @@
 \newcommand{\yvec}{\mathbf{y}}
 \newcommand{\zvec}{\mathbf{z}}
 
+\newcommand{\alphavec}{\boldsymbol{\alpha}}
 \newcommand{\phivec}{\boldsymbol{\phi}}
 \newcommand{\psivec}{\boldsymbol{\psi}}
+\newcommand{\thetavec}{\boldsymbol{\theta}}
 
 % zero vector
 \newcommand{\zerovec}{\mathbf{0}}
@@ -187,13 +190,13 @@
 
 % environment states
 \newcommand{\EnvStates}{\boldsymbol{\Psi}}
-\newcommand{\EnvState}{S}
+\newcommand{\EnvState}{\Psi}
 \newcommand{\envstate}{\psi}
 
 % agent states
 \newcommand{\States}{\mathcal{S}}
 \newcommand{\State}{S}
-\newcommand{\state}{s}
+\newcommand{\state}{\agentstate}
 \newcommand{\pstate}{\tilde{s}}
 \newcommand{\ipstate}{\tilde{s}}
 
@@ -210,15 +213,18 @@
 \newcommand{\Hists}{\mathcal{H}}
 \newcommand{\Hist}{\mathcal{H}}
 \newcommand{\history}{\hvec}
+\newcommand{\hist}{\hvec}
 
 % agent state for po
 \newcommand{\agentstate}{\svec}
 \newcommand{\astate}{\svec}
 \newcommand{\interstate}{z}
 
+
 % rewards and cumulants
 \newcommand{\Rewards}{\mathcal{R}}
 \newcommand{\reward}{r}
+\newcommand{\Cumulant}{c}
 \newcommand{\cumulant}{c}
 \newcommand{\cfunc}{c}
 
@@ -230,7 +236,7 @@
 \newcommand{\RSSA}{R_{s,s'}^a}
 
 % Value functions
-\newcommand{\Value}{\mathcal{V}}
+\newcommand{\Value}{V}
 \newcommand{\vfunc}{V}
 \newcommand{\vifunc}[1]{V^{(#1)}}
 \newcommand{\viweights}[1]{V^{(#1)}_\weights}
@@ -370,6 +376,17 @@
 \newcommand{\krondelta}{\delta^\kappa}
 
 \newcommand{\secweights}{\uvec}
+
+
+% Resampling
+\newcommand{\Cov}{\mathrm{Cov}}
+
+% \newcommand{\cumul}{c}
+% \newcommand{\cumulr}{C}
+% \newcommand{\stater}{S}
+% \newcommand{\actionr}{A}
+% \newcommand
+% \renewcommand{\Value}{V}
 
 % \newcommand{\dummycite}[1]{
 %   {[{\bf CITE #1}]}}
