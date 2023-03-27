@@ -86,14 +86,48 @@ and sets formatting up for main text.
 
 
 
+* Sections Looking for a home
+
+*************** TODO [#A] Figure out where Learning long-temporal dependencies goes?
+*************** END
+
+This chapter
+- goes through state construction using predictions
+- discusses the large literature related to learning long-temporal dependencies.
+
+** DONE [1/1] Learning Long-temporal Dependencies
+:PROPERTIES:
+:CUSTOM_ID: sec:bg:perception:tempdepend
+:END:
+
+*************** DONE edit LLTD section :noexport:
+CLOSED: [2023-02-21 Tue 15:48]
+*************** END
+
+
+Learning long-temporal dependencies is the primary concern of both RL and SL applications of recurrent networks. While great work has been done to coalesce around a few potential architectures and algorithms for SL settings, these are often found lacking in the online-incremental RL context cite:&sodhani2020training;&rafiee2022eyeblinks;&schlegel2021general. 
+# discussed in section \ref{sec:open_problems}.
+Not only do agents need to learn from the currently stored data (i.e. in an experience replay buffer), they must also continually incorporate the newest information into their decisions (i.e. update online and incrementally). The importance of learning state from an online stream of data has been heavily emphasized in the past through predictive representations of state cite:&littman2002predictive, temporal-difference networks [[cite:&sutton2005temporaldifference]] and GVF networks [[cite:&schlegel2021general]], and in modeling trace patterning systems [[cite:&rafiee2022eyeblinks]]. From a supervised learning perspective, several problems like saturating capacity and catastrophic forgetting are cited as the most pressing for any parametric continual learning system [[cite:&sodhani2020training]]. Below we suggest a few alternative directions needing further exploration in the RL context.
+
+The current standard in training recurrent architectures in RL is truncated BPTT. This algorithm trades off the ability to learn long-temporal dependencies with computation and memory complexity. Currently, the system designer must set the length of temporal sequences the agent needs to model (as would be needed for truncated BPTT to be effective [[cite:&mozer1995focused;&ke2018sparse;&tallec2018unbiased;&rafiee2022eyeblinks]]). Setting this length is a difficult task, as it interacts with the underlying environment and the agent's exploration strategy
+# (see section \ref{sec:open_problems} for more details).
+As the truncation parameter increases it is known that the gradient estimates become wildly variant [[cite:&pascanu2013difficulty;&sodhani2020training]], which can make learning slow.
+
+An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
+
+Learning long-temporal dependencies through regularizing objectives on the state has shown promise in alleviating the need for unrolling the network over long-temporal sequences. citeauthor:&schlegel2021general (citeyear:&schlegel2021general) use GVFs to make the hidden state of a simple RNN predictions about the observations showing potential in lightening the need for BPTT. This approach is sensitive the GVF parameters to use as targets on the state of the network. Predictive state recurrent neural networks [[cite:&downey2017predictive]] combine the benefits of RNNs and predictive representations of state [[cite:&littman2002predictive]] in a single architecture. They show improvement in several settings, but don't explore the model when starved for temporal information in the update. Another approach is through stimulating traces, as shown by [[cite:&rafiee2022eyeblinks]], where traces of observations are used to bridge the gap between different stimuli. Instead of traces, an objective which learns the expected trace [[cite:&hasselt2021expected]] of the trajectory could provide similar benefits as a predictive objective. One can even change the requirements on the architecture in terms of final objectives. [[cite:&mozer1991induction]] propose to predict only the contour or general trends of a temporal sequence, reducing the resolution considerably. Value functions are another object which takes an infinite sequence and reduces resolution to make the target easier to predict [[cite:&sutton1995td;&sutton2011horde;&modayil2014multitimescale;&vanhasselt2015learning]].
+
+It is also possible to reduce or avoid the need for BPTT for modeling long-temporal sequences by adjusting the internal mechanisms of the recurrent architecture. Echo-state Networks [[cite:&jaeger2002adaptive]] are one possible direction. Related to the generate and test idea, echo-state networks rely on a random fixed "reservoir" network, where predictions are made by only adjusting the outgoing weights. Because the recurrent architecture is fixed, no gradients flow through the recurrent connections meaning no BPTT is needed to estimate the gradients. Unfortunately, these networks are dependent on their initializations making them hard to deploy in practice. [[citeauthor:&mozer1995focused]] ([[citeyear:&mozer1995focused]]) propose a focused architecture design, where recurrent connections are made more sparsely (even just singular connections). This significantly reduces the computational complexity of RTRL and allows for a focused version of BPTT.
+
+Transformers [[cite:&vaswani2017attention]] are a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. Because of these compromises, it is still unclear if transformers are a viable solution to the state construction problem in continual reinforcement learning.
+
+
 * IN-PROGRESS Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
 :END:
 
-*************** TODO [#A] Rewrite Introduction with new story
-*************** END
-
+*************** TODO [#A] Rewrite Introduction with new story direction
 - Partial information is something that exists generally.
   - Example in details.
   - Example situation where the observation is the same but correct action is different.
@@ -102,9 +136,79 @@ and sets formatting up for main text.
 - SL has different considerations from RL.
 - Thesis questions  
 - Contributions
+*************** END
 
 
+# In many real-world decision making problems there is missing key information.
 
+# Real-world decision making algorithms will inevitably not have all the key information needed to make optimal decisions at every juncture.
+
+# Decision making algorithms in real-world problems will inevitably have to make decisions without critical pieces of information.
+
+# Real-world decision making algorithms will inevitably have to make decisions when the information available is insufficient to make an optimal decision.
+
+# Real-world decision making algorithms will inevitably have to make decisions when the information available is insufficient to make an optimal choice.
+
+# Machine intelligent systems in the real-world will inevitably have to make decisions when the information available is insufficient to make a good choice.
+
+The goal of machine intelligence research is to design an agent which interacts with its world through a continuous stream of interactions, consistently getting better through feedback, either provided or self-guided. Continual reinforcement learning [[cite:&ring1994continual;&khetarpal2022continual]] is one paradigm in which we can design such systems. Similar to reinforcement learning (RL), a continual RL agent seeks to maximize the cumulative sum of rewards---which provides a simple yet effective path towards learning behavior. The main attribute of continual RL is that there is an unending stream of sensorimotor interactions which the agent must sift through online, in effect the agent never reaches the end of the maze. The agent must also balance computation to make decisions within a small time frame while also learning from recent observations. These attributes make the continual RL problem challenging, but applicable to a wide range of real-world applications.
+
+Continual RL systems in the real-world will inevitably have to make decisions when the information available is insufficient to make an optimal choice. For example, an autonomous car driving on the highway. An autonomous car can have an abundance of sensors to perceive the cars around it---say to ensure other cars are currently within their lane or following the speed limit--or measure its own internal properties such as temperature, total fuel, and speed. While it seems the car has sufficient information at an instantaneous observation to predict with confidence, there are still many properties of the world obscured to the agent. If the neighboring car's wheel pops off because the bolts weren't tightened properly or if the driver two cars over drops their coffee and swerves towards the agent all constitute in environmental conditions in which the agent couldn't predict the future given its senses. In situations where the agent has improper context the world appears non-stationary: the world responds differently when the agent acts according to the same set of senses.
+
+In the face of missing information about the environments underlying properties (also known as partial observability), the main approach developed in machine learning is to summarize the past to provide the agent context which is missing from its current senses. In the autonomous car example, an agent can keep a history to measure how erratic other drivers have been. The agent could notice a wobble in the car with the faulty wheel or erratic driving from the driver juggling hot coffee. Using this information the agent could preemptively move away from dangerous scenarios to minimize the risk of an accident. In the past, artificial intelligence research focused on outlining all possible scenarios the agent could face in what are known as expert systems. These systems faced challenges in that humans were notoriously poor at outlining why they made a decision in a given scenario. The goal of representation learning---which is embodied by the current wave of deep learning---is to construct compact memories of the past in order to aid decision making. While we shouldn't expect this method to provide a full representation of the environment's latent properties, it is the best an agent can do while being general to scenarios not predicted by system designers.
+
+In reinforcement learning (RL), the most widely used approaches for representation learning are based on ideas developed for supervised learning (SL). Recurrent neural networks (RNNs) have been established as an important tool for learning predictions of data with temporal dependencies. They have been primarily used in language and video prediction [[cite:&mikolov2010recurrent;&wang2016largercontext;&saon2017english;&wang2018eidetic;&oh2015actionconditional]], but have also been used in traditional time-series forecasting [[cite:&bianchi2017recurrent]]. Recurrent networks have also been applied to the RL problem [[cite:&onat1998recurrent;&bakker2002reinforcement;&wierstra2007solving;&hausknecht2015deep;&heess2015memorybased;&zhu2018improving;&igl2018deep]], but often these applications focus on how to fit the RL problem into what will work with the standard recurrent training approaches. Recently, transformers [[cite:&vaswani2017attention]] have become a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. This is again similar to the application of recurrent networks where the problem is modified to fit the architecture.
+
+
+While we can--and arguably should--use the intuitions built in the SL setting, these intuitions must be tested and re-justified as the problem setting incorporates ways of behaving in an environment or if there is no-longer a well defined dataset with constrained histories---like in continual reinforcement learning. In this thesis, we ask
+#+BEGIN_QUOTE
+What algorithmic modifications are needed to make reinforcement learning methods more performant in partially observable, continual decision making tasks?
+#+END_QUOTE
+We use (continual) reinforcement learning to study recurrent architectures and provide novel observations and algorithms to learn representations in the RL setting. In the following sections, I outline the main contributions of this dissertation.
+
+
+** Incorporating Actions in Recurrent Networks
+
+This contribution (Chapter ref:chap:arnn) empirically evaluates architectural choices for encoding action in the update function of recurrent networks. The evaluation provides 1) simple strategies to drastically improve prediction and control in reinforcement learning that can be applied in a general way to recurrent networks and 2) clarity in what approaches have been applied to recurrent networks in the reinforcement learning literature. Evidence for the preferred strategy is provided through an in-depth analysis of the prediction setting in a small example domain and in a variate of control problems.
+
+** A novel predictive approach to learning agent-state
+
+In this contribution, I develop a novel approach to incorporate ideas from predictive state representations---an approach to representation learning that is designed for temporal partially observable prediction problems---and recurrent neural networks. The approach is shown to be competitive to RNNs in several continual learning and time-series domains without needing as much history when estimating gradients. This contribution is split into three chapters.
+- Chapter ref:chap:gvfn introduces the architecture and relates it to recurrent neural networks and previous predictive approaches.
+- Chapter ref:chap:gvfn:algs derives several learning algorithms for the architecture derived from an extension of the /Mean-Squared Projected Bellmen Network Error/.
+- Chapter ref:chap:gvfn:empirical empirically compares the new architecture to standard recurrent neural networks in several continual learning prediction problems.
+
+** Designing and generating predictive questions
+
+This contribution investigates the set of predictive questions available to GVFs and how these can be generated for the architecture discussed above. 
+
+
+** Off-policy prediction using Resampling
+
+This contribution (Chapter ref:chap:resampling) defines a new off-policy prediction algorithm using importance resampling. The resulting estimator is shown to be more sample efficient than importance sampling, and robust to settings with large importance sampling ratios, while still being consistent. The evidence provided is through several empirical experiments and theorems with proofs provided in the appendix.
+
+
+** More generous sections
+*** Incorporating Actions in Recurrent Networks
+This contribution (Chapter ref:chap:arnn) empirically evaluates architectural choices for encoding action in the update function of recurrent networks. The evaluation provides 1) simple strategies to drastically improve prediction and control in reinforcement learning that can be applied in a general way to recurrent networks and 2) clarity in what approaches have been applied to recurrent networks in the reinforcement learning literature. Evidence for the preferred strategy is provided through an in-depth analysis of the prediction setting in a small example domain and in a variate of control problems.
+*** Developing a novel predictive approach to recurrent learning
+
+I develop a novel approach to incorporate ideas from predictive state representations---an approach to representation learning that is designed for temporal partially observable prediction problems---and recurrent neural networks. We show this approach can envelop a large set of other predictive approaches: including predictive state representations, temporal-difference networks, and forecasting networks. This contribution includes several theorems and lemmas to support the architecture and relate it to the other predictive approaches.
+
+*** Deriving algorithms to minimize the MSPBNE
+
+This contribution develops the /Mean-Squared Predictive Bellmen Network Error/, extending prior work in temporal-difference networks [[cite:&silver2013gradient]], and then derives several algorithms to minimize such an objective. This contribution outlines several algorithms which can be readily used for training a general value function network. This contribution includes several theorems, lemmas, algorithms, and details to apply the derived algorithms to the GVFN architecture.
+
+*** Evaluating GVFNs
+
+
+*** Investigating the set of predictive questions
+
+*** Generating for general value function networks
+
+*** Off-policy prediction with Resampling
+
+** Old Introduction
 Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large, complex domains. For example, consider a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. Game playing systems such as StarCraft [[citep:&vinyals2019grandmaster]] provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
 
 *************** TODO [#B] Define Representations
@@ -118,7 +222,9 @@ Deep reinforcement learning has expanded reinforcement learning to wide spectrum
 
 # Finally, a related line of reasoning argues complex behavior arises from the interactions between the mind, body and environment [[cite:&chemero2013radical]]. While a clear definition of what constitutes a body over just a separate part of the environment hasn't been discussed in the reinforcement learning context, the importance of agency and acting during the foundation of perception is still highlighted as critical.
 
-While we can--and arguably should--use the intuitions built in the SL setting, these intuitions must be tested and further justified as the problem setting changes to the continual reinforcement learning setting. For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn).
+While we can--and arguably should--use the intuitions built in the SL setting, these intuitions must be tested and further justified as the problem setting changes to the continual reinforcement learning setting.
+
+For example, often new cell architectures use a full sequence to estimate the gradients using backpropagation, which is not possible in a continual reinforcement learning problem. While several strategies exist to reduce the sequence length in approximating the gradient, these often lead to comprising on the length of temporal-dependencies the network can model (see Section ref:sec:bg:perception:tempdepend). Another example is in the incorporation of information into the recurrent cell. A reinforcement learning agent has three primary forms of information to incorporate into the state: sensations (or observations), prior beliefs, and action. The most straightforward (but possibly not best) solution is to combine these forms of information through a concatenation operation, passing the action and observation through separate feed-forward networks (see Chapter ref:chap:arnn).
 
 A critical structural assumption in many approaches to learning in partial observability is that all learning is driven by the gradients (or the importance of features) of the system with respect to the final error (i.e. the agent's beliefs are free from constraints external to the main objective). One opposing idea is to use the answers to predictive questions about the stream of observations. Several approaches to learning under partial observability using predictions have been proposed and studied. One approach is to use short histories to find a collection of observation action sequences to infer the probability of seeing another trajectory given the agent's current histry, also known as predictive state representations (PSRs) [[cite:&littman2002predictive;&singh2004predictive]]. Another architecture, known as Temporal-difference Networks [[cite:&sutton2005temporaldifference;&tanner2005temporal;&tanner2005td;&tanner2005thesis]], is highly related to the work presented in this dissertation. A TDN is a combination of a question network (built on the base observations) and an answer network (the parameter used for answering the questions). The TDN then used TD to learn the parameters of the answer network from experience.
 
@@ -525,40 +631,6 @@ CLOSED: [2023-03-01 Wed 13:15]
 *************** END
 
 Above we introduced GVFs in the context of prediction (i.e. as a prediction demon). This object can be used to in both prediction (as described above) and for control (similarly to options). A control demon is encoded into a state-action value function and learned through Q-learning [[cite:&watkins1992qlearning]] or Sarsa [[cite:&rummery1994line]] to maximize the return. This is similar to the control problem (Section ref:sec:bg:control)--where the objective is to use value iteration to learn a policy--but often the behavior policy is arbitrarily different from the current policy of the demon. While these objects present unique sets of predictive information, our focus in the thesis will be on prediction demons throughout the thesis and consider the incorporation of control demons in future work.
-
-
-* TODO Is this a new chapter?
-
-This chapter
-- goes through state construction using predictions
-- discusses the large literature related to learning long-temporal dependencies.
-
-** DONE [1/1] Learning Long-temporal Dependencies
-:PROPERTIES:
-:CUSTOM_ID: sec:bg:perception:tempdepend
-:END:
-
-*************** DONE edit LLTD section :noexport:
-CLOSED: [2023-02-21 Tue 15:48]
-*************** END
-
-
-Learning long-temporal dependencies is the primary concern of both RL and SL applications of recurrent networks. While great work has been done to coalesce around a few potential architectures and algorithms for SL settings, these are often found lacking in the online-incremental RL context cite:&sodhani2020training;&rafiee2022eyeblinks;&schlegel2021general. 
-# discussed in section \ref{sec:open_problems}.
-Not only do agents need to learn from the currently stored data (i.e. in an experience replay buffer), they must also continually incorporate the newest information into their decisions (i.e. update online and incrementally). The importance of learning state from an online stream of data has been heavily emphasized in the past through predictive representations of state cite:&littman2002predictive, temporal-difference networks [[cite:&sutton2005temporaldifference]] and GVF networks [[cite:&schlegel2021general]], and in modeling trace patterning systems [[cite:&rafiee2022eyeblinks]]. From a supervised learning perspective, several problems like saturating capacity and catastrophic forgetting are cited as the most pressing for any parametric continual learning system [[cite:&sodhani2020training]]. Below we suggest a few alternative directions needing further exploration in the RL context.
-
-The current standard in training recurrent architectures in RL is truncated BPTT. This algorithm trades off the ability to learn long-temporal dependencies with computation and memory complexity. Currently, the system designer must set the length of temporal sequences the agent needs to model (as would be needed for truncated BPTT to be effective [[cite:&mozer1995focused;&ke2018sparse;&tallec2018unbiased;&rafiee2022eyeblinks]]). Setting this length is a difficult task, as it interacts with the underlying environment and the agent's exploration strategy
-# (see section \ref{sec:open_problems} for more details).
-As the truncation parameter increases it is known that the gradient estimates become wildly variant [[cite:&pascanu2013difficulty;&sodhani2020training]], which can make learning slow.
-
-An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
-
-Learning long-temporal dependencies through regularizing objectives on the state has shown promise in alleviating the need for unrolling the network over long-temporal sequences. citeauthor:&schlegel2021general (citeyear:&schlegel2021general) use GVFs to make the hidden state of a simple RNN predictions about the observations showing potential in lightening the need for BPTT. This approach is sensitive the GVF parameters to use as targets on the state of the network. Predictive state recurrent neural networks [[cite:&downey2017predictive]] combine the benefits of RNNs and predictive representations of state [[cite:&littman2002predictive]] in a single architecture. They show improvement in several settings, but don't explore the model when starved for temporal information in the update. Another approach is through stimulating traces, as shown by [[cite:&rafiee2022eyeblinks]], where traces of observations are used to bridge the gap between different stimuli. Instead of traces, an objective which learns the expected trace [[cite:&hasselt2021expected]] of the trajectory could provide similar benefits as a predictive objective. One can even change the requirements on the architecture in terms of final objectives. [[cite:&mozer1991induction]] propose to predict only the contour or general trends of a temporal sequence, reducing the resolution considerably. Value functions are another object which takes an infinite sequence and reduces resolution to make the target easier to predict [[cite:&sutton1995td;&sutton2011horde;&modayil2014multitimescale;&vanhasselt2015learning]].
-
-It is also possible to reduce or avoid the need for BPTT for modeling long-temporal sequences by adjusting the internal mechanisms of the recurrent architecture. Echo-state Networks [[cite:&jaeger2002adaptive]] are one possible direction. Related to the generate and test idea, echo-state networks rely on a random fixed "reservoir" network, where predictions are made by only adjusting the outgoing weights. Because the recurrent architecture is fixed, no gradients flow through the recurrent connections meaning no BPTT is needed to estimate the gradients. Unfortunately, these networks are dependent on their initializations making them hard to deploy in practice. [[citeauthor:&mozer1995focused]] ([[citeyear:&mozer1995focused]]) propose a focused architecture design, where recurrent connections are made more sparsely (even just singular connections). This significantly reduces the computational complexity of RTRL and allows for a focused version of BPTT.
-
-Transformers [[cite:&vaswani2017attention]] are a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. Because of these compromises, it is still unclear if transformers are a viable solution to the state construction problem in continual reinforcement learning.
-
 
 * DONE [#A] [14/14] Incorporating action into a recurrent network
 :PROPERTIES:
