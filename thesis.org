@@ -88,22 +88,11 @@ and sets formatting up for main text.
 
 
 
-* IN-PROGRESS [2/4] Introduction
+* Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
 :END:
 
-*************** DONE [#A] Rewrite Introduction with new story direction :noexport:
-CLOSED: [2023-04-12 Wed 14:57]
-- Partial information is something that exists generally.
-  - Example in details.
-  - Example situation where the observation is the same but correct action is different.
-- Summarizing history is a useful strategy
-- Widely used approaches for rep learning in RL
-- SL has different considerations from RL.
-- Thesis questions  
-- Contributions
-*************** END
 
 The goal of machine intelligence research is to design an agent which interacts with its world through a continuous stream of interactions, consistently getting better through feedback, either provided or self-guided. Continual reinforcement learning [[cite:&ring1994continual;&khetarpal2022continual]] is one paradigm in which we can design such systems. Similar to reinforcement learning (RL), a continual RL agent seeks to maximize the cumulative sum of rewards---which provides a simple yet effective path towards learning behavior. The main attribute of continual RL is that there is an unending stream of sensorimotor interactions which the agent must sift through online. This is different from many instantiations of reinforcement learning where the agent often gets to the goal or the end of a maze and then is sent back to the beginning to continue learning, in continual RL the agent never reaches a point where it is reset. The agent must also balance computation to make decisions within a small time frame while also learning from recent observations. These attributes make the continual RL problem challenging, but applicable to a wide range of real-world applications.
 
@@ -159,15 +148,12 @@ This contribution develops the /Mean-Squared Predictive Bellmen Network Error/, 
 
 *** Off-policy prediction with Resampling
 
-* IN-PROGRESS [#A] [17/18] Background
-
-*************** TODO Edit
-*************** END
+* Background
 
 
-In this thesis, I take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually. While this is not a particularly novel interpretation of the machine intelligence problem [[cite:&ring1994continual;&ring1997child;&sutton2011horde]], it is worthwhile to clarify the terms I will use throughout intuitively before moving onto formal descriptions. In this chapter, I provide the relevant general background. This includes background on reinforcement learning (RL) (including off-policy prediction and control), and learning under the constraint of partial observability. Specific background details related to certain solution methods will be presented closer to their relevant sections.
+In this thesis, I take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually [[cite:&ring1994continual;&ring1997child;&sutton2011horde]]. In this chapter, I provide the relevant general background. This includes background on reinforcement learning (RL) (including off-policy prediction and control), and learning under the constraint of partial observability. Specific background details related to certain solution methods will be presented closer to their relevant sections.
 
-** DONE Reinforcement Learning
+** Reinforcement Learning
 CLOSED: [2023-02-21 Tue 11:50]
 
 The problem setting considered in this thesis is (continual) reinforcement learning (RL). In short, a reinforcement learning agent seeks to maximize a reward signal by acting in the world. In this thesis, I am concerned with two learning problems in reinforcement learning. Specifically, I focus on the model-free prediction and control problem, but each share the same general framework. The agent-environment interaction consists of a stream of data (from the agent's senses), coming in at a consistent rate into the agent's central control systems. In most reinforcement learning, the agent-environment boundary is placed inside the agent's nervous system where parts of the agent's body which are defined through evolution are external to the learning process, and those that are learned and modified through an agent's lifetime are a part of the learning process. This enables RL researchers to focus on the core problem of learning a policy to maximize reward. Figure ref:fig:bg:rl-interaction depicts the agent-environment interaction loop in RL.
@@ -194,7 +180,7 @@ q(\EnvState, \Action) = \Expected_\pi [ G_t | \envstate_t = \EnvState, \Action_t
 \]
 This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections I will extend this framework to the partial observable case, and go into the specifics of the prediction problem and the control problem.
 
-** DONE [4/4] Prediction
+** Prediction
 
 *************** DONE Outline and lay foundation for prediction section :noexport:
 CLOSED: [2023-02-21 Tue 15:44]
@@ -278,7 +264,7 @@ While the above objectives have been shown to effectively work in a wide range o
 \end{align*}
 where \(\alpha\) and \(\beta\) are learning rates which can also be set per time-step. This algorithm can also be derived when the value function is non-linear [[cite:&maei2009convergent]]. See Chapter ref:chap:gvfn:algs for a non-linear derivation with added constraints.
 
-** DONE Control in Reinforcement Learning
+** Control in Reinforcement Learning
 CLOSED: [2023-02-21 Tue 11:50]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:control
@@ -299,7 +285,7 @@ So far, the above update rule for q-learning is defined for the tabular setting.
 
 # See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
 
-** DONE [4/4] Perception and Partial Observability in Reinforcement Learning
+** Perception and Partial Observability in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:perception
 :END:
@@ -327,7 +313,7 @@ Such a state summarizes the history, removing the need to store the entire (pote
 
 In the next two sections, I detail recurrent neural networks (RNNs) and the algorithms used to train RNNs in SL and RL.
 
-*** DONE Recurrent Neural Networks
+*** Recurrent Neural Networks
 CLOSED: [2023-02-22 Wed 13:17]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:rnns
@@ -362,7 +348,7 @@ CLOSED: [2023-03-28 Tue 13:08]
 *************** END
 
 
-*** DONE Back-Propagation Through Time
+*** Back-Propagation Through Time
 CLOSED: [2023-03-28 Tue 13:03]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:bptt
@@ -385,7 +371,6 @@ One might notice the above loss function requires growing computational and memo
 \]
 
 An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
-
 
 
 ** Prediction and Control in Deep Recurrent Reinforcement Learning
@@ -420,7 +405,7 @@ Previously, the components of a deep feed-forward reinforcement learning agent w
 
 *Objectives matter even more:* It is known that some objective functions are more learnable in both the fully and partially observable settings cite:&mozer1991induction;&vanhasselt2015learning. In this thesis, a specific loss structure is adopted to make comparisons between several styles of architectures (see section ref:sec:bg:bptt  for details), but others could have been used. Another addition are auxiliary tasks which augment the objective function cite:&jaderberg2017reinforcement, and has been argued to improve learning state representations.
 
-** DONE [4/4] Temporal Abstractions in Reinforcement Learning
+** Temporal Abstractions in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:temporal-abstractions
 :END:
@@ -453,21 +438,10 @@ CLOSED: [2023-03-01 Wed 13:15]
 
 Above GVFs were introduced in the context of prediction (i.e. as a prediction demon). This object can be used to in both prediction (as described above) and for control (similarly to options). A control demon is encoded into a state-action value function and learned through Q-learning [[cite:&watkins1992qlearning]] or Sarsa [[cite:&rummery1994line]] to maximize the return. This is similar to the control problem (Section ref:sec:bg:control)--where the objective is to use value iteration to learn a policy--but often the behavior policy is arbitrarily different from the current policy of the demon. While these objects present unique sets of predictive information, our focus in the thesis will be on prediction demons throughout the thesis and consider the incorporation of control demons in future work. GVF questions, or the definitions used here, can be used as a unifying specification for reinforcement learning tasks (i.e. for options, predictions, control, etc...) [[cite:&white2017unifying]].
 
-* DONE [#A] [14/14] Incorporating action into a recurrent network
+* Incorporating action into a recurrent network
 :PROPERTIES:
 :CUSTOM_ID: chap:arnn
 :END:
-
-# #+CAPTION: Visualizations of the multiplicative and additive RNNs.
-# #+NAME: fig:viz_rnn
-# [[./plots/arnns/figures/RNN.pdf]]
-
-*************** DONE [#B] Deal with the appendix from paper :noexport:
-CLOSED: [2023-02-24 Fri 09:21]
-*************** END
-
-
-# In this chapter, I will introduce different mechanisms for incorporating action into a recurrent cell. Some of these mechanisms have been introduced in other parts of the reinforcement learning literature, while some are novel to this thesis. These mechanisms can be applied broadly in any recurrent architecture. In this thesis, I focus on empirically evaluating the difference approaches in simple RNNs and in GRUs, leaving other cells to future work. The goal of this chapter is to bring together these difference mechanisms and perform a rigorous empirical evaluation.
 
 The major contribution of this chapter is the comparison and analysis of several architectures for incorporating action into the state-update function of an RNN in partially observable RL settings. Many of these architectures have been proposed previously for recurrent architectures (i.e. cite:&zhu2018improving;&schlegel2021general), and others are either related to or obvious extensions of those architectures. The results include an in-depth empirical evaluation on several illustrative domains, and outline the relationship between the domain and architectures using the deep recurrent q-network (DRQN) framework [[cite:&hausknecht2015deep]]. Finally, future directions in developing recurrent architectures designed for the RL problem and discuss challenges specific to the RL setting are discussed.
 
@@ -481,7 +455,7 @@ One important design decision is the strategy used to incorporate action in the 
 [[./plots/arnns/figures/ringworld_example_lc.pdf]]
 
 
-** DONE Problem Setting :noexport:
+** Problem Setting                                                :noexport:
 CLOSED: [2023-01-18 Wed 13:57]
 
 The agent-environment interaction is formalized as a partially observable markov decision processes (POMDP). The underlying dynamics are defined by a tuple \((\States, \Actions, \Pmat, f_\obs, \Rewards)\). Given a state \(\envstate \in \States\) and \(\action \in \Actions\) the environment transitions to a new state \(\envstate\prime \in \States\) according to the state transition probability matrix \(\Pmat \defeq \States \times \Actions \times \States \rightarrow [0,\infty)\) with a reward given by \(\Rewards \defeq \States \times \Actions \rightarrow \Reals\). The agent observes the sequence \(\obs_t, \action_t, \reward_{t+1}, \obs_{t+1}, \action_{t+1}, \ldots\) where the observations are a lossy function over the state \(\obs_t \defeq f_\obs(\envstate_t) \in \Reals^\obssize\), the actions are selected by the agent's current policy \(\action_t \sim \pi(\cdot|\obs_0, \action_0, \ldots, \action_{t-1}, \obs_t) \rightarrow [0, \infty)\), and the reward is \(\reward_t \defeq f_\reward(\envstate_0, \envstate_1, \ldots, \envstate_t) \in \Reals\).
@@ -494,7 +468,7 @@ Experiments are performed in two settings: prediction and control. For predictio
 {{{c}}}
 The value function is estimated using off-policy semi-gradient TD(0) citep:&sutton1988learning;&tesauro1994tdgammon. For the control setting, the agent learns a policy which maximizes the discounted sum of rewards or return \(G_t \defeq \sum_{i=0}^\infty \gamma^{i} \reward_{i+t+1}\) using Q-learning citep:&watkins1992qlearning.
 
-** DONE Constructing State with Recurrent Networks
+** Constructing State with Recurrent Networks
 CLOSED: [2023-01-18 Wed 13:57]
 
 For convenience, this section reiterates the methods used to learning a state-update function using recurrent neural networks. Much of the content is the same as found in Section ref:sec:bg:perception, with details specific to this contribution. Specifically, the details needed for incorporating RNNs into the deep Q-network framework as originally discussed by [[citeauthor:&hausknecht2015deep]] ([[citeyear:&hausknecht2015deep]]).
@@ -524,7 +498,7 @@ There are several known problems with simple recurrent units (and to a lesser ex
 
 Finally, to improve sample efficiency experience replay (ER) is incorporated. ER is a critical part of a deep (recurrent) system in RL citep:&mnih2015humanlevel;&hausknecht2015deep. There are two key choices here: how states are stored and updated in the buffer and how sequences are sampled citep:&kapturowski2019recurrent. In the following sections, the hidden state of the cell is stored in the experience replay buffer as apart of the experience tuple. This is then used to initialize the state when sampled from the buffer for both the target and non-target networks. Gradients are passed back to the stored state to update them along with our model parameters, see a full discussion in Section ref:sec:conc:arnn:open-problems. A separate initial state is also stored for the beginning of episodes, which is updated with gradients. This is slightly differ from the approach taken by cite:&kapturowski2019recurrent, but this architectural choice should have little impact on the results presented here. If the beginning of an episode is sampled from the replay, the most up to date version of this vector was used to initialize the hidden state. The agent samples states across the episode. For samples at the end of the episode, a shorter sequence length \(\tau\) is used.
 
-** DONE Tensors and Low-Rank Decompositions
+** Tensors and Low-Rank Decompositions
 CLOSED: [2023-02-24 Fri 10:08]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:tensor
@@ -595,7 +569,7 @@ One interesting property of this operation is now each of the dimensions can hav
 
 Using a lower rank approximation of a multiplicative operation has been derived before several times. A multiplicative update was used to make action-conditional video predictions in Atari [[cite:&oh2015actionconditional]]. This operation also appears in a lower-rank approximation defined by Predictive State RNN hidden state update [[cite:&downey2017predictive]], albeit never performed as well as the full rank version.
 
-** DONE Architectural Designs for Incorporating Action
+** Architectural Designs for Incorporating Action
 CLOSED: [2023-01-18 Wed 13:57]
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:design
@@ -659,7 +633,7 @@ CLOSED: [2023-02-24 Fri 09:29]
 
 Another approach to reducing the number of parameters required---and to reduce redundant learning---by using an action embedding rather than a one-hot encoding. For example, in Pong it is known that only ~5 actions matter. By taking advantage of the structure of the action space further reductions to the number of parameters could be made. This architecture is explored briefly in Section ref:app:arnns:deep-action. While this is an important piece of the puzzle, no effort is afforded to learning good action embeddings in the following results and leave it to future work.
 
-** DONE Empirical Questions
+** Empirical Questions
 CLOSED: [2023-01-18 Wed 13:57]
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:experiments
@@ -699,7 +673,7 @@ CLOSED: [2023-02-24 Fri 09:28]
 
 In all control experiments, an \(\epsilon\)-greedy policy with \(\epsilon=0.1\) is used. All networks are initialized using a uniform Xavier strategy citep:&glorot2010understanding, with the multiplicative operation independently normalizing across the action dimension (i.e. each matrix associated with an action in the tensor is independently sampled using the Xavier distribution). Unless otherwise stated, a hyperparameter search was performed for all models using a grid search over various parameters (listed appropriately in the Appendix ref:app:arnns:emp). The number of hyperparameter settings were fixed to be equivalent across all models, except the factored variants which use several combinations of hidden state size and number of factors. The best settings were selected and reported using independent runs with seeds different from those used in the hyperparameter search, unless otherwise specified. All the network sizes were controlled such that they had an approximately equal number of free parameters. All final network sizes can be found in Appendix ref:app:arnns:emp.
 
-** DONE Investigating Properties of the Predictions and State
+** Investigating Properties of the Predictions and State
 CLOSED: [2023-01-18 Wed 13:57]
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:learnability
@@ -762,7 +736,7 @@ Above, I hypothesized the separation of action faced by the additive agent could
   \caption{TSNE plots for multiplicative and additive RNNs for various number of training samples.} \label{fig:arnn:tsnes-over-time}
 \end{figure}
 
-** DONE Understanding when Action Encoding Does and Does Not Matter
+** Understanding when Action Encoding Does and Does Not Matter
 CLOSED: [2023-01-20 Fri 15:59]
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:control
@@ -795,7 +769,7 @@ To better replicate these dynamics in TMaze, a direction component is added to t
 
 Now that the agent must be mindful of its orientation, the action again becomes a critical component in learning. The multiplicative variants outperforming all other variants in this domain. Without action, the GRU and RNN are unable to learn, and even the additive and deep additive versions are unable to learn in 300000 steps. Figure ref:fig:arnn:dirtmaze-fac reports the performance of a sweep over the number of factors and report the as compared to the multiplicative and additive variants. As the factors increase, generally the performance increases as well. This matches our expectations, as with increased factors the factored variants should better approximate the multiplicative variances. But there is a tradeoff when adding too many factors, causing performance to decrease substantially. While the factored variant has some interesting properties, the remaining experiments focus on the base architectures (NA, MA, AA, DA) and report full results with the factored variant in Appendix ref:app:arnns.
 
-** DONE Combining Cell Architectures
+** Combining Cell Architectures
 CLOSED: [2023-01-20 Fri 15:45]
 :PROPERTIES:
 :CUSTOM_ID: sec:arnn:combining
@@ -823,7 +797,7 @@ where \(\boldsymbol{\theta}^a, \boldsymbol{\theta}^m \in \Reals^\statesize\). Th
 
 These combinations are compared to the original architectures in TMaze and Directional TMaze following the same procedure as above. These cells should perform as well as either the additive or the multiplicative (which ever is doing the best in the specific domain). The results can be seen in Figure ref:fig:arnn:combination. Overall, the softmax combination performs similarly or slightly better than the multiplicative version except in the Directional TMaze for the GRUs. In TMaze, concatenating the two states together performed better than the additive and multiplicative cells, but this operation worked slightly worse than the multiplicative in the Directional TMaze. To test the hypothesis that the softmax weighting should emphasize the better cell in a given domain the softmax weighting over the training period is reported. For the TMaze the weightings end being approximately equivalent while the Directional TMaze shows a very distinct separation where the multiplicative is weighted significantly more and the additive is continually down-weighted.
 
-** DONE Learning State Representations from Pixels
+** Learning State Representations from Pixels
 CLOSED: [2023-01-20 Fri 15:49]
 
 Finally, an empirical study in two environments with non-binary observations is performed. I am particularly interested in whether the recurrent architectures perform comparably when the observation needs to be transformed by fully connected layers, or when the observation is an image. These experiments only use the GRU cells. Full details can be found in Appendix ref:app:arnns:emp.
@@ -844,7 +818,7 @@ Results for the Image DirectionalTMaze can be seen in Figure ref:fig:arnn:scalin
 # \label{fig:scaling_up}
 # \end{figure}
 
-** DONE Learning State Representations from Agent-Centric Sensors
+** Learning State Representations from Agent-Centric Sensors
 CLOSED: [2023-01-23 Mon 12:56]
 
 The second domain is a partially observable version of the LunarLander-v2 environment from OpenAI Gym cite:&brockman2016openai. The goal is to land a lander on the moon within a landing area. Further details and results can be found in Appendix ref:app:arnns:emp. The observation is modified by removing the anglular speed, and filtering the angle \(\theta\) such that it is 1 if \(-7.5 \le \theta \le 7.5\) and 0 otherwise. The average reward obtained over all episodes and learning curves are reported.
@@ -872,7 +846,7 @@ As seen in Figure ref:fig:arnn:scaling-up, our findings generalize to this domai
   \caption{Individual learning curves. Line is the median over 1000 episodes, with the shaded region as the 1st and 3rd quantile over the same window.} \label{fig:arnn:lunar-median}
 \end{figure}
 
-** DONE Summary and Conclusions
+** Summary and Conclusions
 CLOSED: [2023-01-23 Mon 12:57]
 
 This chapter empirically evaluated several strategies for incorporating the previous action into the state update of a recurrent neural network.
@@ -1978,8 +1952,45 @@ CLOSED: [2023-02-22 Wed 14:34]
 :CUSTOM_ID: chap:composite
 :END:
 
-In Chapter ref:chap:gvfn:empirical, I explored several hand designed network configurations. This lead to several observations, including compositional GVFs have considerable representational power if the predictive questions can be answered. In the following Chapter, I focus on the open question of "what do GVFs composed together in chains predictively represent?" While I don't answer this question conclusively for all possible chains GVFs, I provide explorations for two important types of composite GVFs: those which have constant discounts, and those which have terminating discounts.
+In Chapter ref:chap:gvfn:empirical, I explored several hand designed network configurations. This lead to several observations, including compositional GVFs have considerable representational power if the predictive questions can be answered. In the following Chapter, I propose constraints we should apply to the set of GVFs that should be considered in a egocentric agent. These constraints are born from the constraints on a continual learning agent, and inform future explorations in using GVFs and GVFNs for planning and control. I follow up this discussion by analyzing a specific type of GVF oft unexplored in the literature, composite GVFs. Specifically, I explore the open question of "what do GVFs composed together in chains predictively represent?" While I don't answer this question conclusively for all possible chains GVFs, I provide explorations for two important types of composite GVFs: those which have constant discounts, and those which have terminating discounts.
 
+** Expanding the set of predictive targets in a continual learning agent :noexport:
+
+*************** DONE Motivate what specific targets do we want.   :noexport:
+CLOSED: [2023-04-19 Wed 11:18]
+*************** END
+
+
+In this thesis, I have taken the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually. While this is not a particularly novel interpretation of the machine intelligence problem [[cite:&ring1994continual;&ring1997child;&sutton2011horde]], it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
+
+#+caption: Diagram of the agent in the environment
+#+name: fig:bg:agent-env-interaction
+#+attr_latex: :width 0.8\linewidth
+[[./plots/world-body-agent-diagram.pdf]]
+
+The *agent* exists inside the *environment*. The *environment* is large. So large the agent faces a vast array of detail and regularity, which can not be captured in any finite way. This big world view [[cite:&sutton2020tea]] is a hallmark of continual learning [[cite:&ring1994continual;&ring1997child]]. The environment could be filled with other agents, areas of high reward or risk, or a seemingly infinite number of objectives about which to learn. The agent views the environment through a set of analog-to-digital sensors positioned in an egocentric orientation [fn:: While we take the egocentric perspective, nothing is preventing our artificial agents from accessing non-egocentric senses. A clear example of this would be a camera positioned in a different room, which can be plugged directly through the agents perceptual system directly. This is unlike a biological agent, who must observe the camera through their eyes from a screen.]. The agent must maintain a set of current beliefs about the world internally. This set of beliefs (also known as a summary of the agent's history) is referred to as *agent-state* (we use state and agent-state interchangeably, making sure to emphasize when discussing the environment state where necessary). The agent's life goal is to maximize the cumulation of *rewards* [fn:: In machine intelligence, the *reward* is used as a broad term to encompass both positive and aversive outcomes. While these signals are often combined in MI research, there is evidence to suggest they are encoded and processed in organic agents differently [[cite:&niv2009reinforcement]]] either internally or externally defined [[cite:&silver2021reward]].
+
+
+The *practitioner* is you and me. Specifically, a practitioner is one who is creating the *agent* for an environment. In machine intelligence (MI) research, the goal is to construct agents which can behave in an environment, usually to accomplish a specific goal set by the practitioner. We seek solutions, algorithms, and systems which can do solve goals with as little imbued assumptions by the practitioner as possible [[cite:&sutton2019bitter]]. One possible way to accomplish this goal is through setting goals for the agent in terms of reward functions. This form of machine intelligence has been discussed before with a hypothesis termed "Reward is Enough". This hypothesis has been used to form a centralized definition of intelligence and conjectures on how to create such an intelligence through designing reward functions [[cite:&sutton2020john;&silver2021reward]]. While it is typical for the practitioner to construct an explicit reward function for the agent, the agent can also use internal signals to drive its behavior. This is typically known as intrinsic motivations. In this thesis, we use hand constructed reward functions to gain insights into the algorithms and architectures we explore, but overall we are interested in an agent's ability to predict and control its stream of experience. In all, we make sure our approaches provide better prediction as well as lead to maximizing cumulative reward. Given the right experiences (i.e. behavior in the environment) an agent should be able to accurately make predictions in a computationally constrained way. For more on ways to improve behavior for learning predictions see [[cite:&mcleod2021continual]].
+
+
+# One common example consistently used in this thesis is that of a small robot on wheels behaving in a room. This is a common example throughout MI and RL research and is also known as a vacuum robot [[cite:&russell2010artificial]], or lovingly known as the critterbot [[cite:&sutton2011horde;&modayil2014multitimescale;&white2015developing]]. While we don't explore the full robotic setting, we often use simulations which approximate this setting to ask fundamental questions about the learning process. The hallmarks of this setting include a squat, mostly circular robot with wheels. This robot has a large set of egocentric sensors including light sensors, a camera, a bump sensor, and many more senses to view its environment. It can roll forward and backwards and rotate clockwise or counterclockwise. This agent lives continuously and has several potential goals depending on the practitioner's desires. Approximations of this example can be seen in several experiments throughout this thesis (Section ref:sec:arnn:experiments, and Chapters ref:chap:gvfn:empirical, ref:chap:composite, ref:chap:gvfn:discovery).
+
+*************** DONE [#B] GVFs set the stage for expanding the set of predictive targets, but we must constrain. :noexport:
+CLOSED: [2023-04-19 Wed 11:18]
+*************** END
+
+General value functions [[cite:&sutton2011horde;&white2015developing]] provide a concrete framework for proposing predictive questions. This framework extends the set of predictions which can be learned through temporal-difference style learning algorithms to any real-valued signal available to the agent. But often this framework is discussed from the perspective of the practitioner, where privileged information can be incorporated into the parameter functions. This can be seen in much of the work above. While this is a convenient strategy to incorporate expert knowledge into the agent's representation---which should be done if it is available for applications---in many settings this information is either costly to access or entirely unavailable. All of the agent's question parameters should be derived from the observations or signals the agent reliably has access to. In other words, all parameter functions are mappings from the agent's perceptual system to real-values. For event based terminations and cumulants, the agent must be able to recognize when an event is happening from its perceptual system alone.
+
+While I advocate for constraining the set of functions used to define the question parameter functions, learning predictions of any real-valued signal the agent has access to also opens the possibility of asking composite predictive questions [[cite:&white2015developing]]. A composite question is one whose target is dependent on another prediction internal to the agent. Compositions expand the possible range of predictive questions we can specify as a GVF [[cite:&sutton2005temporaldifference;&rafols2006temporal;&zheng2021learning;&white2015developing;&schlegel2021general]]. While this may suggest the GVF framework is limited in what questions can be asked, the limitations are necessary so the predictions can be trained /independent of span/ [[cite:&vanhasselt2015learning]]. Learning independent of span means the target can be learned using online algorithms regardless of the effective horizon of the prediction. Adding layers of composite questions have improved the learning in predictive representations [[cite:&rafols2006temporal;&schlegel2021general]], and improved the performance of deep reinforcement learning through auxiliary tasks [[cite:&zheng2021learning]]. In the automatic specification of learning targets compositions are thought to provide a way for the agent to build complexity [[cite:&schlegel2021general;&veeriah2019discovery;&zheng2021learning;&kearney2022what]], but often these architectures don't leverage compositions for stability concerns [[cite:&tanner2005temporal;&tanner2005td;&schlegel2017stable;&schlegel2021general]]. 
+
+As well as improving behavior empirically, compositions can provide semantic depth. An excellent example of this can be seen in option-extended temporal difference networks [[cite:&rafols2006temporal]], and later explored again in [[cite:&schlegel2021general]]. The example is centered in an environment where the agent has a low-powered visual sensor and needs to learn its directionality from the painted walls. Each cardinal direction has a different colored wall. The first layer of predictions the agent makes is to predict what color it will observe if it were to drive straight. The second layer are myopic predictions which ask what the first layer's prediction will be after turning clockwise (or counter-clockwise). The second layer allows the agent to predict which walls are to its sides as well as the wall in the direction the agent is facing. These predictions cannot be specified in the usual GVF framework, but can be easily constructed through compositions. While this may be ``repeated information'' in a sense, the extra learning objectives makes the learning properties of the predictive representation better as compared to other specifications [[cite:&schlegel2021general]].
+
+As algorithms for the automatic discovery of complex question networks continue to push the boundaries of what questions are considered by the agent, the properties of compositions should be better studied. When searching for what to learn the questions an agent eventually retains will be dependent on the agent's ability to learn the predictions. While it is clear questions that naturally diverge (say setting the discount $\gamma=1$) should be avoided, other problems, such as the scale of a target, could be equally as problematic when using function approximation (i.e. end-to-end neural networks). This could mean important predictions are disregarded because the agent is unable to learn the answer without proper strategies to normalize the prediction's magnitude. Better strategies for learning and normalizing predictive targets will come from understanding the effective discount schedule (or emphasis) composite predictions will have on the targets.
+
+In this chapter, I consider the effect of compositions on the sequence of discounts, and relegate the effect of off-policy importance weights to future work. I first analyze the sequence of discounts over any number of compositions and constant discounts. I then analyze this sequence to better understand how it emphasizes parts of the data stream. Surprisingly, the effective discount for constant discount compositions have a form which can be described analytically. While this does not include the full spectrum of discount functions, it provides a first step towards understanding compositions. Next I evaluate more complex state-dependent discount functions using a simple consistent sequence and two timeseries datasets in empirical simulations. In these simulations I focus on the effect of applying the same discount function a large number of times, looking to see if the shape of the returns become regular over the compositions.
+{{{c}}}
+{{{c}}}
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{plots/compgvfs/seq_plus_cw.pdf}
@@ -1990,7 +2001,6 @@ In Chapter ref:chap:gvfn:empirical, I explored several hand designed network con
     $n$ compositions with constant and terminating discounts
     respectively.} \label{fig:compgvfs:seq-cw}
 \end{figure}
-
 ** Composite GVFs
 :PROPERTIES:
 :CUSTOM_ID: sec:compgvfs:analyze
@@ -2055,7 +2065,6 @@ The first series is based off the cycle world, where the agent observes a sequen
 
 Next the Critterbot dataset [[cite:&modayil2014multitimescale;&white2015developing]] is used, focusing on light sensor 3 in figure ref:fig:compgvfs:critterbot. This gives a sequence of spikes similar to the cycle world sequence and a long pause in-between consistent saturations of the light sensor. The predictions look more like shifted and spread spikes as compared to the cycle world results. But with many more compositions, the return reverts to a similar form as before. The terminating discounts (with termination at sensor saturation $x[t+1] > 0.99$) provides a nice demonstration of how the returns are predicting the signal, just with a decaying prediction instead of the usual growing prediction. The results are similar in the multiple sinusoidal oscillator [[cite:&jaeger2004harnessing]]. A slightly different terminating discount is used where the return terminates when the previous normalized prediction is $y^{n-1}[t+1] > 0.9$ rather than when the observation is saturated. While there are decays as the MSO sequence peaks, as the depth of the composition is increased, these periods are less frequent. Deep compositions may indicate parts of the sequence where there are fewer saturations in the original sequence.
 
-
 ** Future Directions
 
 This work suggests a number of interesting research directions and questions. While I mostly analyzed the sequence on discrete steps and applications of the filter, the general form does lend itself to continuous and complex values of $n$ and $k$. In a similar vein, I focused on real valued exponential discounting while several discounting schemes exist which could be applied to our formulation. I am particularly interested in complex discounting [[cite:&deasis2018predicting]] and hyperbolic discounting [[cite:&ainslie1992hyperbolic;&fedus2019hyperbolic]]. Applying a diverse set of discounting schemes in compositions provide an interesting way to extend the power of value functions while maintaining learnability through efficient algorithms like temporal-difference learning. 
@@ -2080,7 +2089,7 @@ There are two main families of approaches to discovery of GVFs for GVFNs: genera
 *Generate and test*
 is a natural algorithmic approach when considering a search problem through a complex unordered (or not obviously ordered) space. The core of the approach is to propose GVFs through a generator and approximate their utility for the downstream task through a proxy measure. This approach has been used for representation discovery cite:&mahmood2013representation,javed2020learning. The simplest setting where such a generate-and-test approach could be used is time series forecasting, as the predictions are on-policy and so policies do not have to be proposed by the generated. Further, practitioners can apply their prior knowledge in creating the cumulant and continuation functions considered by the generator. There are, however, some simple strategies for generating policies, which is discussed in Section ref:sec:gvfn:simple-disc.
 
-A generate and test algorithm has been developed for TD networks [[cite:&makino2008online]]. The process of discovery involves creating new predictions built entirely from existing structures: senses or predictions. By building new predictions from existing predictions, it facilitates the creation of compositional structures. The system proposed in citeA:&makino2008line determines when a node (i.e. a prediction or sense) should be expanded on using three criteria. They then expand these nodes in specific ways to ask a broad set of compositional questions. TD networks do not include policies---rather they include action primitives---so the approach does not directly extend. However, the idea of iteratively creating such compositional structures does extend. For example, in this work, the expert network considered in Section ref:sec:gvfn:emp:poorlyspecified was composed of compositional GVFs. Compositional GVFs could be generated simply by using existing GVFs as the cumulant for the new GVF.
+A generate and test algorithm has been developed for TD networks [[cite:&makino2008online]]. The process of discovery involves creating new predictions built entirely from existing structures: senses or predictions. By building new predictions from existing predictions, it facilitates the creation of composite structures. The system proposed in citeA:&makino2008line determines when a node (i.e. a prediction or sense) should be expanded on using three criteria. They then expand these nodes in specific ways to ask a broad set of composite questions. TD networks do not include policies---rather they include action primitives---so the approach does not directly extend. However, the idea of iteratively creating such composite structures does extend. For example, in this work, the expert network considered in Section ref:sec:gvfn:emp:poorlyspecified was composed of composite GVFs. Composite GVFs could be generated simply by using existing GVFs as the cumulant for the new GVF.
 
 
 *Meta-gradient descent* uses gradient descent to learn meta-parameters that affect learning performance. The meta-parameters could correspond to initialization of a model for later fine tuning [[cite:&finn2017modelagnostic]], a set of GVF auxiliary tasks to improve representation learning in Atari cite:&veeriah2019discovery or parameterized options [[cite:&bacon2017option]]. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
@@ -2116,7 +2125,7 @@ event, which consists of a transition $(o, a, o')$).
 For cumulants, the set includes
 \textit{stimuli cumulants} (the cumulant is one of the observations,
 or taking on 0 or 1 if the observation fulfills some criteria (e.g. a threshold))
-and \textit{compositional cumulants} (the cumulant is the prediction of another GVF).
+and \textit{composite cumulants} (the cumulant is the prediction of another GVF).
 \textit{Random cumulants} (the cumulant is a random number generated from a zero-mean Gaussian with a random variance sampled from a uniform distribution) are also included; these are not expected to be useful, but rather use it to define what is called here a dysfunctional GVF to test pruning.
 For the policies, \textit{random policies} (an action is chosen at random) and
 \textit{persistent policies} (always follows one action) are used.
@@ -2172,27 +2181,17 @@ In the sampling literature, this strategy has been proposed under the name Sampl
 
 A resampling strategy has several potential benefits for off-policy prediction [fn:resampling2]. Resampling could even have larger benefits for learning approaches, as compared to averaging or numerical integration problems, because updates accumulate in the weight vector and change the optimization trajectory of the weights. For example, very large importance sampling ratios could destabilize the weights. This problem does not occur for resampling, as instead the same transition will be resampled multiple times, spreading out a large magnitude update across multiple updates. On the other extreme, with small ratios, IS will waste updates on transitions with very small IS ratios. By correcting the distribution before updating, standard on-policy updates can be applied. The magnitude of the updates vary less---because updates are not multiplied by very small or very large importance sampling ratios---potentially reducing variance of stochastic updates and simplifying learning rate selection. I hypothesize that resampling (a) learns in a fewer number of updates to the weights, because it focuses computation on samples that are likely under the target policy and (b) is less sensitive to learning parameters and target and behavior policy specification.
 
-# In this chapter, I investigate the use of resampling for online off-policy prediction for known, unchanging target and behavior policies. First Importance Resampling (IR) is introduced. Importance Resampling samples transitions from a buffer of (recent) transitions according to IS ratios. These sampled transitions are then used for on-policy updates. I show that IR has the same bias as WIS, and that it can be made unbiased and consistent with the inclusion of a batch correction term---even under a sliding window buffer of experience. Additional theoretical results characterizing when the variance is expected to be lower for IR than IS is reported in Appendix . We then empirically investigate IR on three microworlds and a racing car simulator, learning from images, highlighting that (a) IR is less sensitive to learning rate than IS and V-trace (IS with clipping) and (b) IR converges more quickly in terms of the number of updates.
-
 [fn:resampling1] There is substantial literature on variance reduction for another area called off-policy policy evaluation, but which estimates only a single number or value for a policy (e.g., see [[cite:&thomas2016dataefficient]]). The resulting algorithms differ substantially, and are not appropriate for learning the value function.
 
 [fn:resampling2] We explicitly use the term prediction rather than policy evaluation to make it clear that we are not learning value functions for control. Rather, our goal is to learn value functions solely for the sake of prediction.
 
 ** Background
 
-# \newcommand{\cumul}{c}
-# \newcommand{\cumulr}{C}
-# \newcommand{\stater}{S}
-# \newcommand{\actionr}{A}
-# \renewcommand{\Value}{V}
-
-We consider the problem of learning General Value Functions (GVFs) [[cite:&sutton2011horde]]. The agent interacts in an environment defined by a set of states $\States$, a set of actions $\Actions$ and Markov transition dynamics, with probability $\Pfcn(\state'|\state,\action)$ of transitions to state $\state'$ when taking action $\action$ in state $\state$. A GVF is defined for policy $\pi: \States \!\times \!\Actions \!\rightarrow\! [0,1]$, cumulant $\cumul: \States\! \times \!\Actions \!\times\! \States\! \rightarrow\! \RR$ and continuation function $\gamma: \States \!\times\! \Actions \!\times \!\States \rightarrow [0,1]$, with $\cumulr_{t+1} \defeq  \cumul(\stater_t, \actionr_t, \stater_{t+1})$ and  $\gamma_{t+1} \defeq  \gamma(\stater_t, \actionr_t, \stater_{t+1})$ for a (random) transition $(\stater_t, \actionr_t, \stater_{t+1})$. The value for a state $s \in \States$ is
+This chapter considers the problem of learning General Value Functions (GVFs) [[cite:&sutton2011horde]]. The agent interacts in an environment defined by a set of states $\States$, a set of actions $\Actions$ and Markov transition dynamics, with probability $\Pfcn(\state'|\state,\action)$ of transitions to state $\state'$ when taking action $\action$ in state $\state$. A GVF is defined for policy $\pi: \States \!\times \!\Actions \!\rightarrow\! [0,1]$, cumulant $\cumul: \States\! \times \!\Actions \!\times\! \States\! \rightarrow\! \RR$ and continuation function $\gamma: \States \!\times\! \Actions \!\times \!\States \rightarrow [0,1]$, with $\cumulr_{t+1} \defeq  \cumul(\stater_t, \actionr_t, \stater_{t+1})$ and  $\gamma_{t+1} \defeq  \gamma(\stater_t, \actionr_t, \stater_{t+1})$ for a (random) transition $(\stater_t, \actionr_t, \stater_{t+1})$. The value for a state $s \in \States$ is
 {{{c}}}
 {{{c}}}
 \begin{align*}
   \Value(\state) \defeq \mathbb{E}_\pi\left[ G_t | \stater_t = \state \right] &
-  % MARTHAC: lets noti nclude this ugly equation, since we dont need it
-%= \mathbb{E}_\pi\Big[ \sum_{i=1}^\infty \Big( \prod_{j=0}^{i-1} \gamma_{t+j} \Big)  \cumulr_{t+i}  | \stater_t = \state \Big]
 &\text{where }  G_t \defeq \cumulr_{t+1} + \gamma_{t+1} \cumulr_{t+2} + \gamma_{t+1} \gamma_{t+2} \cumulr_{t+3} + \ldots
 .
 \end{align*}
@@ -2204,7 +2203,7 @@ These values are typically estimated using parametric function approximation, wi
 In off-policy learning, transitions are sampled according to behavior policy, rather than the target policy. 
 To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update \(\alpha_t\delta_t\nabla_\theta \Value_{\theta}(s)$ for a given $S_t = s\), 
 for learning rate $\alpha_t \in \RR^+$ and TD-error $\delta_t \defeq C_{t+1} + \gamma_{t+1}\Value_{\theta}(S_{t+1}) -  \Value_{\theta}(s)$. 
-If actions are instead sampled according to a behavior policy $\mu: \States \times \Actions \rightarrow [0,1]$, then we can use importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$
+If actions are instead sampled according to a behavior policy $\mu: \States \times \Actions \rightarrow [0,1]$, then importance sampling (IS) to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\theta}(s)$
 for IS ratio $\rho_t \defeq \frac{\tpolicy(\actionr_t | \stater_t)}{\bpolicy(\actionr_t | \stater_t)}$. 
 Given state $\stater_t = \state$, if $\mu(a | s) > 0$ when $\pi(a | s) > 0$, then the expected value of these two updates are equal. To see why, notice that
 {{{c}}}
@@ -2224,7 +2223,7 @@ which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\t
 Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions \(\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=1}^n\), batch WIS uses a normalized estimate for the update.
 For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would use update \(\alpha_t \frac{\rho_t}{\sum_{i=1}^n \rho_i} \delta_t\nabla_\theta \Value_{\theta}(s)\).
 Obtaining an efficient WIS update is not straightforward, however, when learning online and has resulted in algorithms in the SGD setting (i.e. $n=1$) specialized to tabular [[cite:&precup2001offpolicy]] and linear functions [[cite:&mahmood2014weighted;&mahmood2015off]].
-We nonetheless use WIS as a baseline in the experiments and theory.
+Nonetheless, WIS is used as a baseline in the experiments and theory.
 
 ** Importance Resampling 
 :PROPERTIES:
@@ -2232,15 +2231,15 @@ We nonetheless use WIS as a baseline in the experiments and theory.
 :END:
 # \label{sec:resampling_offpolicy}
 
-In this section, we introduce Importance Resampling (IR) for off-policy prediction and characterize its bias and variance. 
-A resampling strategy requires a buffer of samples, from which we can resample. Replaying experience from a buffer was introduced as a biologically plausible way to reuse old experience [[cite:&lin1992selfimproving;&lin1993reinforcement]], and has  become common for improving sample efficiency, particularly for control [[cite:&mnih2015humanlevel;&schaul2015prioritized]]. In the simplest case---which we assume here---the buffer is a sliding window of the most recent $n$ samples, $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=t-n}^t$, at time step $t > n$. 
+In this section, Importance Resampling (IR) for off-policy prediction is introduced and its bias and variance is characterized. 
+A resampling strategy requires a buffer of samples, from which to resample. Replaying experience from a buffer was introduced as a biologically plausible way to reuse old experience [[cite:&lin1992selfimproving;&lin1993reinforcement]], and has  become common for improving sample efficiency, particularly for control [[cite:&mnih2015humanlevel;&schaul2015prioritized]]. In the simplest case---which is assumed here---the buffer is a sliding window of the most recent $n$ samples, $\{(s_i, a_i, s_{i+1}, c_{i+1}, \rho_i)\}_{i=t-n}^t$, at time step $t > n$. 
 {{{c}}}
-We assume samples are generated by taking actions according to behavior $\bpolicy$. The transitions are generated with probability $d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$, where $d_\bpolicy : \States \rightarrow [0,1]$ is the stationary distribution for policy $\bpolicy$. The goal is to obtain samples according to  $d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, as if we had taken actions according to policy $\tpolicy$ from states [fn:resampling3]  $\state \sim d_\bpolicy$.
+Samples are generated by taking actions according to behavior $\bpolicy$. The transitions are generated with probability $d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$, where $d_\bpolicy : \States \rightarrow [0,1]$ is the stationary distribution for policy $\bpolicy$. The goal is to obtain samples according to  $d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, as if actions were sampled according to policy $\tpolicy$ from states [fn:resampling3]  $\state \sim d_\bpolicy$.
 
-The IR algorithm is simple: resample a mini-batch of size $k$ on each step $t$ from the buffer of size $n$, proportionally to $\rho_i$ in the buffer. Using the resampled mini-batch we can update our value function using standard on-policy approaches, such as on-policy TD or on-policy gradient TD.
-The key difference to IS and WIS is that the distribution itself is corrected, before the update, whereas IS and WIS correct the update itself. This small difference, however, can have larger ramifications practically, as we show in this paper.
+The IR algorithm is simple: resample a mini-batch of size $k$ on each step $t$ from the buffer of size $n$, proportionally to $\rho_i$ in the buffer. Using the resampled mini-batch the value function can be updated using standard on-policy approaches, such as on-policy TD or on-policy gradient TD.
+The key difference to IS and WIS is that the distribution itself is corrected, before the update, whereas IS and WIS correct the update itself. This small difference, however, can have larger ramifications practically, as shown in this chapter.
 
-We consider two variants of IR: with and without bias correction. For point $i_j$ sampled from the buffer, let $\Delta_{i_j}$ be the on-policy update for that transition. For example, for TD, $\Delta_{i_j} = \delta_{i_j} \nabla_\theta V_\theta(s_{i_j})$. The first step for either variant is to sample a mini-batch of size $k$ from the buffer, proportionally to $\rho_i$. Bias-Corrected IR (BC-IR) additionally pre-multiplies with the average ratio in the buffer $\bar{\rho} \defeq \tfrac{1}{n} \sum_{i=1}^n \rho_i$, giving the following estimators for the update direction 
+Two variants of IR are considered: with and without bias correction. For point $i_j$ sampled from the buffer, let $\Delta_{i_j}$ be the on-policy update for that transition. For example, for TD, $\Delta_{i_j} = \delta_{i_j} \nabla_\theta V_\theta(s_{i_j})$. The first step for either variant is to sample a mini-batch of size $k$ from the buffer, proportionally to $\rho_i$. Bias-Corrected IR (BC-IR) additionally pre-multiplies with the average ratio in the buffer $\bar{\rho} \defeq \tfrac{1}{n} \sum_{i=1}^n \rho_i$, giving the following estimators for the update direction 
 {{{c}}}
 \[
 \xiwer \defeq \tfrac{1}{k} \sum_{j=1}^k \Delta_{i_j} \hspace{2.0cm}
@@ -2248,18 +2247,18 @@ We consider two variants of IR: with and without bias correction. For point $i_j
 \]
 
 BC-IR negates bias introduced by the average ratio in the buffer deviating significantly from the true mean. For reasonably large buffers, \(\bar{\rho}\) will be close to 1 making IR and BC-IR have near-identical updates[fn:resampling4].
-Nonetheless, they do have different theoretical properties, particularly for small buffer sizes \(n\), so we characterize both. 
+Nonetheless, they do have different theoretical properties, particularly for small buffer sizes \(n\), so both are characterized. 
 
-Across most results, we make the following assumption.
-assum_id
+Across most results, the following assumption is applied.
 #+name: assum:resampling:id
 #+begin_assumption
 A buffer $B_t = \{X_{t+1}, ..., X_{t+n}\}$ is constructed from the most recent $n$ transitions sampled by time $t+n$, which are generated sequentially from an irreducible, finite MDP with a fixed policy $\mu$.
 #+end_assumption
 
-To denote expectations under $p(x) \!=\! d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$ and $q(x) \!=\! d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, we overload the notation from above, using operators $\E_\bpolicy$ and $\E_\tpolicy$ respectively. To reduce clutter, we write $\E$ to mean $\E_\bpolicy$, because most expectations are under the sampling distribution. All proofs can be found in Appendix \ref{sec:theory_appendix}.
+To denote expectations under $p(x) \!=\! d_\bpolicy(s) \bpolicy(a | s) \Pfcn(s' | s, a)$ and $q(x) \!=\! d_\bpolicy(s) \tpolicy(a | s) \Pfcn(s' | s, a)$, the notation from above is overloaded, using operators $\E_\bpolicy$ and $\E_\tpolicy$ respectively. To reduce clutter, $\E$ is used to mean $\E_\bpolicy$, because most expectations are under the sampling distribution.
+# All proofs can be found in Appendix  \ref{sec:theory_appendix}.
 
-[fn:resampling3] The assumption that states are sampled from $d_\bpolicy$ underlies most off-policy learning algorithms. Only a few attempt to adjust probabilities $d_\bpolicy$ to $d_\tpolicy$, either by multiplying IS ratios before a transition \cite{precup2001offpolicy} or by directly estimating state distributions \cite{hallak2017consistent, liu2018}. In this work, we focus on using resampling to correct the action distribution---the standard setting. We expect, however, that some insights will extend to how to use resampling to correct the state distribution, particularly because wherever IS ratios are used it should be straightforward to use our resampling approach.
+[fn:resampling3] The assumption that states are sampled from $d_\bpolicy$ underlies most off-policy learning algorithms. Only a few attempt to adjust probabilities $d_\bpolicy$ to $d_\tpolicy$, either by multiplying IS ratios before a transition [[cite:&precup2001offpolicy]] or by directly estimating state distributions [[cite:&hallak2017consistent;&liu2018breaking]]. In this chapter, resampling is used to correct the action distribution---the standard setting. However, several insights are expected extend to how to use resampling to correct the state distribution, particularly because wherever IS ratios are used it should be straightforward to use our resampling approach.
 
 In the sections below, I provide the bias characterizations of the two estimators defined above with proofs provided in the appendix. In the appendix, you can also find a characterization of the update variance.
 
@@ -2267,7 +2266,7 @@ In the sections below, I provide the bias characterizations of the two estimator
 
 *** Bias of IR
 
-We first show that IR is biased, and that its bias is actually equal to WIS-Optimal, in Theorem \ref{thm:bias_IR}.
+Below I show IR is biased, and that its bias is actually equal to WIS-Optimal, in Theorem ref:thm:resampling:bias-IR
 {{{c}}}
 
 #+name: thm:resampling:bias-IR
@@ -2288,7 +2287,7 @@ $\sigma_\Delta^2 = \Var(\tfrac{1}{n}\sum_{i=1}^{n} \rho_i \Delta_i)$; and covari
 #+end_theorem
 
 
-Theorem ref:thm:resampling:bias-IR is the only result which follows a different set of assumptions, primarily due to using the bias characterization of $\xwis$ found in [[cite:&owen2013monte]]. The bias of IR will be small for reasonably large $n$, both because it is proportional to $1/n$ and because larger $n$ will result in lower variance of the average ratios and average update for the buffer in Equation eqref:eq:resampling:bias. In particular, as $n$ grows, these variances decay proportionally to $n$. Nonetheless, for smaller buffers, such bias could have an impact. We can, however, easily mitigate this bias with a bias-correction term, as shown in the next corollary and proven in Appendix \ref{app_bcir_unbiased}. 
+Theorem ref:thm:resampling:bias-IR is the only result which follows a different set of assumptions, primarily due to using the bias characterization of $\xwis$ found in [[cite:&owen2013monte]]. The bias of IR will be small for reasonably large $n$, both because it is proportional to $1/n$ and because larger $n$ will result in lower variance of the average ratios and average update for the buffer in Equation eqref:eq:resampling:bias. In particular, as $n$ grows, these variances decay proportionally to $n$. Nonetheless, for smaller buffers, such bias could have an impact. The bias can be easily mitigated with a bias-correction term, as shown in the next corollary and proven in Appendix \ref{app_bcir_unbiased}. 
 {{{c}}}
 {{{c}}}
 #+name: cor:resampling:bias-BCIR
@@ -2296,15 +2295,22 @@ Theorem ref:thm:resampling:bias-IR is the only result which follows a different 
 BC-IR is unbiased:  $\E [\xbciwer] = \E_\tpolicy[\Delta]$.
 #+end_corollary
 
+*************** TODO [#A] Add proof for IR bias.                 :noexport:
+*************** END
+
 *** Consistency of IR
 
-Consistency of IR in terms of an increasing buffer, with $n \rightarrow \infty$, is a relatively straightforward extension of prior results for SIR, with or without the bias correction, and from the derived bias of both estimators (see Theorem \ref{lem:convergence_dist} in Appendix \ref{app_consistency_bign}). More interesting, and reflective of practice, is consistency /with a fixed length buffer/ and increasing interactions with the environment, $t \rightarrow \infty$. IR, without bias correction, is asymptotically biased in this case; in fact, its asymptotic bias is the one characterized above for a fixed length buffer in Theorem \ref{thm:bias_IR}.
+Consistency of IR in terms of an increasing buffer, with $n \rightarrow \infty$, is a relatively straightforward extension of prior results for SIR, with or without the bias correction, and from the derived bias of both estimators (see Theorem \ref{lem:convergence_dist} in Appendix \ref{app_consistency_bign}). More interesting, and reflective of practice, is consistency /with a fixed length buffer/ and increasing interactions with the environment, $t \rightarrow \infty$. IR, without bias correction, is asymptotically biased in this case; in fact, its asymptotic bias is the one characterized above for a fixed length buffer in Theorem ref:thm:resampling:bias-IR.
 
 #+name: thm:resampling:sliding-window
 #+begin_theorem
 Let $B_t = \{X_{t+1}, ..., X_{t+n}\}$ be the buffer of the most recent $n$ transitions sampled according to Assumption ref:assum:resampling:id. Define the sliding-window estimator $\xwindow{t} \defeq \frac{1}{T} \sum_{t=1}^T \xbciwerb{t}$. 
 Then, if $\E_\pi [|\Delta| ] < \infty$, then $\xwindow{T}$ converges to $\E_\pi [\Delta ]$ almost surely as $T \rightarrow \infty$.
 #+end_theorem
+
+*************** TODO Add proof for sliding-window thrm           :noexport:
+*************** END
+
 
 ** Weighted Importance Sampling
 :PROPERTIES:
@@ -2317,7 +2323,7 @@ In this section, I detail the several variants of weighted importance sampling (
 *** Mini-Batch Algorithms
 # \subsection{Mini-Batch Algorithms}
 
-We consider three weighted importance sampling updates as competitors to IR. $n$ is the size of the experience replay buffer, $k$ is the size of a single batch. WIS-Minibatch and WIS-Buffer both follow a similar protocol as IS, in that they uniformly sample a mini-batch from the experience replay buffer and use this to update the value functions. The difference comes in the scaling of the update. The first, WIS-Minibatch, uses the sum of the importance weights $\rho_i$ in the sampled mini-batch, while WIS-Buffer uses the sum of importance weights in the experience replay buffer. WIS-Buffer is also scaled by the size of the buffer and brought to the same effective scale as the other updates with $\frac{1}{k}$. WIS-Optimal follows a different approach and performs the best possible version of WIS where the gradient descent update is calculated from the whole experience replay buffer. We do not provide analysis on the bias or consistency of WIS-Minibatch or WIS-Buffer, but are natural versions of WIS one might try.
+Three weighted importance sampling updates are considered as competitors to IR. $n$ is the size of the experience replay buffer, $k$ is the size of a single batch. WIS-Minibatch and WIS-Buffer both follow a similar protocol as IS, in that they uniformly sample a mini-batch from the experience replay buffer and use this to update the value functions. The difference comes in the scaling of the update. The first, WIS-Minibatch, uses the sum of the importance weights $\rho_i$ in the sampled mini-batch, while WIS-Buffer uses the sum of importance weights in the experience replay buffer. WIS-Buffer is also scaled by the size of the buffer and brought to the same effective scale as the other updates with $\frac{1}{k}$. WIS-Optimal follows a different approach and performs the best possible version of WIS where the gradient descent update is calculated from the whole experience replay buffer. Analysis on the bias or consistency of WIS-Minibatch or WIS-Buffer is not provided, but are natural versions of WIS one might try.
 
 \begin{align*}
   \Delta\theta &= \frac{\sum_i^k \rho_i \delta_i \nabla_\theta \Value(s_i;\theta)}{\sum_j^k\rho_j}
@@ -2334,7 +2340,7 @@ We consider three weighted importance sampling updates as competitors to IR. $n$
 :END:
 # \subsection{Incremental Algorithm}\label{appendix:inc_updates}
 
-While implementing an efficient true WIS algorithm for mini-batch updating is beyond the scope of this work, we compare WIS-TD(0) to the incremental versions of IR, IS, VTrace, and WISBatch. The difference between the mini-batch and incremental algorithms is how the updates are calculated. In the incremental scheme a random mini-batch of data is similarly sampled from the buffer. We then use each sample individually to update our value function. We do this to more naturally compare our baselines to WIS-TD(0) \cite{mahmood2015off}. WIS-TD(0) has parameters $u_{0} \in \{\frac{1}{64}, 1, 5, 10, 50\} * 64, \mu \in 10^{-2:0.25:1}$, and $\eta = \frac{\mu}{u_0}$. WIS-TD(0) follows the update equations:
+While implementing an efficient true WIS algorithm for mini-batch updating is beyond the scope of this work, WIS-TD(0) is compared to the incremental versions of IR, IS, VTrace, and WISBatch. The difference between the mini-batch and incremental algorithms is how the updates are calculated. In the incremental scheme a random mini-batch of data is similarly sampled from the buffer. Each sample is used individually to update the value function. This is done to more naturally compare our baselines to WIS-TD(0) [[cite:&mahmood2015off]]. WIS-TD(0) has parameters $u_{0} \in \{\frac{1}{64}, 1, 5, 10, 50\} * 64, \mu \in 10^{-2:0.25:1}$, and $\eta = \frac{\mu}{u_0}$. WIS-TD(0) follows the update equations:
 
 \begin{align*}
   \uvec_{i+1} &= (\mathbf{1} -\eta \phivec_i \circ \phivec_i) \circ \uvec_i + \rho_i \phivec_i \circ \phivec_i  \quad \triangleright \circ \defeq \text{ element wise product}\\
@@ -2352,12 +2358,12 @@ where $\thetavec \in \Reals^d$ is the weight vector of the value function, $\phi
 :CUSTOM_ID: sec:resampling:empirical
 :END:
 
-We investigate the two hypothesized benefits of resampling as compared to reweighting: improved sample efficiency and reduced variance. These benefits are tested in two microworld domains---a Markov chain and the Four Rooms domain---where exhaustive experiments can be conducted. We also provide a demonstration that IR reduces sensitivity over IS and VTrace in a car simulator, TORCs, when learning from images[fn:: Experimental code for every domain except Torcs can be found at [[https://mkschleg.github.io/Resampling.jl][https://mkschleg.github.io/Resampling.jl]]].
+Two hypothesized benefits of resampling as compared to reweighting are investigated: improved sample efficiency and reduced variance. These benefits are tested in two microworld domains---a Markov chain and the Four Rooms domain---where exhaustive experiments can be conducted. Finally, a demonstration that IR reduces sensitivity over IS and VTrace in a car simulator, TORCs, when learning from images is provided[fn:: Experimental code for every domain except Torcs can be found at [[https://mkschleg.github.io/Resampling.jl][https://mkschleg.github.io/Resampling.jl]]].
 
-We compare IR and BC-IR against several reweighting strategies, including importance sampling (IS); two online approaches to weighted important sampling, WIS-Minibatch with weighting $\rho_i/\sum_{j=1}^k \rho_j$ and WIS-Buffer with weighting $\rho_i/\tfrac{k}{\bsize}\sum_{j=1}^\bsize \rho_j$; and V-trace[fn:: Retrace, ABQ and TreeBackup also use clipping to reduce variance. But, they are designed for learning action-values and for mitigating variance in eligibility traces. When trace parameter $\lambda = 0$---as we assume here---there are no IS ratios and these methods become equivalent to using Sarsa(0) for learning action-values.], which corresponds to clipping importance weights [[cite:&espeholt2018impala]].
-We also compare to WIS-TD(0) [[cite:&mahmood2015off]], when applicable, which uses an online approximation to WIS, with a stepsize selection strategy (as described in Appendix \ref{appendix:inc_updates}). This algorithm uses only one sample at a time, rather than a mini-batch, and so is only included in Figure \ref{fig:frc}. Where appropriate, we also include baselines using On-policy sampling; WIS-Optimal which uses the whole buffer to get an update; and Sarsa(0) which learns action-values---which does not require IS ratios---and then produces estimate $V(s) = \sum_a \pi(s,a) Q(s,a)$. WIS-Optimal is included as an optimal baseline, rather than as a competitor, as it estimates the update using the whole buffer on every step.
+IR and BC-IR are compared against several reweighting strategies, including importance sampling (IS); two online approaches to weighted important sampling, WIS-Minibatch with weighting $\rho_i/\sum_{j=1}^k \rho_j$ and WIS-Buffer with weighting $\rho_i/\tfrac{k}{\bsize}\sum_{j=1}^\bsize \rho_j$; and V-trace[fn:: Retrace, ABQ and TreeBackup also use clipping to reduce variance. But, they are designed for learning action-values and for mitigating variance in eligibility traces. When trace parameter \(\lambda = 0\)---as assumed here---there are no IS ratios and these methods become equivalent to using Sarsa(0) for learning action-values.], which corresponds to clipping importance weights [[cite:&espeholt2018impala]].
+WIS-TD(0) [[cite:&mahmood2015off]] is also used as a baseline, when applicable, which uses an online approximation to WIS, with a stepsize selection strategy (as described in Appendix \ref{appendix:inc_updates}). This algorithm uses only one sample at a time, rather than a mini-batch, and so is only included in Figure \ref{fig:frc}. Where appropriate, baselines using On-policy sampling are included; WIS-Optimal which uses the whole buffer to get an update; and Sarsa(0) which learns action-values---which does not require IS ratios---and then produces estimate $V(s) = \sum_a \pi(s,a) Q(s,a)$. WIS-Optimal is included as an optimal baseline, rather than as a competitor, as it estimates the update using the whole buffer on every step.
 
-In all the experiments, the data is generated off-policy. We compute the absolute value error (AVE) or the  absolute return error (ARE) on every step. For the sensitivity plots we take the average over all the interactions as specified for the environment --- resulting in MAVE and MARE respectively. The error bars represent the standard error over runs, which are featured on every plot --- although not visible in some instances. For the microworlds, the true value function is found using dynamic programming with threshold $10^{-15}$, and we compute AVE over all the states. For TORCs and continuous Four Rooms, the true value function is approximated using rollouts from a random subset of states generated when running the behavior policy $\mu$, and the ARE is computed over this subset. For the Torcs domain, the same subset of states is used for each run due to computational constraints and report the mean squared return error (MSRE). Plots showing sensitivity over number of updates show results for complete experiments with updates evenly spread over all the interactions. A tabular representation is used in the microworld experiments, tilecoded features with 64 tilings and 8 tiles is used in continuous Four Rooms, and a convolutional neural network is used for TORCs, with an architecture previously defined for self-driving cars [[cite:&bojarski2016enda]].
+In all the experiments, the data is generated off-policy. The absolute value error (AVE) or the  absolute return error (ARE) is computed on every step. For the sensitivity plots the average over all the interactions as specified for the environment are taken---resulting in MAVE and MARE respectively. The error bars represent the standard error over runs, which are featured on every plot---although not visible in some instances. For the microworlds, the true value function is found using dynamic programming with threshold $10^{-15}$, and AVE is taken over all the states. For TORCs and continuous Four Rooms, the true value function is approximated using rollouts from a random subset of states generated when running the behavior policy $\mu$, and the ARE is computed over this subset. For the Torcs domain, the same subset of states is used for each run due to computational constraints and report the mean squared return error (MSRE). Plots showing sensitivity over number of updates show results for complete experiments with updates evenly spread over all the interactions. A tabular representation is used in the microworld experiments, tilecoded features with 64 tilings and 8 tiles is used in continuous Four Rooms, and a convolutional neural network is used for TORCs, with an architecture previously defined for self-driving cars [[cite:&bojarski2016enda]].
 
 *** Investigating Convergence Rate
 :PROPERTIES:
@@ -2365,7 +2371,7 @@ In all the experiments, the data is generated off-policy. We compute the absolut
 :END:
 # \subsection{Investigating Convergence Rate} \label{sec:exp_conv}
 
-We first investigate the convergence rate of IR. We report learning curves in Four Rooms, as well as sensitivity to the learning rate. 
+The convergence rate of IR is investigated first. Learning curves and sensitivity to the learning rate are reported in the Four Rooms domain. 
 The Four Rooms domain [[cite:&stolle2002learning]] has four rooms in an 11x11 grid world. The four rooms are positioned in a grid pattern with each room having two adjacent rooms. Each adjacent room is separated by a wall with a single connecting hallway.
 The target policy takes the down action deterministically. The cumulant for the value function is 1 when the agent hits a wall and 0 otherwise. The continuation function is $\gamma=0.9$, with termination when the agent hits a wall. The resulting value function can be thought of as distance to the bottom wall. The behavior policy is uniform random everywhere except for 25 randomly selected states which take the action down with probability 0.05 with remaining probability split equally amongst the other actions. The choice of behavior and target policy induce high magnitude IS ratios.
 
@@ -2377,11 +2383,11 @@ The target policy takes the down action deterministically. The cumulant for the 
 
 
 As shown in Figure \ref{fig:fourrooms_tabular}, IR has noticeable improvements over the reweighting strategies tested. 
-The fact that IR resamples more important transitions from the replay buffer seems to significantly increase the learning speed. Further, IR has a wider range of usable learning rates. The same effect is seen even as we reduce the total number of updates, where the uniform sampling methods perform significantly worse as the interactions between updates increases---suggesting improved sample efficiency. WIS-Buffer performs almost equivalently to IS, because for reasonably size buffers, its normalization factor $\tfrac{1}{\bsize}\sum_{j=1}^\bsize \rho_j \approx 1$ because $\E[\rho] = 1$. WIS-Minibatch and V-trace both reduce the variance significantly, with their bias having only a limited impact on the final performance compared to IS. Even the most aggressive clipping parameter for V-trace---a clipping of 1.0--- outperforms IS. 
+The fact that IR resamples more important transitions from the replay buffer seems to significantly increase the learning speed. Further, IR has a wider range of usable learning rates. The same effect is seen even as the total number of updates is reduced, where the uniform sampling methods perform significantly worse as the interactions between updates increases---suggesting improved sample efficiency. WIS-Buffer performs almost equivalently to IS, because for reasonably size buffers, its normalization factor $\tfrac{1}{\bsize}\sum_{j=1}^\bsize \rho_j \approx 1$ because $\E[\rho] = 1$. WIS-Minibatch and V-trace both reduce the variance significantly, with their bias having only a limited impact on the final performance compared to IS. Even the most aggressive clipping parameter for V-trace---a clipping of 1.0--- outperforms IS. 
 The bias may have limited impact because the target policy is deterministic, and so only updates for exactly one action in a state.
 Sarsa---which is the same as Retrace(0)---performs similarly to the reweighting strategies.
 
-The above results highlight the convergence rate improvements from IR, in terms of number of updates, without generalization across values. Conclusions might actually be different with function approximation, when updates for one state can be informative for others. For example, even if in one state the target policy differs significantly from the behavior policy, if they are similar in a related state, generalization could overcome effective sample size issues. We therefore further investigate if the above phenomena arise under function approximation with RMSProp learning rate selection.
+The above results highlight the convergence rate improvements from IR, in terms of number of updates, without generalization across values. Conclusions might actually be different with function approximation, when updates for one state can be informative for others. For example, even if in one state the target policy differs significantly from the behavior policy, if they are similar in a related state, generalization could overcome effective sample size issues. Therefore, this phenomena is further investigated under function approximation with RMSProp learning rate selection.
 
 \begin{figure*}[ht]
 \centering
@@ -2389,11 +2395,11 @@ The above results highlight the convergence rate improvements from IR, in terms 
   \caption{Convergence rates in Continuous Four Rooms averaged over 25 runs with 100000 interactions with the environment. {\bf left} uniform random behavior policy and target policy which takes the down action with probability $0.9$ and probability $0.1 / 3$ for all other actions. Learning used incremental updates (as specified in appendix \ref{appendix:inc_updates}). {\bf right} uniform random behavior and target policy with persistent down action selection learned with mini-batch updates with RMSProp.
   }\label{fig:frc}
 \end{figure*}
-We conduct two experiments similar to above, in a continuous state Four Rooms variant. The agent is a circle with radius 0.1, and the state consists of a continuous tuple containing the x and y coordinates of the agent's center point. The agent takes an action in one of the 4 cardinal directions moving $0.5 \pm \mathcal{U}(0.0, 0.1)$  in that directions with random drift in the orthogonal direction sampled from $\mathcal{N}(0.0,0.01)$. The representation is a tile coded feature vector with 64 tilings and 8 tiles. We provide results for both mini-batch updating (as above) and incremental updating (i.e. updating on each transition of a mini-batch incrementally, see appendix \ref{appendix:inc_updates} for details). For the mini-batch experiment, the target policy deterministically takes the down action. For the incremental experiment, the target policy takes the down action with probability $0.9$ and selects all other action with probability $0.1 / 3$.
+Two experiments similar to above are conducted in a continuous state Four Rooms variant. The agent is a circle with radius 0.1, and the state consists of a continuous tuple containing the x and y coordinates of the agent's center point. The agent takes an action in one of the 4 cardinal directions moving $0.5 \pm \mathcal{U}(0.0, 0.1)$  in that directions with random drift in the orthogonal direction sampled from $\mathcal{N}(0.0,0.01)$. The representation is a tile coded feature vector with 64 tilings and 8 tiles. Results are provided for both mini-batch updating (as above) and incremental updating (i.e. updating on each transition of a mini-batch incrementally, see appendix \ref{appendix:inc_updates} for details). For the mini-batch experiment, the target policy deterministically takes the down action. For the incremental experiment, the target policy takes the down action with probability $0.9$ and selects all other action with probability $0.1 / 3$.
 
-We find that generalization can mitigate some of the differences between IR and IS above in some settings, but in others the difference remains just as stark (see Figure \ref{fig:frc} and Appendix \ref{appendix:four_rooms_cont}). If we use the behavior policy from the tabular domain, which skews the behavior in a sparse set of states, the nearby states mitigate this skew. However, if we use a behavior policy that selects all actions uniformly, then again IR obtains noticeable gains over IS and V-trace, for reducing the required number of updates, as shown in Figure \ref{fig:frc}.
+Generalization can mitigate some of the differences between IR and IS above in some settings, but in others the difference remains just as stark (see Figure \ref{fig:frc} and Appendix \ref{appendix:four_rooms_cont}). If the behavior policy from the tabular domain, which skews the behavior in a sparse set of states, is used the nearby states mitigate this skew. However, if a behavior policy that selects all actions uniformly is used, then again IR obtains noticeable gains over IS and V-trace, for reducing the required number of updates, as shown in Figure \ref{fig:frc}.
 
-We find similar results for the incremental setting Figure \ref{fig:frc} (left), where resampling still outperforms all other methods in terms of convergence rates. Given WIS-TD(0)'s significant degrade in performance as the number of updates decreases, we also compare with using WIS-TD(0) when sampling according to resampling IR+WIS-TD(0). Interestingly, this method outperforms all others  --- albeit only slightly against IR with constant learning rate. This result leads us to believe RMSProp may be a optimizer poor choice for this setting. Expanded results can be found in Appendix \ref{appendix:four_rooms_cont}.
+Similar results are found for the incremental setting Figure \ref{fig:frc} (left), where resampling still outperforms all other methods in terms of convergence rates. Given WIS-TD(0)'s significant degrade in performance as the number of updates decreases, I also compare with using WIS-TD(0) when sampling according to resampling IR+WIS-TD(0). Interestingly, this method outperforms all others  --- albeit only slightly against IR with constant learning rate. This result leads us to believe RMSProp may be a optimizer poor choice for this setting. Expanded results can be found in Appendix \ref{appendix:four_rooms_cont}.
 
 *** Investigating Variance
 :PROPERTIES:
@@ -2401,40 +2407,38 @@ We find similar results for the incremental setting Figure \ref{fig:frc} (left),
 :END:
 # \subsection{Investigating Variance} \label{sec:var_prop}
 
-To better investigate the update variance we use a Markov chain, where we can more easily control dissimilarity between $\mu$ and $\pi$, and so control the magnitude of the IS ratios. The Markov chain is composed of 8 non-terminating states and 2 terminating states on the ends of the chain, with a cumulant of 1 on the transition to the right-most terminal state and 0 everywhere else. We consider policies with probabilities [left, right] equal in all states: $\mu = [0.9, 0.1], \pi=[0.1,0.9]$; further policy settings can be found in Appendix \ref{appendix:markov}.
+To better investigate the update variance a Markov chain is used, this domain can more easily control dissimilarity between $\mu$ and $\pi$, and so control the magnitude of the IS ratios. The Markov chain is composed of 8 non-terminating states and 2 terminating states on the ends of the chain, with a cumulant of 1 on the transition to the right-most terminal state and 0 everywhere else. The policies with probabilities [left, right] equal in all states: $\mu = [0.9, 0.1], \pi=[0.1,0.9]$ are considered; further policy settings can be found in Appendix \ref{appendix:markov}.
 
 
-We first measure the variance of the updates for fixed buffers. We compute the variance of the update---from a given weight vector---by simulating the many possible updates that could have occurred. We are interested in the variance of updates both for early learning---when the weight vector is quite incorrect and updates are larger---and later learning. To obtain a sequence of such weight vectors, we use the sequence of weights generated by WIS-Optimal. As shown in Figure \ref{fig:markov_sens}, the variance of IR is lower than IS, particularly in early learning, where the difference is stark. Once the weight vector has largely converged, the variance of IR and IS is comparable and near zero.
+First, the variance of the updates for fixed buffers is measured. I compute the variance of the update---from a given weight vector---by simulating the many possible updates that could have occurred. I am interested in the variance of updates both for early learning---when the weight vector is quite incorrect and updates are larger---and later learning. To obtain a sequence of such weight vectors, the sequence of weights generated by WIS-Optimal is used. As shown in Figure \ref{fig:markov_sens}, the variance of IR is lower than IS, particularly in early learning, where the difference is stark. Once the weight vector has largely converged, the variance of IR and IS is comparable and near zero.
 \begin{wrapfigure}{r}{0.45\textwidth}
 \centering
   \includegraphics[width=0.45\columnwidth]{{plots/resampling/torcs/lr_sens.pdf}}
-  \caption{Learning rate sensitivity in TORCs, averaged over 10 runs. V-trace has clipping parameter 1.0. All the methods performed worse with a higher learning rate than shown here, so we restrict to this range.
-    \vspace{-1.4cm}
+  \caption{Learning rate sensitivity in TORCs, averaged over 10 runs. V-trace has clipping parameter 1.0. All the methods performed worse with a higher learning rate than shown here.
   }\label{fig:torcs}
 \end{wrapfigure}
 
-We can also evaluate the update variance by proxy using learning rate sensitivity curves. 
+The update variance can be measured by proxy using learning rate sensitivity curves. 
 As seen in Figure \ref{fig:markov_sens} (left) and (center), IR has the lowest sensitivity to learning rates, on-par with On-Policy sampling. IS has the highest sensitivity, along with WIS-Buffer and WIS-Minibatch. Various clipping parameters with V-trace are also tested. V-trace does provide some level of variance reduction but incurs more bias as the clipping becomes more aggressive.
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{plots/resampling/markov/grouped_neurips.pdf}
   \caption{Learning Rate sensitivity plots in the Random Walk Markov Chain, with buffer size $n = 15000$ and mini-batch size $k=16$. Averaged over 100 runs. The policies, written as [probability left, probability right] are $\mu = [0.9,0.1], \pi=[0.1,0.9]$ {\bf left} learning rate sensitivity plot for all methods but V-trace. {\bf center} learning rate sensitivity for V-trace with various clipping parameters {\bf right} Variance study for IS, IR, and WISBatch. The x-axis corresponds to the training iteration, with variance reported for the weights at that iteration generated by WIS-Optimal. These plots show a correlation between the sensitivity to learning rate and magnitude of variance.
-    \vspace{-0.5cm}
   } \label{fig:markov_sens}
 \end{figure*}
 
 *** Demonstration on a Car Simulator
 
-We use the TORCs racing car simulator to perform scaling experiments with neural networks to compare IR, IS, and V-trace. The simulator produces 64x128 cropped grayscale images. We use an underlying deterministic steering controller that produces steering actions $a_{det} \in [-1,+1]$ and take an action with probability defined by a Gaussian $a \sim \mathcal{N}(a_{det}, 0.1)$.
+The TORCs racing car simulator is used to perform scaling experiments with neural networks to compare IR, IS, and V-trace. The simulator produces 64x128 cropped grayscale images. A deterministic steering controller is used. The controller produces steering actions $a_{det} \in [-1,+1]$ and take an action with probability defined by a Gaussian $a \sim \mathcal{N}(a_{det}, 0.1)$.
 The target policy is a Gaussian $\mathcal{N}(0.15, 0.0075)$, which corresponds to steering left. Pseudo-termination (i.e., $\gamma = 0$) occurs when the car nears the center of the road, and the cumulant becomes 1. Otherwise, the cumulant is zero and $\gamma = 0.9$. The policy is specified using continuous action distributions and results in IS ratios as high as $\sim 1000$ and highly variant updates for IS.
 
 
-Again, we can see that IR provides benefits over IS and V-trace, in Figure \ref{fig:torcs}. There is even more generalization from the neural network in this domain, than in Four Rooms where we found generalization did reduce some of the differences between IR and IS. Yet, IR still obtains the best performance, and avoids some of the variance seen in IS for two of the learning rates. Additionally, BC-IR actually performs differently here, having worse performance for the largest learning rate. This suggest IR has an effect in reducing variance.
+Again, IR provides benefits over IS and V-trace, in Figure \ref{fig:torcs}. There is even more generalization from the neural network in this domain, than in Four Rooms where generalization did reduce some of the differences between IR and IS. Yet, IR still obtains the best performance, and avoids some of the variance seen in IS for two of the learning rates. Additionally, BC-IR actually performs differently here, having worse performance for the largest learning rate. This suggest IR has an effect in reducing variance.
 
 ** Conclusions
 
-In this Chapter, I introduced a new approach to off-policy learning: Importance Resampling. I showed that IR is consistent, and that the bias is the same as for Weighted Importance Sampling. I also provided an unbiased variant of IR, called Bias-Corrected IR. We empirically showed that IR (a) has lower learning rate sensitivity than IS and V-trace, which is IS with varying clipping thresholds; (b) the variance of updates for IR are much lower in early learning than IS and (c) IR converges faster than IS and other competitors, in terms of the number of updates. These results confirm the theory presented for IR, which states that variance of updates for IR are lower than IS in two settings, one being an early learning setting. Such lower variance also explains why IR can converge faster in terms of number of updates, for a given buffer of data. 
+In this Chapter, I introduced a new approach to off-policy learning: Importance Resampling. I showed that IR is consistent, and that the bias is the same as for Weighted Importance Sampling. I also provided an unbiased variant of IR, called Bias-Corrected IR. I empirically showed that IR (a) has lower learning rate sensitivity than IS and V-trace, which is IS with varying clipping thresholds; (b) the variance of updates for IR are much lower in early learning than IS and (c) IR converges faster than IS and other competitors, in terms of the number of updates. These results confirm the theory presented for IR, which states that variance of updates for IR are lower than IS in two settings, one being an early learning setting. Such lower variance also explains why IR can converge faster in terms of number of updates, for a given buffer of data. 
 
 The algorithm and results in this Chapter suggest new directions for off-policy prediction, particularly for faster convergence. Resampling is promising for scaling to learning many value functions in parallel, because many fewer updates can be made for each value function. A natural next step is a demonstration of IR, in such a parallel prediction system. Resampling from a buffer also opens up questions about how to further focus updates. One such option is using an intermediate sampling policy. Another option is including prioritization based on error, such as was done for control with prioritized sweeping [[cite:&peng1993efficient]] and prioritized replay [[cite:&schaul2015prioritized]].
 
@@ -2451,15 +2455,15 @@ The architectural intuitions and assumptions developed in supervised learning fo
 #+END_QUOTE
 Through controlled experimentation and a focused approach the contributions which make up this thesis show several limitations of recurrent networks as used in the supervised learning setting when applying them to the reinforcement learning and continual reinforcement learning settings.
 
-First, the incorporation of actions and other information was investigated in the DRQN framework in Chapter ref:chap:arnn. In this chapter, I discussed out several approaches to incorporate information into the cell of a recurrent network found throughout the literature. I incorporated these approaches into both simple recurrent cells and gated-recurrent units to uncover the advantages of each. I showed that in most cases we should be applying the action through a multiplicative update, and that we can uncover which cell is appropriate to a problem through combining architectures.
+First, the incorporation of actions and other information was investigated in the DRQN framework in Chapter ref:chap:arnn. In this chapter, I discussed several approaches to incorporate information into the cell of a recurrent network found throughout the literature. I incorporated these approaches into both simple recurrent cells and gated-recurrent units to uncover the advantages of each. I showed that in most cases we should be applying the action through a multiplicative update, and that combining architectures can be used to find the appropriate cell for a problem.
 
-Next, I approached the assumption that the hidden units of a recurrent network should be learned through only the loss at the final layer of the network and developed a predictive approach to learning state which restricts the agent-state to predictions of the observation stream. Approaching this question resulted in a new predictive framework for agent-state construction known as /General Value Function Networks/ (Chapter ref:chap:gvfn). We explored the similarities of this approach to previous predictive approaches, and showed GVFNs encompasses the predictive targets of several previous directions.
+Next, I approached the assumption that the hidden units of a recurrent network should be learned through only the loss at the final layer of the network and developed a predictive approach to learning state which restricts the agent-state to predictions of the observation stream. Approaching this question resulted in a new predictive framework for agent-state construction known as /General Value Function Networks/ (Chapter ref:chap:gvfn). I explored the similarities of this approach to previous predictive approaches, and showed GVFNs encompasses the predictive targets of several previous directions.
 
 To fully develop the predictive approach found in Chapter ref:chap:gvfn, I defined a set of learning updates following in the footsteps of gradient temporal-difference algorithms and previous predictive architectures in ref:chap:gvfn:algs. These algorithms follow naturally from the gradient temporal-difference learning updates [[cite:&maei2009convergent;&sutton2009fast]] and gradient temporal-difference networks [[cite:&silver2013gradient]]. Our learning update extends beyond these approaches to incorporate composite predictive questions into the objective as well as arbitrary discounting (with the usual limitations [[cite:&white2017unifying]]).
 
 In Chapter ref:chap:gvfn:empirical, I empirically compared the usual approaches to agent-state construction in supervised learning with our predictive approach in several continual reinforcement learning and continual timeseries domains. I showed the incorporation of predictions which can be learned through temporal-difference learning results in a recurrent network which can learn absent of gradients rolled back through time. These predictions were also competitive to predictions made by other recurrent architectures when allowed large truncations in BPTT. I investigated several predictive questions which result in a wide range of performance and also highlight GVFs learned through temporal-difference as a key component. Finally, I reproduced a known counter example structure in ring world and showed this can be solved through the use of recurrent semi-gradient temporal difference learning rather than the full gradient update rule derived in section ref:chap:gvfn.
 
-The empirical results discussed in ref:chap:gvfn:empirical lead to questions about the underlying targets presented by composite predictive questions and what an algorithm to discover structures like this may look like. We pose and provide initial explanations and explorations in Chapters ref:chap:composite and ref:chap:gvfn:discovery respectively. These results create a strong future research direction in developing new methods for discovering predictive questions and combing GVFs to create novel hand designed structures which might be relevant across a wide range of problems
+The empirical results discussed in ref:chap:gvfn:empirical lead to questions about the underlying targets presented by composite predictive questions and what an algorithm to discover structures like this may look like. I posed and provided initial explanations and explorations in Chapters ref:chap:composite and ref:chap:gvfn:discovery respectively. These results create a strong future research direction in developing new methods for discovering predictive questions and combing GVFs to create novel hand designed structures which might be relevant across a wide range of problems
 
 Finally, posing off-policy prediction questions for learning an agent-state requires us to re-think the core approach to off-policy prediction. Due to traditional importance sampling can quickly result in large variance unstable updates, I proposed importance resampling as a technique to avoid the instability induced by large importance sampling ratios in Chapter ref:chap:resampling. This new approach to off-policy prediction effectively manages the update variance found when using importance sampling ratios directly in the update, while also improving the efficiency of each update towards learning the target prediction.
 
@@ -2983,10 +2987,9 @@ with expectation across buffers. Therefore, the analysis of $\V(\xbciwer \ | \ B
 
 ** Additional Theoretical Results and Proofs
 :PROPERTIES:
-:CUSTOM_ID: sec:theory_appendix
+:CUSTOM_ID: app:sec:arnns:theory
 :END:
 
-# \section{Additional Theoretical Results and Proofs} \label{sec:theory_appendix}
 
 
 
@@ -3001,49 +3004,6 @@ This chapter
 - discusses the large literature related to learning long-temporal dependencies.
 
 
-** TODO [#B] [0/2] Expanding the set of predictive targets in a continual learning agent :noexport:
-
-*************** TODO Motivate what specific targets do we want.
-*************** END
-
-
-In this thesis, we take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually. While this is not a particularly novel interpretation of the machine intelligence problem [[cite:&ring1994continual;&ring1997child;&sutton2011horde]], it is worthwhile to clarify the terms we will use throughout intuitively before moving onto formal descriptions. 
-
-#+caption: Diagram of the agent in the environment
-#+name: fig:bg:agent-env-interaction
-#+attr_latex: :width 0.8\linewidth
-[[./plots/world-body-agent-diagram.pdf]]
-
-The *agent* exists inside the *environment*. The *environment* is large. So large the agent faces a vast array of detail and regularity, which can not be captured in any finite way. This big world view [[cite:&sutton2020tea]] is a hallmark of continual learning [[cite:&ring1994continual;&ring1997child]]. The environment could be filled with other agents, areas of high reward or risk, or a seemingly infinite number of objectives about which to learn. The agent views the environment through a set of analog-to-digital sensors positioned in an egocentric orientation [fn:: While we take the egocentric perspective, nothing is preventing our artificial agents from accessing non-egocentric senses. A clear example of this would be a camera positioned in a different room, which can be plugged directly through the agents perceptual system directly. This is unlike a biological agent, who must observe the camera through their eyes from a screen.]. The agent must maintain a set of current beliefs about the world internally. This set of beliefs (also known as a summary of the agent's history) is referred to as *agent-state* (we use state and agent-state interchangeably, making sure to emphasize when discussing the environment state where necessary). The agent's life goal is to maximize the cumulation of *rewards* [fn:: In machine intelligence, the *reward* is used as a broad term to encompass both positive and aversive outcomes. While these signals are often combined in MI research, there is evidence to suggest they are encoded and processed in organic agents differently [[cite:&niv2009reinforcement]]] either internally or externally defined [[cite:&silver2021reward]].
-
-
-The *practitioner* is you and me. Specifically, a practitioner is one who is creating the *agent* for an environment. In machine intelligence (MI) research, the goal is to construct agents which can behave in an environment, usually to accomplish a specific goal set by the practitioner. We seek solutions, algorithms, and systems which can do solve goals with as little imbued assumptions by the practitioner as possible [[cite:&sutton2019bitter]]. One possible way to accomplish this goal is through setting goals for the agent in terms of reward functions. This form of machine intelligence has been discussed before with a hypothesis termed "Reward is Enough". This hypothesis has been used to form a centralized definition of intelligence and conjectures on how to create such an intelligence through designing reward functions [[cite:&sutton2020john;&silver2021reward]]. While it is typical for the practitioner to construct an explicit reward function for the agent, the agent can also use internal signals to drive its behavior. This is typically known as intrinsic motivations. In this thesis, we use hand constructed reward functions to gain insights into the algorithms and architectures we explore, but overall we are interested in an agent's ability to predict and control its stream of experience. In all, we make sure our approaches provide better prediction as well as lead to maximizing cumulative reward. Given the right experiences (i.e. behavior in the environment) an agent should be able to accurately make predictions in a computationally constrained way. For more on ways to improve behavior for learning predictions see {{{citeplease mcleod, others}}}.
-
-
-# One common example consistently used in this thesis is that of a small robot on wheels behaving in a room. This is a common example throughout MI and RL research and is also known as a vacuum robot [[cite:&russell2010artificial]], or lovingly known as the critterbot [[cite:&sutton2011horde;&modayil2014multitimescale;&white2015developing]]. While we don't explore the full robotic setting, we often use simulations which approximate this setting to ask fundamental questions about the learning process. The hallmarks of this setting include a squat, mostly circular robot with wheels. This robot has a large set of egocentric sensors including light sensors, a camera, a bump sensor, and many more senses to view its environment. It can roll forward and backwards and rotate clockwise or counterclockwise. This agent lives continuously and has several potential goals depending on the practitioner's desires. Approximations of this example can be seen in several experiments throughout this thesis (Section ref:sec:arnn:experiments, and Chapters ref:chap:gvfn:empirical, ref:chap:composite, ref:chap:gvfn:discovery).
-
-*************** TODO [#B] GVFs set the stage for expanding the set of predictive targets, but we must constrain.
-*************** END
-
-Learning predictions of any real-valued signal the agent has access to also opens the possibility of asking compositional predictive questions [[cite:&white2015developing]]. A compositional question is one whose target is dependent on another prediction internal to the agent. Compositions expand the possible range of predictive questions we can specify as a GVF [[cite:&sutton2005temporaldifference;&rafols2006temporal;&zheng2021learning;&white2015developing;&schlegel2021general]]. While this may suggest the GVF framework is limited in what questions can be asked, the limitations are necessary so the predictions can be trained /independent of span/ [[cite:&vanhasselt2015learning]]. Learning independent of span means the target can be learned using online algorithms regardless of the effective horizon of the prediction. Adding layers of compositional questions have improved the learning in predictive representations [[cite:&rafols2006temporal;&schlegel2021general]], and improved the performance of deep reinforcement learning through auxiliary tasks [[cite:&zheng2021learning]]. In the automatic specification of learning targets compositions are thought to provide a way for the agent to build complexity [[cite:&schlegel2021general;&veeriah2019discovery;&zheng2021learning;&kearney2022what]], but often these architectures don't leverage compositions for stability concerns [[cite:&tanner2005temporal;&tanner2005td;&schlegel2017stable;&schlegel2021general]]. 
-
-As well as improving behavior empirically, compositions can provide semantic depth. An excellent example of this can be seen in option-extended temporal difference networks [[cite:&rafols2006temporal]], and later explored again in [[cite:&schlegel2021general]]. The example is centered in an environment where the agent has a low-powered visual sensor and needs to learn its directionality from the painted walls. Each cardinal direction has a different colored wall. The first layer of predictions the agent makes is to predict what color it will observe if it were to drive straight. The second layer are myopic predictions which ask what the first layer's prediction will be after turning clockwise (or counter-clockwise). The second layer allows the agent to predict which walls are to its sides as well as the wall in the direction the agent is facing. These predictions cannot be specified in the usual GVF framework, but can be easily constructed through compositions. While this may be ``repeated information'' in a sense, the extra learning objectives makes the learning properties of the predictive representation better as compared to other specifications [[cite:&schlegel2021general]].
-
-As algorithms for the automatic discovery of complex question networks continue to push the boundaries of what questions are considered by the agent, the properties of compositions should be better studied. When searching for what to learn the questions an agent eventually retains will be dependent on the agent's ability to learn the predictions. While it is clear questions that naturally diverge (say setting the discount $\gamma=1$) should be avoided, other problems, such as the scale of a target, could be equally as problematic when using function approximation (i.e. end-to-end neural networks). This could mean important predictions are disregarded because the agent is unable to learn the answer without proper strategies to normalize the prediction's magnitude. Better strategies for learning and normalizing predictive targets will come from understanding the effective discount schedule (or emphasis) compositional predictions will have on the targets.
-
-In this chapter, I consider the effect of compositions on the sequence of discounts, and relegate the effect of off-policy importance weights to future work. I first analyze the sequence of discounts over any number of compositions and constant discounts. I then analyze this sequence to better understand how it emphasizes parts of the data stream. Surprisingly, the effective discount for constant discount compositions have a form which can be described analytically. While this does not include the full spectrum of discount functions, it provides a first step towards understanding compositions. Next I evaluate more complex state-dependent discount functions using a simple consistent sequence and two timeseries datasets in empirical simulations. In these simulations we focus on the effect of applying the same discount function a large number of times, looking to see if the shape of the returns become regular over the compositions.
-{{{c}}}
-{{{c}}}
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{plots/compgvfs/seq_plus_cw.pdf}
-  \caption{(\textbf{left}) The effective discount for $n$ compositions
-    normalized by the maximum value found in section
-    \ref{sec:compgvfs:analyze}. (\textbf{middle, right}) The cycle world
-    simulations, with top graph as the cumulant and subsequent plots
-    $n$ compositions with constant and terminating discounts
-    respectively.} \label{fig:compgvfs:seq-cw}
-\end{figure}
 
 ** Something on state
 
