@@ -1,4 +1,4 @@
-#+title: Exploring the effectiveness of Recurrent Networks in Reinforcement Learning
+#+title: Leveraging Off-Policy Prediction in Recurrent Networks for Reinforcement Learning
 #+FILETAGS: :THESIS:
 #+author: Matthew Schlegel
 #+STARTUP: overview
@@ -10,6 +10,11 @@
 #+LATEX_HEADER: \input{variables.tex}
 #+MACRO: c #+latex: %
 #+MACRO: citeplease *[CITEPLEASE: $1, $2, $3, $4, $5, $6]*
+
+
+# Old Titles:
+# Exploring the Effectiveness of Recurrent Networks in Reinforcement Learning
+# Revisiting Predictive State for Reinforcement Learning with Recurrent Neural Networks
 
 * Preamble                                                           :ignore:
 #+begin_comment
@@ -59,7 +64,7 @@ and sets formatting up for main text.
                % Now the table of contents etc.
                
 \tableofcontents
-\listoftables  % only if you have any
+% \listoftables  % only if you have any
 \listoffigures % only if you have any
 
 % minimal support for list of plates and symbols (Optional)
@@ -87,35 +92,34 @@ and sets formatting up for main text.
 
 
 
-
 * Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
 :END:
 
 
-The goal of machine intelligence research is to design an agent which interacts with its world through a continuous stream of interactions, consistently getting better through feedback, either provided or self-guided. Continual reinforcement learning [[cite:&ring1994continual;&khetarpal2022continual]] is one paradigm in which we can design such systems. Similar to reinforcement learning (RL), a continual RL agent seeks to maximize the cumulative sum of rewards---which provides a simple yet effective path towards learning behavior. The main attribute of continual RL is that there is an unending stream of sensorimotor interactions which the agent must sift through online. This is different from many instantiations of reinforcement learning where the agent often gets to the goal or the end of a maze and then is sent back to the beginning to continue learning, in continual RL the agent never reaches a point where it is reset. The agent must also balance computation to make decisions within a small time frame while also learning from recent observations. These attributes make the continual RL problem challenging, but applicable to a wide range of real-world applications.
+The goal of machine intelligence research is to design and understand an agent which interacts with its world through a continuous stream of interactions, consistently getting better through feedback. Continual reinforcement learning [[cite:&ring1994continual;&khetarpal2022continual]] is one paradigm used to build agents which continually improve. Similar to reinforcement learning (RL), a continual RL agent seeks to maximize the cumulative sum of rewards---which provides a simple yet effective path towards learning behavior. The main attribute of continual RL is that there is an unending stream of sensorimotor interactions that the agent must sift through online. This is different from many instantiations of reinforcement learning where the agent often gets to the goal or the end of a maze and then is sent back to the beginning to continue learning---also known as episodic reinforcement learning---in continual RL the agent never reaches a point where it is reset to a constrained starting distribution. The agent must also balance computation to make decisions in real-time, while also learning from recent observations. Finally, the agent must handle a world which is constantly changing over time. These properties make the continual RL problem challenging, but applicable to a wide range of real-world applications.
 
-Continual RL systems in the real-world will inevitably have to make decisions when the information available is insufficient to make an optimal choice. For example, an autonomous car driving on the highway. An autonomous car can have an abundance of sensors to perceive the cars around it---say to ensure other cars are currently within their lane or following the speed limit--or measure its own internal properties such as temperature, total fuel, and speed. While it seems the car has sufficient information at an instantaneous observation to predict with confidence, there are still many properties of the world obscured to the agent. If the neighboring car's wheel pops off because the bolts weren't tightened properly or if the driver two cars over drops their coffee and swerves towards the agent. These environment attributes could result in conditions in which the agent could never predict the future given its senses. In situations like these, where the agent has improper context, the world appears non-stationary: the world responds differently when the agent acts according to the same set of senses.
+Continual RL systems in the real-world will inevitably have to make decisions when the information available is insufficient to make an optimal choice (also known as partial observability). For example, an autonomous car driving on the highway. An autonomous car can have an abundance of sensors to perceive the cars around it---say to ensure other cars are currently within their lane or following the speed limit--or measure its own internal properties such as temperature, total fuel, and speed. While it seems the car has sufficient information at an instantaneous observation to predict with confidence, there are still many properties of the world obscured to the agent. If the neighboring car's wheel pops off because the bolts weren't tightened properly or if the driver two cars over drops their coffee and swerves towards the agent. These environment attributes could result in conditions in which the agent could never predict the future given its senses. In situations like these, where the agent has improper context, the world appears non-stationary: the world responds differently when the agent acts according to the same set of senses.
 
-In the face of missing information about the environments underlying properties (also known as partial observability), the main approach developed in machine learning is to summarize the past to provide the agent context which is missing from its current senses. In the autonomous car example, an agent can keep a history to measure how erratic other drivers have been. The agent could notice a wobble in the car with the faulty wheel or erratic driving from the driver juggling hot coffee. Using this information the agent could preemptively move away from dangerous scenarios to minimize the risk of an accident. In the past, artificial intelligence research focused on outlining all possible scenarios the agent could face in what are known as expert systems. These systems faced challenges in that humans were notoriously poor at outlining why they made a decision in a given scenario. The goal of representation learning---which is embodied by the current wave of deep learning---is to construct compact memories of the past in order to aid decision making.
+In the face of partial observability, the main approach developed in machine learning is to summarize the past to provide the agent context which is missing from its current senses. In the autonomous car example, an agent can keep a history to measure how erratic other drivers have been. The agent could notice a wobble in the car with the faulty wheel or erratic driving from the driver juggling hot coffee. Using this information the agent could preemptively move away from dangerous scenarios to minimize the risk of an accident. In the past, artificial intelligence research focused on outlining all possible scenarios the agent could face [[cite:&durkin1996expert]]. These systems faced challenges in that humans were notoriously poor at outlining why they made a decision in a given scenario. A raw history of observations has also been used to some effect in the past [[cite:&mccallum1993overcoming;&mccallum1996learning]], but these face many challenges in developing a long enough memory. The goal of representation learning---which is embodied by the current wave of deep learning---is to construct compact memories of the past in order to aid decision making.
 
 In RL, the most widely used approaches for representation learning are based on ideas developed for supervised learning (SL). Recurrent neural networks (RNNs) have been established as an important tool for learning predictions of data with temporal dependencies. They have been primarily used in language and video prediction [[cite:&mikolov2010recurrent;&wang2016largercontext;&saon2017english;&wang2018eidetic;&oh2015actionconditional]], but have also been used in traditional time-series forecasting [[cite:&bianchi2017recurrent]]. Recurrent networks have also been applied to the RL problem [[cite:&onat1998recurrent;&bakker2002reinforcement;&wierstra2007solving;&hausknecht2015deep;&heess2015memorybased;&zhu2018improving;&igl2018deep]], but often these applications focus on how to fit the RL problem into what will work with the standard recurrent training approaches. Recently, transformers [[cite:&vaswani2017attention]] have become a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. This is again similar to the application of recurrent networks where the problem is modified to fit the architecture.
 
 
-While we can--and arguably should--use the intuitions built in the SL setting for continual RL problems, these intuitions must be tested and re-justified as the problem setting incorporates ways of behaving in an environment or if there is no-longer a well defined dataset with constrained histories---like in continual reinforcement learning. In this thesis, we ask
+While we can--and arguably should--use the intuitions built in the SL setting for continual RL problems, these intuitions must be tested and re-justified as an agent if there is no-longer a well defined dataset with constrained histories and the agent must make decisions which effect the data stream---like in continual reinforcement learning. In this thesis, we ask
 #+BEGIN_QUOTE
-What algorithmic modifications are needed to make reinforcement learning methods more performant in partially observable, continual decision making tasks?
+How can ideas and algorithms from off-policy prediction and predictive state representations be used to make reinforcement learning methods more performant in partially observable, continual decision making tasks?
 #+END_QUOTE
 I use (continual) reinforcement learning to study recurrent architectures and provide novel observations and algorithms to learn representations in the RL setting. In the following sections, I outline the main contributions of this dissertation.
 
 ** Incorporating Actions in Recurrent Networks
 
-This contribution (Chapter ref:chap:arnn) empirically evaluates architectural choices for encoding action in the update function of recurrent networks. The evaluation provides 1) simple strategies to drastically improve prediction and control in reinforcement learning that can be applied in a general way to recurrent networks and 2) clarity in what approaches have been applied to recurrent networks in the reinforcement learning literature. Evidence for the preferred strategy is provided through an in-depth analysis of the prediction setting in a small example domain and in a variate of control problems.
+This contribution (Chapter ref:chap:arnn) empirically evaluates architectural choices for encoding action in the update function of recurrent networks. The evaluation provides a simple, general recommendation to incorporate action information into recurrent neural networks through a multiplicative operation which improves prediction and control in reinforcement learning. Evidence for the preferred strategy is provided through an in-depth analysis of the prediction setting in a small example prediction continuing domain and in a variety of control problems.
 
 ** A novel predictive approach to learning in the face of partial observability
 
-In this contribution, I develop a novel approach to incorporate ideas from predictive state representations---an approach to representation learning that is designed for temporal partially observable prediction problems---and recurrent neural networks, called a general value function network (GVFN). The approach is shown to be competitive to RNNs in several continual learning and time-series domains without needing as much history when estimating gradients. This contribution is split into three chapters.
+In this contribution, I develop a novel approach to incorporate ideas from predictive state representations---an approach to representation learning that is designed for temporal partially observable prediction problems---and recurrent neural networks, called a general value function network (GVFN). The approach is shown to be competitive to RNNs in several continual learning and time-series domains, often without needing history when learning. This contribution is split into three chapters.
 - Chapter ref:chap:gvfn introduces the architecture and relates it to recurrent neural networks and previous predictive approaches.
 - Chapter ref:chap:gvfn:algs derives several learning algorithms for the architecture derived from an extension of the /Mean-Squared Projected Bellmen Network Error/.
 - Chapter ref:chap:gvfn:empirical empirically compares the new architecture to standard recurrent neural networks in several continual learning prediction problems.
@@ -124,7 +128,9 @@ In this contribution, I develop a novel approach to incorporate ideas from predi
 
 This contribution investigates the set of predictive questions available to GVFNs and how these can be generated for the architecture discussed above. The impact of this contribution brings clarity to the set of predictive questions applicable to the GVFN architecture (Chapter ref:chap:composite) and progresses towards automatic deployment to a general set of partially observable settings (Chapter ref:chap:gvfn:discovery). These chapters use a collection of lemmas and empirical evidence to draw conclusions about the set of general value functions.
 
-** Off-policy prediction using Resampling
+** Off-policy prediction using Importance Resampling
+
+GVFNs require learning value functions off-policy. Off-policy prediction means learning the answer to a predictive question (i.e GVF) using experience generated through a separate behaving policy---unrelated to the target policy of the GVF. Because a GVFN requires GVFs to be stable during the learning process, previous off-policy prediction algorithms---i.e. using importance sampling ratios---can cause significant problems if the behavior is very different from the target policy.
 
 This contribution (Chapter ref:chap:resampling) defines a new off-policy prediction algorithm using importance resampling. The resulting estimator is shown to be more sample efficient than importance sampling, and robust to settings with large importance sampling ratios, while still being consistent. This estimator is widely applicable to reinforcement learning when using a replay buffer, but also is consequential for the predictive approaches developed in this thesis. The evidence provided is through several empirical experiments and theorems with proofs provided in the appendix.
 
@@ -151,7 +157,7 @@ This contribution develops the /Mean-Squared Predictive Bellmen Network Error/, 
 * Background
 
 
-In this thesis, I take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually [[cite:&ring1994continual;&ring1997child;&sutton2011horde]]. In this chapter, I provide the relevant general background. This includes background on reinforcement learning (RL) (including off-policy prediction and control), and learning under the constraint of partial observability. Specific background details related to certain solution methods will be presented closer to their relevant sections.
+In this thesis, I take the perspective that an agent is situated inside its environment and observes its world from an egocentric perspective, continually [[cite:&ring1994continual;&ring1997child;&sutton2011horde]]. In this chapter, I provide the relevant general background. This includes background on reinforcement learning (RL) (including off-policy prediction and control), and learning under the constraint of partial observability. Specific background details related to certain solution methods will be presented closer to their relevant topics.
 
 ** Reinforcement Learning
 CLOSED: [2023-02-21 Tue 11:50]
@@ -163,24 +169,27 @@ The problem setting considered in this thesis is (continual) reinforcement learn
 #+attr_latex: :width 0.8\linewidth
 [[./plots/rl-diagram.pdf]]
 
-In the agent's lifetime it observes its surroundings, takes actions, and receives rewards as the infinite sequence \(\obs_1, \action_1, \reward_2, \obs_2, \ldots, \obs_t, \action_t, \reward_{t+1}, \obs_{t+1}, \ldots\). The observation \(\obs_t\) is the agent's window into the world through various sensing parts of its body. These can include a camera for vision, microphone for audio, lidar to measure distance from other objects, and many other analog-to-digital conversion technologies. The agent then selects an action \(\Action_t\) which is passed to the agent's actuators or sub-level control system. By performing this action, the agent receives a reward \(\reward_{t+1}\) and another observation \(\obs_{t+1}\) determined by the dynamics of the environment.
+In the agent's lifetime it observes its surroundings, takes actions, and receives rewards as the infinite sequence \(\obs_1, \action_1, \reward_2, \obs_2, \ldots, \obs_t, \Action_t, \reward_{t+1}, \obs_{t+1}, \ldots\). The observation \(\obs_t\) is the agent's window into the world through various sensing parts of its body. These can include a camera for vision, microphone for audio, lidar to measure distance from other objects, and many other analog-to-digital conversion technologies. The agent then selects an action \(\Action_t\) which is passed to the agent's actuators or sub-level control system. By performing this action, the agent receives a reward \(\reward_{t+1}\) and another observation \(\obs_{t+1}\) determined by the dynamics of the environment.
 
-The agent-environment interaction can be formalized as a partially observable Markov decision processes (POMDP). The underlying dynamics are defined by a tuple \((\EnvStates, \Actions, \Pmat, f_\obs, \Rewards)\). Given a state \(\envstate \in \EnvStates\) and \(\Action \in \Actions\) the environment transitions to a new state \(\envstate^\prime \in \EnvStates\) according to the state transition probability matrix \(\Pmat \defeq \EnvStates \times \Actions \times \EnvStates \rightarrow [0,\infty)\) with a reward given by \(\Rewards \defeq \EnvStates \times \Actions \rightarrow \Reals\). The observations can then be defined as a lossy function over the environment state \(\obs_t \defeq f_\obs(\envstate_t) \in \Reals^\obssize\), and the reward is \(\reward_t \defeq f_\reward(\envstate_0, \envstate_1, \ldots, \envstate_t) \in \Reals\). This thesis concerns itself primarily with the discrete action setting, where the set of actions is a finite discrete set of values \(\Action \in \Actions \defeq [A_1, A_2, \ldots, A_n]\).
+The agent-environment interaction can be formalized as a partially observable Markov decision processes (POMDP). The underlying dynamics are defined by a tuple \((\EnvStates, \Actions, \Pmat, f_\obs, \Rewards)\). Given the state of the environment \(\envstate \in \EnvStates\) [fn:: Typically, the environment state is denoted with $s$. Here we use $\psi$ to more clearly distinguish it from the state of the agent ref:sec:bg:perception.] and \(\Action \in \Actions\) the environment transitions to a new state \(\envstate^\prime \in \EnvStates\) according to the state transition probability matrix \(\Pmat \defeq \EnvStates \times \Actions \times \EnvStates \rightarrow [0,\infty)\) with a reward given by \(\Rewards \defeq \EnvStates \times \Actions \rightarrow \Reals\). The observations can then be defined as a lossy function over the environment state \(\obs_t \defeq f_\obs(\envstate_t) \in \Reals^\obssize\), and the reward is \(\reward_t \defeq f_\reward(\envstate_0, \envstate_1, \ldots, \envstate_t) \in \Reals\). This thesis concerns itself primarily with the discrete action setting, where the set of actions is a finite discrete set of values \(\Action \in \Actions \defeq [A_1, A_2, \ldots, A_n]\).
 
-The agent has several canonical internal components. A *policy* is a mapping from states to actions \(\pi: \EnvStates \rightarrow \Actions\) and defines a way of interacting with the environment. Most often a policy defines a probability distribution over the space of Actions conditioned on the agent's state \(\pi(a|\envstate)\defeq\text{The probability of selecting action $\Action$ in state $\envstate$}\). A *value function* is a prediction of the future cumulated (discounted) reward the agent will obtain by following a policy. Specifically,
+The agent has several canonical internal components. A *policy* is a mapping from states to actions \(\pi: \EnvStates \rightarrow \Actions\) and defines a way of interacting with the environment. Most often a policy defines a probability distribution over the space of Actions conditioned on the agent's state \(\pi(a|\envstate)\defeq\text{The probability of selecting action $\Action$ in state $\envstate$}\). The return \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} \reward_{t+i} \) is the cumulated (discounted) reward into the future. A *value function* is a prediction of the future cumulated (discounted) reward the agent will obtain by following a policy. Specifically,
 {{{c}}}
-\[
-V(\EnvState) = \Expected_\pi[ G_t | \envstate_t = \EnvState, \Action \sim \pi(\cdot| \EnvState)]
-\]
+\begin{equation}
+\Value(\envstate) = \Expected_\pi[ G_t | \EnvState_t = \envstate, \action_t \sim \pi(\cdot| \EnvState)] \label{eqn:value}
+\end{equation}
 {{{c}}}
 {{{c}}}
 with a state-action value function defined similarly
 \[
-q(\EnvState, \Action) = \Expected_\pi [ G_t | \envstate_t = \EnvState, \Action_t = \Action].
+\QValue(\envstate, \Action) = \Expected_\pi [ G_t | \EnvState_t = \envstate, \Action_t = \Action].
 \]
-This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections I will extend this framework to the partial observable case, and go into the specifics of the prediction problem and the control problem.
+This thesis uses both state value functions and state-action value functions to do prediction and control. In the following sections I will 1) go into the specifics of the prediction (Section ref:sec:bg:prediction) and control (Section ref:sec:bg:control) problems as they relate to this thesis, and 2) introduce this framework to the partially observable case.
 
 ** Prediction
+:PROPERTIES:
+:CUSTOM_ID: sec:bg:prediction
+:END:
 
 *************** DONE Outline and lay foundation for prediction section :noexport:
 CLOSED: [2023-02-21 Tue 15:44]
@@ -189,52 +198,41 @@ CLOSED: [2023-02-21 Tue 15:44]
 
 The prediction problem in RL is that of learning value functions efficiently and accurately. This process can be used to improve an agent's policy through value iteration or policy iteration [[cite:&sutton2018reinforcement]], or to learn temporal abstractions of the sensorimotor stream through options or general value functions (see Section ref:sec:bg:temporal-abstractions for more details). A value function can be learned either on-policy or off-policy through temporal difference learning. In this section, I introduce the on and off-policy prediction problem as used throughout this text.
 
-As introduced above, a *value function* is a prediction of the future cumulative (discounted) reward received by following a policy \(\tpolicy\),
-\[
-\Value_\tpolicy(\EnvState) = \Expected_\pi[ G_t | \envstate_t = \EnvState, a \sim \tpolicy(\cdot| \EnvState)]
-\]
-where \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} \reward_{t+i} \) is the return. The operator \(\mathbb{E}_{\tpolicy}\) indicates an expectation with actions selected according to policy $\tpolicy$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy \(\tpolicy\). These values are typically estimated using parametric function approximation, with weights \(\weights \in \RR^d\) defining approximate values \(\Value_\weights(\envstate)\). 
+As introduced above in Equation eqref:eqn:value, a *value function* is a prediction of the future cumulative (discounted) reward received by following a policy \(\tpolicy\),
+# \[
+# \Value_\tpolicy(\envstate) = \Expected_\pi[ G_t | \EnvState_t = \envstate, \Action_t \sim \tpolicy(\cdot| \EnvState)]
+# \]
+# where \(G_t = \sum_{i=1}^{\infty} \gamma^{i-1} \reward_{t+i} \) is the return.
+The operator \(\mathbb{E}_{\tpolicy}\) indicates an expectation with actions selected according to policy $\tpolicy$. GVFs encompass standard value functions, where the cumulant is a reward. Otherwise, GVFs enable predictions about discounted sums of others signals into the future, when following a target policy \(\tpolicy\). These values are typically estimated using parametric function approximation, with weights \(\weights \in \RR^d\) defining approximate values \(\Value_\weights(\envstate)\). 
 
 The simplest algorithm to learn the value function is through Monte-Carlo sampling. The brief of the algorithm is to get samples of the return starting in state $\EnvState$ following policy $\tpolicy$, which are then averaged to receive the expected return. You can use the trajectories to estimate the returns for either first-visit to a specific state or on every visit, see cite:&singh1996reinforcementa;&sutton2018reinforcement for more details. This algorithm only requires the environment to be episodic (i.e. clear terminations) and converges to the true value function as the number of rollouts grow.
 
 Another approach to learning value functions is to take advantage of the Bellman equation through dynamic programming. The Bellman equation for the value function $\Value_\tpolicy(\EnvState)$
 \begin{align*}
-\Value^\pi(\EnvState) &= \Expected_\tpolicy[G_t | \envstate_t = \EnvState, \Action \sim \tpolicy(\cdot | \EnvState)] \\
-&= \Expected_\tpolicy[\reward_t + \gamma G_{t+1} | \envstate_t = \EnvState, \Action \sim \tpolicy(\cdot | \EnvState)] \\
-&= \overline{R}(\EnvState, \pi(\EnvState)) + \gamma \sum_{\EnvState^\prime} P(\EnvState^\prime | \EnvState, \Action \sim \tpolicy(\EnvState)) \Value^\tpolicy(\EnvState^\prime)
+\Value^\pi(\envstate) &= \Expected_\tpolicy[G_t | \EnvState_t = \envstate, \Action_t \sim \tpolicy(\cdot | \EnvState)] \\
+&= \Expected_\tpolicy[\reward_t + \gamma G_{t+1} | \EnvState_t = \envstate, \Action_t \sim \tpolicy(\cdot | \EnvState)] \\
+&= \overline{R}(\envstate, \pi(\envstate)) + \gamma \sum_{\envstate^\prime} P(\envstate^\prime | \envstate, \Action_t \sim \tpolicy(\envstate)) \Value^\tpolicy(\envstate^\prime)
 \end{align*}
-where $\overline{R}(\EnvState, \tpolicy(\EnvState)$ is the expected one-step reward for policy $\tpolicy$ in state $\EnvState$. The algorithm uses the transition dynamics of the environment $\Pmat$ to iteratively calculate the value function through dynamic programming [[cite:&sutton2018reinforcement]].
+where \(\overline{R}(\envstate, \tpolicy(\envstate))\) is the expected one-step reward for policy $\tpolicy$ in state $\envstate$. The algorithm uses the transition dynamics of the environment $\Pmat$ to iteratively calculate the value function through dynamic programming [[cite:&sutton2018reinforcement]].
 
 Temporal-difference learning combines advantages of both these algorithms, eliminating the need for environment dynamics (as in dynamic programming) and episodic environments (as in Monte-Carlo sampling). For tabular settings, TD learning follows the update rule
 \[
-\hat{\Value}_{t+1}(\EnvState) \leftarrow \hat{V}_t(\EnvState) + \alpha (\reward_t + \gamma \hat{V}_t(\EnvState^\prime) - \hat{V}_t(\EnvState)).
+\hat{\Value}_{t+1}(\EnvState) \leftarrow \hat{V}_t(\EnvState) + \alpha \left[\reward_t + \gamma \hat{V}_t(\EnvState^\prime) - \hat{V}_t(\EnvState)\right].
 \]
 The target for the temporal-difference learning algorithm is known as the TD target \(\reward_t + \gamma \hat{\Value}_t(\EnvState^\prime)\). TD bootstraps using the previous estimate of the return on the next state \(\hat{\Value}_t(\EnvState^\prime)\) (like dynamic programming) while sampling transitions from the environment following \(\tpolicy\) (like Monte-Carlo sampling).
 
 When using function approximation, the preferred approach is to follow the gradient taken of the value function with respect to the parameters of your function. This is known as the semi-gradient TD learning algorithm
-\[
-\weights_{t+1} \leftarrow \Value(\EnvState; \weights_t) + \alpha (\reward_t + \gamma \Value(\EnvState^\prime; \weights_t) - \Value(\EnvState; \weights)) \nabla_\weights \Value(\EnvState; \weights).
-\]
-This update can be seen as minimizing the mean squared TD objective \(\loss(\EnvState, \EnvState^\prime, r_t) = \Vert U_t - \Value(\EnvState; \weights) \Vert^2_2\) assuming the bootstrapped target \(U_t = \reward_t + \gamma \Value(\EnvState^\prime; \weights_t)\) has gradient \(\nabla_\weights U_t = 0\). 
+\begin{align*}
+\delta_t &= \Value(\EnvState; \weights) - \left(\reward_t + \gamma \Value(\EnvState^\prime; \weights_t)\right) \\
+\weights_{t+1} &\leftarrow \weights_t - \alpha\delta_t \nabla_\weights \Value(\EnvState; \weights).
+\end{align*}
+This update can be seen as minimizing the mean squared TD objective \(\loss(\EnvState, \EnvState^\prime, \reward_t) = (\Value(\EnvState; \weights) - U_t)^2\) assuming the bootstrapped target \(U_t = \reward_t + \gamma \Value(\EnvState^\prime; \weights_t)\) has gradient \(\nabla_\weights U_t = 0\).
 
 
-*************** DONE Clean up history of learning value functions on-policy :noexport:
-CLOSED: [2023-02-28 Tue 14:23]
-*************** END
-
-# Another way to learn the value function is by taking advantage of the Bellman equation through dynamic programming.
-
-# Both of the above algorithms enforce restrictions on the types of problems addressable. Temporal-difference learning combines advantages of both the above algorithms, alleviating some of constraints imposed.
-
-# The off-policy prediction problem is equally concerned with learning value functions of policy $\tpolicy$, but must use data generated from a separate behavior policy $\bpolicy$.
-
-*************** DONE Temporal-difference learning for on-policy prediction :noexport:
-CLOSED: [2023-02-28 Tue 14:23]
-*************** END
 *** Off-policy prediction
 
 In off-policy prediction, transitions are sampled according to behavior policy, rather than the target policy. 
-To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update \(\alpha_t\delta_t\nabla_\theta \Value_{\weights}(\envstate)\) for a given \(\EnvState_t = \envstate\), for learning rate \(\alpha_t \in \RR^+\) and TD-error \(\delta_t \defeq R_{t+1} + \gamma_{t+1}\Value_{\weights}(\EnvState_{t+1}) -  \Value_{\weights}(\envstate)\). If actions are instead sampled according to a behavior policy \(\bpolicy: \EnvStates \times \Actions \rightarrow [0,1]\), then importance sampling (IS) is used to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\theta \Value_{\weights}(\envstate)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\Action_t | \EnvState_t)}{\bpolicy(\Action_t | \EnvState_t)}$.  Given state $\EnvState_t = \envstate$, if $\bpolicy(\Action | \envstate) > 0$ when $\tpolicy(\Action | \envstate) > 0$, then the expected value of these two updates are equal. To see why, notice that
+To get an unbiased sample of an update to the weights, the action probabilities need to be adjusted. Consider on-policy temporal difference (TD) learning, with update \(\alpha_t\delta_t\nabla_\weights \Value_{\weights}(\envstate)\) for a given \(\EnvState_t = \envstate\), for learning rate \(\alpha_t \in \RR^+\) and TD-error \(\delta_t \defeq R_{t+1} + \gamma_{t+1}\Value_{\weights}(\EnvState_{t+1}) -  \Value_{\weights}(\envstate)\). If actions are instead sampled according to a behavior policy \(\bpolicy: \EnvStates \times \Actions \rightarrow [0,1]\), then importance sampling (IS) is used to modify the update, giving the off-policy TD update $\alpha_t\rho_t\delta_t\nabla_\weights \Value_{\weights}(\envstate)$ for IS ratio $\rho_t \defeq \frac{\tpolicy(\Action_t | \EnvState_t)}{\bpolicy(\Action_t | \EnvState_t)}$.  Given state $\EnvState_t = \envstate$, if $\bpolicy(\Action | \envstate) > 0$ when $\tpolicy(\Action | \envstate) > 0$, then the expected value of these two updates are equal. To see why, notice that
 {{{c}}}
 \begin{equation*}
   \mathbb{E}_\mu\left[\alpha_t\rho_t\delta_t\nabla_\weights \Value_{\weights}(\envstate) |\EnvState_t = \envstate\right]
@@ -245,9 +243,9 @@ which equals $\mathbb{E}_\pi\left[\alpha_t\rho_t\delta_t\nabla_\weights \Value_{
 \begin{align*}
 \mathbb{E}_\mu\left[\rho_t\delta_t |\EnvState_t = \envstate\right] 
 % &= \sum_{\action \in \Actions} \mu(\action | \state) \mathbb{E}\left[\rho_t\delta_t |\stater_t = \state, \actionr_t = \action \right]\\ 
-&= \sum_{\Action \in \Actions} \mu(\Action | \envstate) \frac{\tpolicy(\Action | \envstate)}{\bpolicy(\Action | \envstate)} \mathbb{E}\left[\delta_t |\EnvState_t = \envstate, \Action_t = \action \right]
+&= \sum_{\action \in \Actions} \mu(\action | \envstate) \frac{\tpolicy(\action | \envstate)}{\bpolicy(\action | \envstate)} \mathbb{E}\left[\delta_t |\EnvState_t = \envstate, \Action_t = \action \right]\\
 % &= \sum_{\action \in \Actions} \tpolicy(\action | \state) \mathbb{E}\left[\delta_t |\stater_t = \state, \actionr_t = \action \right] \\
-= \ \mathbb{E}_\pi\left[\delta_t |\EnvState_t = \envstate\right].
+&= \mathbb{E}_\pi\left[\delta_t |\EnvState_t = \envstate\right].
 \end{align*}
 
 Though unbiased, IS can be high-variance. A lower variance alternative is Weighted IS (WIS). For a batch consisting of transitions $\{(\envstate_i, \Action_i, \envstate_{i+1}, \reward_{i+1}, \rho_i)\}_{i=1}^n$, batch WIS uses a normalized estimate for the update.
@@ -257,7 +255,7 @@ For example, an offline batch WIS TD algorithm, denoted WIS-Optimal below, would
 CLOSED: [2023-03-01 Wed 12:12]
 *************** END
 
-While the above objectives have been shown to effectively work in a wide range of problem settings, there are a series of known counter examples where these algorithms do not converge. This is due to what is known as the deadly-triad in off-policy semi-gradient TD: off-policy, function approximation, and bootstrapping. Removing any of these properties results in a convergent learning rule. Instead, minimizing an objective known as the /mean squared projected Bellmen error/ (MSPBE) converges to the TD fixed point. This objective minimizes the full Bellman error through a projection operator [[cite:&sutton2009fast;&maei2009convergent]]. Minimizing this objective results in several algorithms including one known as temporal-difference with corrections (TDC). For linear function approximation $V(\EnvState_t; \weights_t) = \weights_t^\trans \phi_t$ (where \(\phi_t\) is the features corresponding to state \(\EnvState_t\)
+While the above objectives have been shown to effectively work in a wide range of problem settings, there are a series of known counter examples where these algorithms do not converge. This is due to what is known as the deadly-triad in off-policy semi-gradient TD: off-policy, function approximation, and bootstrapping [[cite:&baird1995residual;&sutton2018reinforcement;&vanhasselt2018deep]]. Removing any of these properties results in a convergent learning rule. Instead, minimizing an objective known as the /mean squared projected Bellmen error/ (MSPBE) converges to the TD fixed point. This objective minimizes the full Bellman error through a projection operator [[cite:&sutton2009fast;&maei2009convergent]]. Minimizing this objective results in several algorithms including one known as temporal-difference with corrections (TDC). For linear function approximation $V(\EnvState_t; \weights_t) = \weights_t^\trans \phi_t$ (where \(\phi_t\) is the features corresponding to state \(\EnvState_t\)
 \begin{align*}
 \weights_{t+1} &\leftarrow \weights_{t} + \alpha \delta_t \phi_t - \alpha \gamma \phi_{t+1} (\phi_t^\trans \secweights_{t}) \\
 \secweights_{t+1} &\leftarrow \secweights_t + \beta(\delta_t - \phi_t^\trans \secweights_t) \phi_t \\
@@ -269,19 +267,23 @@ CLOSED: [2023-02-21 Tue 11:50]
 :PROPERTIES:
 :CUSTOM_ID: sec:bg:control
 :END:
-The bread and butter problem for reinforcement learning research is the control problem. The control problem is the process of searching (or learning) a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control (through q-learning) to direct policy optimization through policy gradient and actor critic methods. All the control experiments in this thesis use value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
+The control problem is the process of learning a policy which the agent can use to decide actions. There are many possible approaches for control in reinforcement learning, from value-based control to direct policy optimization through policy gradient and actor critic methods. All the control experiments in this thesis use value-based control as a means to study the perception of reinforcement learning agents (see ref:sec:bg:perception for more details).
 
 As defined above, a state-action value function
 \[
-\QValue(\envstate, a) = \Expected_\optpolicy [ G_t | \EnvState_t = \envstate, \Action_t = \Action].
+Q^*(\envstate, a) = \Expected_{\optpolicy} [ G_t | \EnvState_t = \envstate, \Action_t = \Action].
 \]
 where \(\optpolicy\) is the optimal policy is the main object for value based control. The goal of the agent is to search through the space of policies to maximize the total return the agent will receive from any state, or in other words to find the optimal policy \(\optpolicy\). In this thesis, our control experiments are restricted to Q-learning [[cite:&watkins1992qlearning;&mnih2015humanlevel]], an off-policy technique which learns the optimal policy. Q-learning, in its simplest form, is defined by the following set of updates
 \begin{align*}
-\delta_{t+1} &= \reward_{t+1} + \gamma \max_a (Q(\EnvState_{t+1}, a)) - Q(\EnvState_t, \Action_t) \\
-Q(\EnvState_t, \Action_t) &\leftarrow Q(\EnvState_t, \Action_t) + \alpha\delta_{t+1} 
+\delta_{t+1} &= Q(\EnvState_t, \Action_t) - \left(\reward_{t+1} + \gamma \max_a (Q(\EnvState_{t+1}, a))\right) \\
+Q(\EnvState_t, \Action_t) &\leftarrow Q(\EnvState_t, \Action_t) - \alpha\delta_{t+1}
 \end{align*}
-
-So far, the above update rule for q-learning is defined for the tabular setting. In section ref:sec:bg:deeprl, this algorithm is extended to the function approximation setting.
+Similarly to the TD learning rule, semi-gradient updates can be derived from the tabular rule by minimizing an objective
+\begin{align*}
+U_t &= \reward_{t+1} + \gamma \max_a (Q(\EnvState_{t+1}, a)) \\
+\loss(\EnvState, \Action, \EnvState^\prime, \reward_t) &= ( \QValue(\EnvState, \Action; \weights) - U_t )^2.
+\end{align*}
+So far, the above update rule foar q-learning is defined for the tabular setting. In section ref:sec:bg:deeprl, this algorithm is extended to the function approximation setting.
 
 # See Sections ref:sec:bg:func-approx and ref:sec:bg:perception for details on how to apply this method when using deep learning function approximation and recurrent neural networks respectively.
 
@@ -321,12 +323,17 @@ CLOSED: [2023-02-22 Wed 13:17]
 
 Recurrent neural networks (RNNs) have been established as an important tool for learning predictions of data with temporal dependencies. They have been primarily used in language and video prediction [[cite:&mikolov2010recurrent;&wang2016largercontext;&saon2017english;&wang2018eidetic;&oh2015actionconditional]], but have also been used in traditional time-series forecasting [[cite:&bianchi2017recurrent]] and RL [[cite:&onat1998recurrent;&bakker2002reinforcement;&wierstra2007solving;&hausknecht2015deep;&heess2015memorybased;&zhu2018improving;&igl2018deep]]. In this section, I will outline the three major architectures applied in this thesis. In the next section I will detail the algorithms deployed to train these architectures in SL and RL.
 
-An RNN provides one such solution to learning \(\agentstate_t\) and associated state update function. The simplest RNN is one which learns the parameters \(\weights \in \Reals^\numparams\) recursively
-{{{c}}}
-\[
-  \agentstate_t = \sigma(\weights \xvec_t + \bvec)
-\]
-{{{c}}}
+An RNN provides one such solution to learning \(\agentstate_t\) and associated state update function. The simplest RNN is one which calculates state \(\state_t \in \Reals^\statesize\) recursively
+
+\begin{minipage}{0.5\textwidth}
+\includegraphics[width=\linewidth]{plots/figures/RNN.pdf}
+\end{minipage}%%% to prevent a space
+\begin{minipage}{0.5\textwidth}
+\begin{align*}
+\agentstate_t &= \sigma(\weights \xvec_t + \bvec)
+\end{align*}
+\end{minipage}
+
 where \(\xvec_t = [\obs_t, \agentstate_{t-1}]\) and \(\sigma\) is any non-linear transfer function (typically tanh). While concatenating information (or doing additive operations) has become standard in RNNs, another idea explored earlier in the literature and in more modern cells is using multiplicative operations
 {{{c}}}
 \[
@@ -337,7 +344,26 @@ Using this type of operation was initially called second-order RNNs [[cite:&goud
 
 There are several known problems with simple recurrent units (and to a lesser extent other recurrent cells). The first is known as the vanishing and exploding gradient problem [[cite:&pascanu2013difficulty]]. In this, as gradients are multiplied together (via the chain rule in back-propagation through time) the gradient can either become very large or vanish into nothing. In either case, the learned networks often cannot perform well and a number of practical tricks are applied to stabilize learning [[cite:&bengio2013advances]]. The second problem is called saturation. This occurs when the weights \(\weights\) become large and the activations of the hidden units are at the extremes of the transfer function. While not problematic for learning stability, this can limit the capacity of the network and make tracking changes in the environment dynamics more difficult [[cite:&chandar2019nonsaturating]].
 
-Many specialized architectures have been developed to improve learning with recurrence. These architectures are designed to better learn long-temporal dependences and avoid saturation [[cite:&hochreiter1997long;&cho2014properties;&chung2014empirical;&greff2017lstm;&chandar2019nonsaturating]]. The experiments presented in this work use three cell types. The first was the simple RNN introduced earlier in this section. The other cells used are Long short-term memory cells (LSTM) [[cite:&hochreiter1997long]], and gated-recurrent units (GRU) [[cite:&chung2014empirical]] which are standard cells used throughout sequence prediction in supervised learning. Long short-term memory cells (LSTM) were developed to address the issues with modeling long-temporal dependencies and the vanishing gradients problem observed in simple RNN cells. Gated-recurrent units (GRU) are a modification from the LSTM cell which maintains performance in many settings, improves ease of use, and improves computational footprint [[cite:&greff2017lstm]]. 
+Many specialized architectures have been developed to improve learning with recurrence. These architectures are designed to better learn long-temporal dependences and avoid saturation [[cite:&hochreiter1997long;&cho2014properties;&chung2014empirical;&greff2017lstm;&chandar2019nonsaturating]]. The experiments presented in this work use three cell types. The first was the simple RNN introduced earlier in this section. The other cells used are Long short-term memory cells (LSTM) [[cite:&hochreiter1997long]], and gated-recurrent units (GRU) [[cite:&chung2014empirical]] which are standard cells used throughout sequence prediction in supervised learning. Long short-term memory cells (LSTM) were developed to address the issues with modeling long-temporal dependencies and the vanishing gradients problem observed in simple RNN cells.
+{{{c}}}
+\begin{align*}
+\fvec_t &= \sigma(\weights_\fvec \xvec_t + b_\fvec) \\
+\ivec_t &= \sigma(\weights_\ivec \xvec_t + b_\ivec) \\
+\tilde{\cvec}_t &= \text{tanh}(\weights_\cvec \xvec_t + b_\cvec) \\
+\cvec_t &= f_t \odot \cvec_{t-1} + i_t \odot \tilde{\cvec}_t \\
+o_t &= \sigma(\weights_o \xvec_t + b_o) \\
+\state_t &= o_t \odot \text{tanh}(C_t)
+\end{align*}
+{{{c}}}
+Gated-recurrent units (GRU) are a modification from the LSTM cell which maintains performance in many settings, improves ease of use, and improves computational footprint [[cite:&greff2017lstm]].
+{{{c}}}
+\begin{align*}
+\zvec_t &= \sigma(\weights_\zvec \xvec_t + b_z) \\
+\rvec_t &= \sigma(\weights_\rvec \xvec_t + b_r) \\
+\tilde{\state}_t &= \text{tanh} (\weights_\state [x_t, r_t \odot \state_{t-1}] + b_\state) \\
+\state_t &= (1-z_t) \odot \state_{t-1} + z_t \odot \tilde{\state}_t
+\end{align*}
+
 
 *************** CANCELLED LSTM Cell Architecture       :noexport:CANCELLED:
 CLOSED: [2023-03-28 Tue 13:08]
@@ -355,22 +381,21 @@ CLOSED: [2023-03-28 Tue 13:03]
 :END:
 
 
-In supervised learning, back-propagation through time (BPTT) [[cite:&mozer1995focused]] is the most often used algorithm for estimating the gradients of recurrent networks. In this section, BPTT is briefly introduced alongside some alternatives.
-# This algorithm works by rolling the recurrent network back through the sequence used in the forward inference of the model, effectively treating the rolled out network as one deep neural network. RNNs are typically trained through the use of back-propagation through time (BPTT) [[cite:&mozer1995focused]].
+In supervised learning, back-propagation through time (BPTT) [[cite:&mozer1995focused]] is a commonly used algorithm for estimating the gradients of recurrent networks. In this section, BPTT is briefly introduced alongside some alternatives.
 This algorithm effectively unrolls the network through the sequence and calculates the gradient as if it was one large network with shared weights. When calculating the gradients through time for a specific sample using BPTT, the loss can be defined [fn:: You can also sum over the temporal dimension, passing in a sequence of labels to the loss. In this work, the loss is calculated with respect to the most recent timestep (or the end of sampled sequence) and calculate gradients back from this.] as
 {{{c}}}
 \[
   \mathcal{L}_{t}(\obs_1, \ldots, \obs_t, y_{t}, \weights) = \sum_{i}^{N} (v_i(\agentstate(\obs_1, \ldots, \obs_t, \weights)) - y_{t, i})^2
 \]
 {{{c}}}
-where \(N\) is the size of the batch, and \(y\) is the target defined by the specific algorithm, and \(t is the current time.\). This will calculate the loss for a single step at the end of the sequence rolling back through the entire sequence to the beginning.
+where \(N\) is the size of the batch, and \(y\) is the target defined by the specific algorithm, and \(t\) is the current time. This will calculate the loss for a single step at the end of the sequence rolling back through the entire sequence to the beginning.
 
-One might notice the above loss function requires growing computational and memory requirements as the agent interacts with the environment. To limit the computational and memory concerns, the current standard in training recurrent architectures in RL is (truncated) Back-propagation through time. \(p\)-BPTT truncates the unrolling of the network to some number of steps \(p\). While this alleviates computational-cost concerns, the learning performance can be sensitive to the truncation parameter [[cite:&pascanu2013difficulty]], particularly if the dependencies back-in-time are longer than the chosen \(p\)---as reaffirmed by the results in this thesis. The loss is slightly modified from above as
+One might notice the above loss function requires growing computational and memory requirements as the agent interacts with the environment. To limit the computational and memory concerns, the current standard in training recurrent architectures in RL is truncated back-propagation through time. \(p\)-BPTT truncates the unrolling of the network to some number of steps \(p\). While this alleviates computational-cost concerns, the learning performance can be sensitive to the truncation parameter [[cite:&pascanu2013difficulty]], particularly if the dependencies back-in-time are longer than the chosen \(p\)---as reaffirmed by the results in this thesis. The loss is slightly modified from above as
 \[
   \mathcal{L}_{t}(\obs_t-p, \ldots, \obs_t, y_{t}, \weights) = \sum_{i}^{N} (v_i(\agentstate(\obs_t-p, \ldots, \obs_t, \weights)) - y_{t, i})^2.
 \]
 
-An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
+An alternative to \(p\)-BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
 
 
 ** Prediction and Control in Deep Recurrent Reinforcement Learning
@@ -383,8 +408,11 @@ When applying deep recurrent neural networks to the RL setting, there are severa
 
 
 *Loss Functions:* In all the following results, semi-gradient learning updates are used unless otherwise specified. Given a loss function of the form
-\[\loss(\State, \Action, \State^\prime, \reward_t) = \Vert U_t - \QValue(\State, Action; \weights) \Vert\]
-where the bootstrapped target is \(U_t = \reward_t + \gamma \max_a(\QValue(\State^\prime, a; \weights_t))\) for Watkins q-learning [[cite:&watkins1992qlearning]]. The semi-gradient learning update only considers the gradient with respect to \(\QValue(\State, Action; \weights)\) where the gradient of the target \(\nabla_\weights U_t = 0\). The norm of the loss function is the squared L2-norm \(\Vert \xvec \Vert^2_2 = \sum_i \xvec_i^2 \), unless otherwise specified. 
+\[
+\loss(\State, \Action, \State^\prime, \reward_t) =
+f(U_t, \QValue(\State, \Action; \weights))
+\]
+where the bootstrapped target is \(U_t = \reward_t + \gamma \max_a\QValue(\State^\prime, a; \weights_t)\) for Watkins q-learning [[cite:&watkins1992qlearning]]. The semi-gradient learning update only considers the gradient with respect to \(\QValue(\State, \Action; \weights)\) where the gradient of the target \(\nabla_\weights U_t = 0\). The function $f$ is the mean squared error \(f(\hat{y}, y) = (\hat{y} - y)^2\), unless otherwise specified.
 
 *Experience Replay Buffer:* The experience replay buffer is mechanism for re-using data [[cite:&lin1993reinforcement;&lin1992selfimproving]] and for inducing an almost independent, identically distributed set of examples with which to train the network [[cite:&mnih2015humanlevel;&schaul2015prioritized]]. The replay buffer simply is a buffer of stored transitions \((\State, \Action, \State\prime, \reward)\) which is sampled according to some distribution (typically uniform).
 
@@ -468,6 +496,31 @@ Experiments are performed in two settings: prediction and control. For predictio
 {{{c}}}
 The value function is estimated using off-policy semi-gradient TD(0) citep:&sutton1988learning;&tesauro1994tdgammon. For the control setting, the agent learns a policy which maximizes the discounted sum of rewards or return \(G_t \defeq \sum_{i=0}^\infty \gamma^{i} \reward_{i+t+1}\) using Q-learning citep:&watkins1992qlearning.
 
+** Learning Long-temporal Dependencies
+:PROPERTIES:
+:CUSTOM_ID: sec:bg:perception:tempdepend
+:END:
+
+*************** DONE edit LLTD section :noexport:
+CLOSED: [2023-02-21 Tue 15:48]
+*************** END
+
+
+Learning long-temporal dependencies is the primary concern of both RL and SL applications of recurrent networks. While great work has been done to coalesce around a few potential architectures and algorithms for SL settings, these are often found lacking in the online-incremental RL context cite:&sodhani2020training;&rafiee2022eyeblinks;&schlegel2021general. 
+# discussed in section \ref{sec:open_problems}.
+Not only do agents need to learn from the currently stored data (i.e. in an experience replay buffer), they must also continually incorporate the newest information into their decisions (i.e. update online and incrementally). The importance of learning state from an online stream of data has been heavily emphasized in the past through predictive representations of state cite:&littman2002predictive, temporal-difference networks [[cite:&sutton2005temporaldifference]] and GVF networks [[cite:&schlegel2021general]], and in modeling trace patterning systems [[cite:&rafiee2022eyeblinks]]. From a supervised learning perspective, several problems like saturating capacity and catastrophic forgetting are cited as the most pressing for any parametric continual learning system [[cite:&sodhani2020training]]. Below we suggest a few alternative directions needing further exploration in the RL context.
+
+The current standard in training recurrent architectures in RL is truncated BPTT. This algorithm trades off the ability to learn long-temporal dependencies with computation and memory complexity. Currently, the system designer must set the length of temporal sequences the agent needs to model (as would be needed for truncated BPTT to be effective [[cite:&mozer1995focused;&ke2018sparse;&tallec2018unbiased;&rafiee2022eyeblinks]]). Setting this length is a difficult task, as it interacts with the underlying environment and the agent's exploration strategy
+# (see section \ref{sec:open_problems} for more details).
+As the truncation parameter increases it is known that the gradient estimates become wildly variant [[cite:&pascanu2013difficulty;&sodhani2020training]], which can make learning slow.
+
+An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
+
+Learning long-temporal dependencies through regularizing objectives on the state has shown promise in alleviating the need for unrolling the network over long-temporal sequences. citeauthor:&schlegel2021general (citeyear:&schlegel2021general) use GVFs to make the hidden state of a simple RNN predictions about the observations showing potential in lightening the need for BPTT. This approach is sensitive the GVF parameters to use as targets on the state of the network. Predictive state recurrent neural networks [[cite:&downey2017predictive]] combine the benefits of RNNs and predictive representations of state [[cite:&littman2002predictive]] in a single architecture. They show improvement in several settings, but don't explore the model when starved for temporal information in the update. Another approach is through stimulating traces, as shown by [[cite:&rafiee2022eyeblinks]], where traces of observations are used to bridge the gap between different stimuli. Instead of traces, an objective which learns the expected trace [[cite:&hasselt2021expected]] of the trajectory could provide similar benefits as a predictive objective. One can even change the requirements on the architecture in terms of final objectives. [[cite:&mozer1991induction]] propose to predict only the contour or general trends of a temporal sequence, reducing the resolution considerably. Value functions are another object which takes an infinite sequence and reduces resolution to make the target easier to predict [[cite:&sutton1995td;&sutton2011horde;&modayil2014multitimescale;&vanhasselt2015learning]].
+
+It is also possible to reduce or avoid the need for BPTT for modeling long-temporal sequences by adjusting the internal mechanisms of the recurrent architecture. Echo-state Networks [[cite:&jaeger2002adaptive]] are one possible direction. Related to the generate and test idea, echo-state networks rely on a random fixed "reservoir" network, where predictions are made by only adjusting the outgoing weights. Because the recurrent architecture is fixed, no gradients flow through the recurrent connections meaning no BPTT is needed to estimate the gradients. Unfortunately, these networks are dependent on their initializations making them hard to deploy in practice. [[citeauthor:&mozer1995focused]] ([[citeyear:&mozer1995focused]]) propose a focused architecture design, where recurrent connections are made more sparsely (even just singular connections). This significantly reduces the computational complexity of RTRL and allows for a focused version of BPTT.
+
+Transformers [[cite:&vaswani2017attention]] are a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. Because of these compromises, it is still unclear if transformers are a viable solution to the state construction problem in continual reinforcement learning.
 ** Constructing State with Recurrent Networks
 CLOSED: [2023-01-18 Wed 13:57]
 
@@ -705,12 +758,12 @@ To ground the prediction error reported, two representative examples of the lear
 
 
 #+ATTR_LATEX: :width 0.88\linewidth
-#+caption: TSNE plots for the additive and multiplicative RNNs for truncation \(\in \{1, 6\}\). Given the learning objective (described in Section ref:sec:arnn:learnability), the state should have 10 distinct clusters for each state of the underlying environment. One would expect the truncation $\tau=1$ to not be able to produce this kind of state for either cell variant. The learning curves correspond to a single seed (seed=62 which is best for the Additive update). The top scatter plots are colored on the underlying state the agent is currently in, the bottom scatter plots are colored based on the previous action the agent took. TSNE is initilized with the same random seed, with max iterations set to 1000, and perplexity set to 30. {\bf (top)} additive and {\bf (bottom)} multiplicative update functions.
+#+caption: TSNE plots for the additive and multiplicative RNNs for truncation \(\in \{1, 6\}\). Given the learning objective (described in Section ref:sec:arnn:learnability), the state should have 10 distinct clusters for each state of the underlying environment. One would expect the truncation $\tau=1$ to not be able to produce this kind of state for either cell variant. The learning curves correspond to a single seed (seed=62 which is best for the Additive update). The top scatter plots are colored on the underlying state the agent is currently in, the bottom scatter plots are colored based on the previous action the agent took. TSNE is initilized with the same random seed, with max iterations set to 1000, and perplexity set to 30. *(top)* additive and *(bottom)* multiplicative update functions.
 #+name: fig:arnn:rw-tsne
 [[./plots/arnns/figures/tsne_combined_seed_62.pdf]]
 
 #+ATTR_LATEX: :width 0.88\linewidth
-#+caption: TSNE plots for the additive and multiplicative RNNs for truncation $\in \{1, 6\}$. Given the learning objective (described in Section ref:sec:arnn:learnability), the state should to have 10 distinct clusters for each state of the underlying environment. One would expect the truncation $\tau=1$ to not be able to produce this kind of state for either cell variant. The learning curves correspond to a single seed. The top scatter plots are colored on the underlying state the agent is currently in, the bottom scatter plots are colored based on the previous action the agent took. TSNE is initialized with the same random seed, with max iterations set to 1000, and perplexity set to 30. The results are presened for the median seeds of both cells {\bf (top)} additive uses seed=55 and {\bf (bottom)} multiplicative uses seed=67.
+#+caption: TSNE plots for the additive and multiplicative RNNs for truncation $\in \{1, 6\}$. Given the learning objective (described in Section ref:sec:arnn:learnability), the state should to have 10 distinct clusters for each state of the underlying environment. One would expect the truncation $\tau=1$ to not be able to produce this kind of state for either cell variant. The learning curves correspond to a single seed. The top scatter plots are colored on the underlying state the agent is currently in, the bottom scatter plots are colored based on the previous action the agent took. TSNE is initialized with the same random seed, with max iterations set to 1000, and perplexity set to 30. The results are presened for the median seeds of both cells *(top)* additive uses seed=55 and *(bottom)* multiplicative uses seed=67.
 #+name: fig:arnn:rw-tsne-median
 [[./plots/arnns/figures/tsne_combined_median.pdf]]
 
@@ -806,7 +859,7 @@ The first domain considered is a version of DirectionalTMaze which uses images i
 
 Results for the Image DirectionalTMaze can be seen in Figure ref:fig:arnn:scaling-up. In this domains, the multiplicative performs quite well, although not as well as in the simple version. The AAGRU is unable to learn in this setting, and the deep additive variant performs slightly better than the additive.
 
-#+caption: *(left)* Image Directional TMaze percent success over the final \(10\%\) of episodes for 20 runs for CELL (hidden size): AAGRU (70), MAGRU (32), DAGRU (45, \(|\avec| = 128\)). Using ADAM trained over 400k steps, \((\tau = 20)\). GRU omitted due to prior performance. *(center) Lunar Lander average reward over all episodes for CELL (hidden size): GRU (154), AAGRU (152), MAGRU (64), DAGRU (152, \(|\avec|=64\)) and \((\tau = 16)$. {\bf (right)} Lunar Lander learning curves over total reward. Ribbons show standard error and a window averaging over 100k steps was used. Lunar Lander agents were trained for 20 independent runs for 4M steps.
+#+caption: *(left)* Image Directional TMaze percent success over the final \(10\%\) of episodes for 20 runs for CELL (hidden size): AAGRU (70), MAGRU (32), DAGRU (45, \(|\avec| = 128\)). Using ADAM trained over 400k steps, \((\tau = 20)\). GRU omitted due to prior performance. *(center) Lunar Lander average reward over all episodes for CELL (hidden size): GRU (154), AAGRU (152), MAGRU (64), DAGRU (152, \(|\avec|=64\)) and \((\tau = 16)\). *(right)* Lunar Lander learning curves over total reward. Ribbons show standard error and a window averaging over 100k steps was used. Lunar Lander agents were trained for 20 independent runs for 4M steps.
 #+name: fig:arnn:scaling-up
 #+attr_latex: :width \linewidth
 [[./plots/arnns/figures/scale.pdf]]
@@ -916,7 +969,7 @@ The difficulty in training such a state depends on the chosen targets. For examp
 Therefore, I propose to restrict ourselves to a class of prediction that have been shown to be more robust to these issues [[citep:&vanhasselt2015learning;&sutton2011horde;&modayil2014multitimescale]]. This class of predictions correspond to predictions of discounted cumulative sums of signals into the future, called General Value Functions (GVFs). Algorithms exist to estimate these predictions online, without having to wait to see outcomes in the future. This property of GVFs is called /independence of span/ citep:&vanhasselt2015learning, meaning learning can be achieved with computation and memory independent of the horizon. Such a property is doubly critical for predictions within an RNN, as it is more likely these predictions can be estimated sufficiently quickly to be usable as state. Further, there is some evidence that this class of predictions is sufficient for a broad range of predictions about the future [[citep:&sutton2011horde;&modayil2014multitimescale;&momennejad2018predicting;&banino2018vectorbased;&white2015developing;&pezzulo2008coordinating]], and so the restriction to GVFs does not significantly limit representability.
 
 
-*** DONE The components of a predictive state approach
+*** The components of a predictive state approach
 CLOSED: [2023-02-28 Tue 14:26]
    :PROPERTIES:
    :CUSTOM_ID: sec:bg:predreps
@@ -928,7 +981,7 @@ Choosing the semantics of how predictive questions are asked will have major eff
 
 The second topic is that of learning and representing the answers of the predictive questions. While respectively different questions, they are deeply connected in the design of any system. The original work in PSRs restricted the sets of observations and actions to be finite. The reason this was needed was how the answers were represented, given a history and sequence of actions for the sequence of observations to not be trivially zero the observations must be sampled according to a mass function. This was addressed in later work using kernel density estimation and information-theoretic tools to realize PSRs in the case of continuous observations and actions cite:&wingate2007discovery. The answers were then represented as a matrix of predicted values for the core tests, which could be updated incrementally with new observations. TDNs use artificial neural networks to underly their representation of answers. While the organization of nodes is not restricted cite:&sutton2005temporaldifference, most of the empirical results shown can be described as using a recurrent neural network. cite:&schlegel2021general make this restriction more apparent, where they explicitly learn the predictive representation as the state of a recurrent network. This simplifies the comparison to non-predictive subjective state approaches (i.e. RNNs), while also enabling the application of backpropagation through time and real-time recurrent learning. 
 
-The third and final topic is that of discovery. Discovery is the automatic specification of predictive questions to use in learning the predictive state. PSRs approached discovery by exploring the set of tests to construct a core set that enables all other tests to be answered [[cite:&wolfe2005learning;&james2005combining;&mccracken2006online;&wingate2007discovery]]. This objective is trying to find a sufficient statistic of the history for all predictions, and has been discussed in various forms cite:&subramanian2022approximate. I conjecture that finding such a state is not feasible in large complex problems, and searching for such a state would be a poor use of a finite set of computational resources. Instead, the agent should focus on finding a set of questions which is useful for the agents overarching goals---for example, maximizing the return in the control problem. Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017theoption;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
+The third and final topic is that of discovery. Discovery is the automatic specification of predictive questions to use in learning the predictive state. PSRs approached discovery by exploring the set of tests to construct a core set that enables all other tests to be answered [[cite:&wolfe2005learning;&james2005combining;&mccracken2006online;&wingate2007discovery]]. This objective is trying to find a sufficient statistic of the history for all predictions, and has been discussed in various forms cite:&subramanian2022approximate. I conjecture that finding such a state is not feasible in large complex problems, and searching for such a state would be a poor use of a finite set of computational resources. Instead, the agent should focus on finding a set of questions which is useful for the agents overarching goals---for example, maximizing the return in the control problem. Along this new objective several other approaches have been proposed. Generate and test is a general algorithm for searching through a large space with opaque dynamics cite:&mahmood2013representation;&javed2020learning. Another approach is to define the predictive questions as a parametric optimization problem and use meta-gradient descent cite:&bacon2017option;&veeriah2019discovery. This approach splits the problem into two optimization problems: an inner problem and an outer problem. The inner optimization consists of the usual control or prediction procedure, where the agent seeks to maximize the discounted return or lower prediction error. The outer optimization calculates gradients through this procedure, with respect to the meta-parameters.
 
 Given a predictive approach to state building requires consideration of these difficult algorithmic choices, a natural question arises ``Why shouldn't we use non-predictive subjective based approaches for learning state, such as the usual recurrent networks?''. While this thesis won't provide (or seek) a conclusive answer to this question, predictive approaches to state construction may have a positive effect on a system's ability to generalize and learn a state representation. This is stated in the /Predictive Representation Hypothesis/ cite:&schaul2013better:
 
@@ -1037,7 +1090,7 @@ Of all these approaches, the most directly related to GVFNs is PSIMs. This conne
 
 A natural question, then, is whether the types of questions used by GVFNs provides advantages over PSIMs. Unlike \(k\)-step predictions in the future, GVFs allow questions about outcomes infinitely far into the far, through the use of cumulative discounted sums. Such predictions, though, do not provide high precision about such future events. As motivated in Section ref:sec:gvfn:constraining, GVFs should be easier to learn online. In our experiments, a baseline, called a Forecast Network, that uses \(k\)-step predictions as predictive features, is included to provide some evidence that GVFs are more suitable as predictive features for online agents.
 
-Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes cite:&schutz2007prospective take the theory of prospection and encode future events as representations used for planning and simulation. While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations cite:&soga2009;&synofzik2013. While I focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
+Researchers in reinforcement learning, decision making, and artificial intelligence aren't alone in asking if decision making systems use predictions to effectively navigate their world cite:&bubic2010prediction;&hawkins2004intelligence;&clark2013whatever.  Anticipation cite:&butz2003anticipatory;&pezzulo2008challenge --which has similar properties to the GVF approach to prediction--has been used to mean elevated processing prior to an event (also prediction) as well as the overall effect of prediction on an agent behaviour. An agent can anticipate an event in the future, and act accordingly. This requires the agent's policy to be defined in terms of predictions, or for the representation to have predictive/anticipatory properties. Hierarchical predictive coding cite:&rao1999predictive;&huang2011predictive was used to explain non-classical interference observed in the visual cortex. In this approach, feedback connections transport predictions (or priors) from higher layers to lower layers to give context to the current observations. Prospective codes [[cite:&schutz-bosbach2007prospective]] take the theory of prospection and encode future events as representations used for planning and simulation. While there is evidence to suggest organic decision making systems are directed forward in their representation of the world, memory and ``postdiction'' both play an important, separate role in building a systems underlying representations [[cite:&soga2009predictive;&synofzik2013experience]]. While I focus on two distinct classes in this thesis (i.e. predictive and postdictive), future architectures should be built to take advantage of both approaches.
 
 While GVFs provide, in our opinion, a better language to ask complex predictive questions, one should understand what is given up when moving away from PSRs and PSIMs in predictive power. In the next two sections it is shown that the questions used in PSIMs and PSRs can be posed by GVFs not only through standard cumulants, but also through composite GVFs. Below I use composite GVFs to show the potential predictive power of complex networks of GVFs. See Chapter ref:chap:composite for a more detailed exploration into some of the properties of composite predictions.
 
@@ -1068,6 +1121,7 @@ v_2(\Hist_t) = \Expected[\indicator(a_t = a_{1}, o_{t+1} = o_{2}) \lvert \Hist_t
 
 The next value function in the chain uses the previous predictions value \(c_1(o_t, a_t, o_{t+1}, H_t) = \indicator\{A_t = a_{0}, O_{t+1} = o_{1} \hat{v}_2(\{\Hist_t A_t, O_{t+1}\}) \} \). The resulting value function will predict
 
+\scriptsize
 \begin{align*}
 v_1(\Hist_t) &= \Expected[\indicator(A_t = a_{0}, O_{t+1} = o_{1}) \Expected[\indicator(A_{t+1} = a_{1}, O_{t+2} = o_{2}) \lvert \Hist_t, A_t, O_{t+1}]  \lvert \Hist_t] \\
 &= \sum \indicator(A_t = a_{0}, O_{t+1} = o_{1}) \Prob(A_t, O_{t+1} \lvert \Hist_t) \sum \indicator(A_{t+1} = a_{1}, O_{t+2} = o_{2}) \Prob(A_{t+1}, O_{t+2} \lvert \Hist_t, A_{t}, O_{t+1}) \\
@@ -1076,6 +1130,7 @@ v_1(\Hist_t) &= \Expected[\indicator(A_t = a_{0}, O_{t+1} = o_{1}) \Expected[\in
 &= \sum \sum \indicator(A_t = a_{0}, O_{t+1} = o_{1}, A_{t+1} = a_{1}, O_{t+2} = o_{2}) \Prob(A_{t}, O_{t+1}, A_{t+1}, O_{t+2} \lvert \Hist_t) \\
 &= \Prob(A_{t} = a_0, O_{t+1}=o_1, A_{t+1}=a_1, O_{t+2}=o_2 \lvert \Hist_t)
 \end{align*}
+
 #+end_proof
 
 ** Summary
@@ -1652,11 +1707,12 @@ where the last follows from the definition of $\nabla_\weights \boldsymbol{\psi}
 \nabla_\weights \tderror_j = \nabla_\weights c_{j,\weights} + \gamma_j \phivec_{j,\weights}' - \phivec_{j,\weights}
 .
 \end{align*}
-Now notice that 
+Now notice that
 \begin{align*}
 \Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \nabla_\weights\tderror_j \phivec_{j,\weights}^\trans  \secweights(\weights)  \bigg] 
 &= \Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \big(\nabla_\weights c_{j,\weights} + \gamma_j \phivec_{j,\weights}' - \phivec_{j,\weights}\big) \phivec_{j,\weights}^\trans  \secweights(\weights)  \bigg] \\
-&= -\Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \phivec_{j,\weights}\phivec_{j,\weights}^\trans \bigg]\secweights(\weights) + \Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \big(\nabla_\weights c_{j,\weights} + \gamma_j \phivec_{j,\weights}'\big) \phivec_{j,\weights}^\trans  \secweights(\weights)  \bigg] 
+&= -\Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \phivec_{j,\weights}\phivec_{j,\weights}^\trans \bigg]\secweights(\weights)\\
+& \phantom{{}=} + \Expected\bigg[ \sum_{j=1}^\numgvfs \rho_j \big(\nabla_\weights c_{j,\weights} + \gamma_j \phivec_{j,\weights}'\big) \phivec_{j,\weights}^\trans \secweights(\weights)  \bigg] 
 \end{align*}
 Because $\secweights(\weights) = W(\weights)^\inv\boldsymbol{\delta}(\weights)$, 
 \begin{align*}
@@ -2046,7 +2102,7 @@ where $\psi(z+1) = H_{z} - C$ is the digamma function, $H_{z} = \sum_{i=1}^z \fr
 
 ** Empirical observations
 
-While one can describe the effective discount for composing constant discount predictions, the same techniques are difficult to apply to a non time-invariant discount (i.e. state-dependent discounts [[cite:&white2015developing;&white2017unifying;&sutton2011horde]]). Instead, in this section I look at the ideal returns of various signals using constant discounting and a terminating discounting functions. I use three datasets moving from highly synthetic to real-world robot sensori-motor data. The goal of this section is to show the non-intuitive behavior of compositions to motivate further analysis and exploration. All code can be found at \url{https://github.com/mkschleg/CompGVFs.jl}. Below $\gamma = 0.9$ unless otherwise stated.
+While one can describe the effective discount for composing constant discount predictions, the same techniques are difficult to apply to a non time-invariant discount (i.e. state-dependent discounts [[cite:&white2015developing;&white2017unifying;&sutton2011horde]]). Instead, in this section I look at the ideal returns of various signals using constant discounting and a terminating discounting functions. I use three datasets moving from highly synthetic to real-world robot sensori-motor data. The goal of this section is to show the non-intuitive behavior of compositions to motivate further analysis and exploration.[fn:: All code can be found at \url{https://github.com/mkschleg/CompGVFs.jl}] Below $\gamma = 0.9$ unless otherwise stated.
 {{{c}}}
 {{{c}}}
 \begin{figure}
@@ -2061,6 +2117,7 @@ While one can describe the effective discount for composing constant discount pr
 \end{figure}
 {{{c}}}
 {{{c}}}
+
 The first series is based off the cycle world, where the agent observes a sequence of a single active bit followed by $9$ inactive bits, where the length of the sequence is $m=10$. The cumulant is the observation itself, and in this section all learning is done through TD($\lambda=0.9$) with learning rate $\alpha=0.1$ and an underlying tabular representation where each component is the place in the sequence. Two chains of compositions were trained. The first is that of the continuous discounting described above, and the second is a series of discounts which terminate (i.e. $\gamma[t]=0$) when the observation is active. The predictions of a single run can be seen in figure ref:fig:compgvfs:seq-cw. For the constant discount, as the number of compositions increases the prediction sequence converge to what looks to be a sinusoid with frequency of $10$, and amplitude driven by the analysis above. For the terminating discount, the wave form is more interesting. The first layer of predictions look very similar to the constant discount with amplitude shifted by $\frac{\gamma^{m}}{1 - \gamma^{m}}$. But as there are more compositions the effect seems to be the prediction is at its height farther away from the active bit. As the agent gets closer to the observation, the sequence of summed values is shorter leading to smaller values. Given the sequence used, it is easy to mistake this as the agent creating a trace of the cumulant, but remember the prediction is about future cumulants.
 
 Next the Critterbot dataset [[cite:&modayil2014multitimescale;&white2015developing]] is used, focusing on light sensor 3 in figure ref:fig:compgvfs:critterbot. This gives a sequence of spikes similar to the cycle world sequence and a long pause in-between consistent saturations of the light sensor. The predictions look more like shifted and spread spikes as compared to the cycle world results. But with many more compositions, the return reverts to a similar form as before. The terminating discounts (with termination at sensor saturation $x[t+1] > 0.99$) provides a nice demonstration of how the returns are predicting the signal, just with a decaying prediction instead of the usual growing prediction. The results are similar in the multiple sinusoidal oscillator [[cite:&jaeger2004harnessing]]. A slightly different terminating discount is used where the return terminates when the previous normalized prediction is $y^{n-1}[t+1] > 0.9$ rather than when the observation is saturated. While there are decays as the MSO sequence peaks, as the depth of the composition is increased, these periods are less frequent. Deep compositions may indicate parts of the sequence where there are fewer saturations in the original sequence.
@@ -2087,7 +2144,7 @@ There are two main families of approaches to discovery of GVFs for GVFNs: genera
 
 
 *Generate and test*
-is a natural algorithmic approach when considering a search problem through a complex unordered (or not obviously ordered) space. The core of the approach is to propose GVFs through a generator and approximate their utility for the downstream task through a proxy measure. This approach has been used for representation discovery cite:&mahmood2013representation,javed2020learning. The simplest setting where such a generate-and-test approach could be used is time series forecasting, as the predictions are on-policy and so policies do not have to be proposed by the generated. Further, practitioners can apply their prior knowledge in creating the cumulant and continuation functions considered by the generator. There are, however, some simple strategies for generating policies, which is discussed in Section ref:sec:gvfn:simple-disc.
+is a natural algorithmic approach when considering a search problem through a complex unordered (or not obviously ordered) space. The core of the approach is to propose GVFs through a generator and approximate their utility for the downstream task through a proxy measure. This approach has been used for representation discovery cite:&mahmood2013representation;&javed2020learning. The simplest setting where such a generate-and-test approach could be used is time series forecasting, as the predictions are on-policy and so policies do not have to be proposed by the generated. Further, practitioners can apply their prior knowledge in creating the cumulant and continuation functions considered by the generator. There are, however, some simple strategies for generating policies, which is discussed in Section ref:sec:gvfn:simple-disc.
 
 A generate and test algorithm has been developed for TD networks [[cite:&makino2008online]]. The process of discovery involves creating new predictions built entirely from existing structures: senses or predictions. By building new predictions from existing predictions, it facilitates the creation of composite structures. The system proposed in citeA:&makino2008line determines when a node (i.e. a prediction or sense) should be expanded on using three criteria. They then expand these nodes in specific ways to ask a broad set of composite questions. TD networks do not include policies---rather they include action primitives---so the approach does not directly extend. However, the idea of iteratively creating such composite structures does extend. For example, in this work, the expert network considered in Section ref:sec:gvfn:emp:poorlyspecified was composed of composite GVFs. Composite GVFs could be generated simply by using existing GVFs as the cumulant for the new GVF.
 
@@ -2114,7 +2171,7 @@ removing unused GVFs. The generator proposes new GVFs from a set of possible
 GVFs. The framework is summarized in Figure ref:fig:gvfn:discovery. The key questions are how GVFs are evaluated and how new ones proposed. Our goal here is simply to demonstrate one avenue for discovery in GVFNs, rather than to develop an algorithm for discovery; this section opts for what are some of the simplest choices.
 
 
-The magnitude of the associated weight in the external tasks using the GVFN is used to evaluate a GVF. The state vector is assumed to be used linearly to make predictions, with $\theta_j$ corresponding to state $s_j$ and so to the $j$th GVF. All GVFs are evaluated every $N \in \Naturals$ steps and prune the lowest $\epsilon \in [0,1]$ percentage, i.e., prune $\lfloor n \epsilon \rfloor$ least useful GVFs of the full set of $\numgvfs$ GVFs. Other criteria have been proposed for evaluation, such as using traces of the weight magnitudes and considering internal weights cite:&mahmood2013representation. As mentioned above, the simplest choice that is still reasonably effective is opted for over more complex evaluation metrics.
+The magnitude of the associated weight in the external tasks using the GVFN is used to evaluate a GVF. The state vector is assumed to be used linearly to make predictions, with $\theta_j$ corresponding to state $s_j$ and so to the \(j\)th GVF. All GVFs are evaluated every $N \in \Naturals$ steps and prune the lowest $\epsilon \in [0,1]$ percentage, i.e., prune $\lfloor n \epsilon \rfloor$ least useful GVFs of the full set of $\numgvfs$ GVFs. Other criteria have been proposed for evaluation, such as using traces of the weight magnitudes and considering internal weights cite:&mahmood2013representation. As mentioned above, the simplest choice that is still reasonably effective is opted for over more complex evaluation metrics.
 
 
 New GVFs are generated randomly from a set of GVF primitives. A set of basic types of cumulants, continuations and policies are randomly sampled from. For continuations, the set includes
@@ -2156,7 +2213,7 @@ Another issue is the proxy used to determine a prediction's usefulness. Currentl
 ** Heuristics to specify GVFNs
 Through testing GVFNs in several domains there are some rules of thumb for choosing GVFs which can be applied today. In the time-series experiments, selecting GVFs with constant \(\gammaj{j} \in [1 - 2^{-j}]\) is surprisingly effective across the settings with fixed policies---namely the time series datasets. This is encouraging as these specifications on the surface seem simpler to discover than something as complex as the Expert network in Compass World. A set of discounts selected linearly across a range was also effective. Also including GVFs which have a pseudo-termination at a known event (known due to expert knowledge) and a cumulant which is only active at this event improved learning performance considerably (see the performance of the Terminating-Horizon network in Section ref:sec:gvfn:emp:poorlyspecified).
 
-* IN-PROGRESS [#B] Importance Resampling for Prediction in Reinforcement Learning
+* Importance Resampling for Prediction in Reinforcement Learning
 :PROPERTIES:
 :CUSTOM_ID: chap:resampling
 :END:
@@ -2179,7 +2236,7 @@ Another strategy is to rescale or truncate the IS ratios, as used by V-trace [[c
 An alternative to reweighting updates is to instead correct the distribution before updating the estimator using weighted bootstrap sampling: resampling a new set of data from the previously generated samples [[cite:&smith1992bayesian;&arulampalam2002tutorial]]. Consider a setting where a buffer of data is stored, generated by a behavior policy. Samples for policy $\tpolicy$ can be obtained by resampling from this buffer, proportionally to $\frac{\tpolicy(\action|\state)}{\bpolicy(\action|\state)}$ for state-action pairs $(\state,\action)$ in the buffer. 
 In the sampling literature, this strategy has been proposed under the name Sampling Importance Resampling (SIR) [[cite:&rubin1988using;&smith1992bayesian;&gordon1993novel]], and has been particularly successful for Sequential Monte Carlo sampling [[cite:&gordon1993novel;&skareimproved]]. Such resampling strategies have also been popular in classification, with over-sampling or under-sampling typically being preferred to weighted (cost-sensitive) updates [[cite:&lopez2013insight]].
 
-A resampling strategy has several potential benefits for off-policy prediction [fn:resampling2]. Resampling could even have larger benefits for learning approaches, as compared to averaging or numerical integration problems, because updates accumulate in the weight vector and change the optimization trajectory of the weights. For example, very large importance sampling ratios could destabilize the weights. This problem does not occur for resampling, as instead the same transition will be resampled multiple times, spreading out a large magnitude update across multiple updates. On the other extreme, with small ratios, IS will waste updates on transitions with very small IS ratios. By correcting the distribution before updating, standard on-policy updates can be applied. The magnitude of the updates vary less---because updates are not multiplied by very small or very large importance sampling ratios---potentially reducing variance of stochastic updates and simplifying learning rate selection. I hypothesize that resampling (a) learns in a fewer number of updates to the weights, because it focuses computation on samples that are likely under the target policy and (b) is less sensitive to learning parameters and target and behavior policy specification.
+A resampling strategy has several potential benefits for off-policy prediction.[fn:resampling2] Resampling could even have larger benefits for learning approaches, as compared to averaging or numerical integration problems, because updates accumulate in the weight vector and change the optimization trajectory of the weights. For example, very large importance sampling ratios could destabilize the weights. This problem does not occur for resampling, as instead the same transition will be resampled multiple times, spreading out a large magnitude update across multiple updates. On the other extreme, with small ratios, IS will waste updates on transitions with very small IS ratios. By correcting the distribution before updating, standard on-policy updates can be applied. The magnitude of the updates vary less---because updates are not multiplied by very small or very large importance sampling ratios---potentially reducing variance of stochastic updates and simplifying learning rate selection. I hypothesize that resampling (a) learns in a fewer number of updates to the weights, because it focuses computation on samples that are likely under the target policy and (b) is less sensitive to learning parameters and target and behavior policy specification.
 
 [fn:resampling1] There is substantial literature on variance reduction for another area called off-policy policy evaluation, but which estimates only a single number or value for a policy (e.g., see [[cite:&thomas2016dataefficient]]). The resulting algorithms differ substantially, and are not appropriate for learning the value function.
 
@@ -2286,8 +2343,22 @@ where $\E_\tpolicy[\Delta]$ is the expected update across all transitions, with 
 $\sigma_\Delta^2 = \Var(\tfrac{1}{n}\sum_{i=1}^{n} \rho_i \Delta_i)$; and covariance $\sigma_{(\rho,\Delta)}  = \Cov(\tfrac{1}{n}\sum_{j=1}^n \rho_j,\tfrac{1}{n}\sum_{i=1}^{n} \rho_i \Delta_i)$.
 #+end_theorem
 
+#+begin_proof
+Notice first that when we weight with $\rho_i$, this is equivalent to weighting with $\frac{d_\bpolicy(S_i) \tpolicy(A_i | S_i) \Pfcn(S_{i+1} | S_i, A_i)}{d_\bpolicy(S_i) \bpolicy(A_i | S_i) \Pfcn(S_{i+1} | S_i, A_i)}$, and so is the correct IS ratio for the transition. 
+\begin{align*}
+\E[&\xiwer] = \E\left[ \E [\xiwer | B ] \right] 
+= \E\Big[ \E \Big[ \tfrac{1}{k} \sum_{j=1}^k \Delta_{i_j} | B \Big] \Big] \\
+& = \E\Big[  \tfrac{1}{k} \sum_{j=1}^k \E [\Delta_{i_j} | B ] \Big] \ \ \ \ \ \ \ \ \triangleright \E [\Delta_{i_j} | B ] \!=\!\!  \sum_{i=1}^{n} \!\tfrac{\rho_i}{\sum_{j=1}^n \rho_j} \Delta_i  \\
+&= \E \Big[  \sum_{i=1}^{n} \frac{\rho_i}{\sum_{j=1}^n \rho_j} \Delta_i  \Big] \\
+&= \E[\xwis] 
+.
+\end{align*}
+This bias of $\xiwer$ is the same as $\xwis$, which is characterized in \cite{mcbook},
+completing the proof. 
+#+end_proof
 
-Theorem ref:thm:resampling:bias-IR is the only result which follows a different set of assumptions, primarily due to using the bias characterization of $\xwis$ found in [[cite:&owen2013monte]]. The bias of IR will be small for reasonably large $n$, both because it is proportional to $1/n$ and because larger $n$ will result in lower variance of the average ratios and average update for the buffer in Equation eqref:eq:resampling:bias. In particular, as $n$ grows, these variances decay proportionally to $n$. Nonetheless, for smaller buffers, such bias could have an impact. The bias can be easily mitigated with a bias-correction term, as shown in the next corollary and proven in Appendix \ref{app_bcir_unbiased}. 
+
+Theorem ref:thm:resampling:bias-IR is the only result which follows a different set of assumptions, primarily due to using the bias characterization of $\xwis$ found in [[cite:&owen2013monte]]. The bias of IR will be small for reasonably large $n$, both because it is proportional to $1/n$ and because larger $n$ will result in lower variance of the average ratios and average update for the buffer in Equation eqref:eq:resampling:bias. In particular, as $n$ grows, these variances decay proportionally to $n$. Nonetheless, for smaller buffers, such bias could have an impact. The bias can be easily mitigated with a bias-correction term, as shown in the next corollary.
 {{{c}}}
 {{{c}}}
 #+name: cor:resampling:bias-BCIR
@@ -2295,21 +2366,29 @@ Theorem ref:thm:resampling:bias-IR is the only result which follows a different 
 BC-IR is unbiased:  $\E [\xbciwer] = \E_\tpolicy[\Delta]$.
 #+end_corollary
 
-*************** TODO [#A] Add proof for IR bias.                 :noexport:
-*************** END
+#+begin_proof
+\begin{align*}
+        \E[\xbciwer] &=  \E\Big[  \tfrac{\bar{\rho} }{k} \sum_{j=1}^k \E [\Delta_{i_j} | B ] \Big] 
+        = \E \Big[  \bar{\rho} \sum_{i=1}^{n} \frac{\rho_i}{\sum_{j=1}^n \rho_j} \Delta_i  \Big]\\ 
+        &= \E \Big[ \tfrac{1}{n} \sum_{i=1}^{n} \rho_i \Delta_i  \Big] 
+        = \tfrac{1}{n} \sum_{i=1}^{n} \E \Big[  \frac{\tpolicy(A_i|S_i)}{\bpolicy(A_i|S_i)} \Delta_i  \Big] \\
+        &= \tfrac{1}{n} \sum_{i=1}^{n} \E \Big[  \frac{d_\bpolicy(S_i) \tpolicy(A_i | S_i) \Pfcn(S_{i+1} | S_i, A_i)}{d_\bpolicy(S_i) \bpolicy(A_i | S_i) \Pfcn(S_{i+1} | S_i, A_i)} \Delta_i  \Big] \\
+        &= \tfrac{1}{n} \sum_{i=1}^{n} \E_\pi \left[  \Delta_i  \right] 
+        = \E_\tpolicy \left[  \Delta  \right] 
+        .
+\end{align*}
+The last equality follows from the fact that the samples are identically distributed.
+#+end_proof
 
 *** Consistency of IR
 
-Consistency of IR in terms of an increasing buffer, with $n \rightarrow \infty$, is a relatively straightforward extension of prior results for SIR, with or without the bias correction, and from the derived bias of both estimators (see Theorem \ref{lem:convergence_dist} in Appendix \ref{app_consistency_bign}). More interesting, and reflective of practice, is consistency /with a fixed length buffer/ and increasing interactions with the environment, $t \rightarrow \infty$. IR, without bias correction, is asymptotically biased in this case; in fact, its asymptotic bias is the one characterized above for a fixed length buffer in Theorem ref:thm:resampling:bias-IR.
+Consistency of IR in terms of an increasing buffer, with $n \rightarrow \infty$, is a relatively straightforward extension of prior results for SIR, with or without the bias correction, and from the derived bias of both estimators (see Appendix ref:app:sec:resampling:theory for proofs). More interesting, and reflective of practice, is consistency /with a fixed length buffer/ and increasing interactions with the environment, $t \rightarrow \infty$. IR, without bias correction, is asymptotically biased in this case; in fact, its asymptotic bias is the one characterized above for a fixed length buffer in Theorem ref:thm:resampling:bias-IR.
 
 #+name: thm:resampling:sliding-window
 #+begin_theorem
 Let $B_t = \{X_{t+1}, ..., X_{t+n}\}$ be the buffer of the most recent $n$ transitions sampled according to Assumption ref:assum:resampling:id. Define the sliding-window estimator $\xwindow{t} \defeq \frac{1}{T} \sum_{t=1}^T \xbciwerb{t}$. 
 Then, if $\E_\pi [|\Delta| ] < \infty$, then $\xwindow{T}$ converges to $\E_\pi [\Delta ]$ almost surely as $T \rightarrow \infty$.
 #+end_theorem
-
-*************** TODO Add proof for sliding-window thrm           :noexport:
-*************** END
 
 
 ** Weighted Importance Sampling
@@ -2319,7 +2398,6 @@ Then, if $\E_\pi [|\Delta| ] < \infty$, then $\xwindow{T}$ converges to $\E_\pi 
 
 In this section, I detail the several variants of weighted importance sampling (WIS) used throughout the empirical evaluation (Section ref:sec:resampling:empirical). All of these methods are either obvious variants of WIS when using an experience replay buffer in reinforcement learning or defined previously.
 
-# \section{Weighted Importance Sampling}\label{appendix:wis}
 *** Mini-Batch Algorithms
 # \subsection{Mini-Batch Algorithms}
 
@@ -2361,7 +2439,7 @@ where $\thetavec \in \Reals^d$ is the weight vector of the value function, $\phi
 Two hypothesized benefits of resampling as compared to reweighting are investigated: improved sample efficiency and reduced variance. These benefits are tested in two microworld domains---a Markov chain and the Four Rooms domain---where exhaustive experiments can be conducted. Finally, a demonstration that IR reduces sensitivity over IS and VTrace in a car simulator, TORCs, when learning from images is provided[fn:: Experimental code for every domain except Torcs can be found at [[https://mkschleg.github.io/Resampling.jl][https://mkschleg.github.io/Resampling.jl]]].
 
 IR and BC-IR are compared against several reweighting strategies, including importance sampling (IS); two online approaches to weighted important sampling, WIS-Minibatch with weighting $\rho_i/\sum_{j=1}^k \rho_j$ and WIS-Buffer with weighting $\rho_i/\tfrac{k}{\bsize}\sum_{j=1}^\bsize \rho_j$; and V-trace[fn:: Retrace, ABQ and TreeBackup also use clipping to reduce variance. But, they are designed for learning action-values and for mitigating variance in eligibility traces. When trace parameter \(\lambda = 0\)---as assumed here---there are no IS ratios and these methods become equivalent to using Sarsa(0) for learning action-values.], which corresponds to clipping importance weights [[cite:&espeholt2018impala]].
-WIS-TD(0) [[cite:&mahmood2015off]] is also used as a baseline, when applicable, which uses an online approximation to WIS, with a stepsize selection strategy (as described in Appendix \ref{appendix:inc_updates}). This algorithm uses only one sample at a time, rather than a mini-batch, and so is only included in Figure \ref{fig:frc}. Where appropriate, baselines using On-policy sampling are included; WIS-Optimal which uses the whole buffer to get an update; and Sarsa(0) which learns action-values---which does not require IS ratios---and then produces estimate $V(s) = \sum_a \pi(s,a) Q(s,a)$. WIS-Optimal is included as an optimal baseline, rather than as a competitor, as it estimates the update using the whole buffer on every step.
+WIS-TD(0) [[cite:&mahmood2015off]] is also used as a baseline, when applicable, which uses an online approximation to WIS, with a stepsize selection strategy (as described in Section ref:appendix:inc_updates). This algorithm uses only one sample at a time, rather than a mini-batch, and so is only included in Figure \ref{fig:frc}. Where appropriate, baselines using On-policy sampling are included; WIS-Optimal which uses the whole buffer to get an update; and Sarsa(0) which learns action-values---which does not require IS ratios---and then produces estimate $V(s) = \sum_a \pi(s,a) Q(s,a)$. WIS-Optimal is included as an optimal baseline, rather than as a competitor, as it estimates the update using the whole buffer on every step.
 
 In all the experiments, the data is generated off-policy. The absolute value error (AVE) or the  absolute return error (ARE) is computed on every step. For the sensitivity plots the average over all the interactions as specified for the environment are taken---resulting in MAVE and MARE respectively. The error bars represent the standard error over runs, which are featured on every plot---although not visible in some instances. For the microworlds, the true value function is found using dynamic programming with threshold $10^{-15}$, and AVE is taken over all the states. For TORCs and continuous Four Rooms, the true value function is approximated using rollouts from a random subset of states generated when running the behavior policy $\mu$, and the ARE is computed over this subset. For the Torcs domain, the same subset of states is used for each run due to computational constraints and report the mean squared return error (MSRE). Plots showing sensitivity over number of updates show results for complete experiments with updates evenly spread over all the interactions. A tabular representation is used in the microworld experiments, tilecoded features with 64 tilings and 8 tiles is used in continuous Four Rooms, and a convolutional neural network is used for TORCs, with an architecture previously defined for self-driving cars [[cite:&bojarski2016enda]].
 
@@ -2382,7 +2460,7 @@ The target policy takes the down action deterministically. The cumulant for the 
 \end{figure*}
 
 
-As shown in Figure \ref{fig:fourrooms_tabular}, IR has noticeable improvements over the reweighting strategies tested. 
+As shown in Figure ref:fig:fourrooms_tabular, IR has noticeable improvements over the reweighting strategies tested. 
 The fact that IR resamples more important transitions from the replay buffer seems to significantly increase the learning speed. Further, IR has a wider range of usable learning rates. The same effect is seen even as the total number of updates is reduced, where the uniform sampling methods perform significantly worse as the interactions between updates increases---suggesting improved sample efficiency. WIS-Buffer performs almost equivalently to IS, because for reasonably size buffers, its normalization factor $\tfrac{1}{\bsize}\sum_{j=1}^\bsize \rho_j \approx 1$ because $\E[\rho] = 1$. WIS-Minibatch and V-trace both reduce the variance significantly, with their bias having only a limited impact on the final performance compared to IS. Even the most aggressive clipping parameter for V-trace---a clipping of 1.0--- outperforms IS. 
 The bias may have limited impact because the target policy is deterministic, and so only updates for exactly one action in a state.
 Sarsa---which is the same as Retrace(0)---performs similarly to the reweighting strategies.
@@ -2392,12 +2470,12 @@ The above results highlight the convergence rate improvements from IR, in terms 
 \begin{figure*}[ht]
 \centering
 \includegraphics[width=0.8\textwidth]{{plots/resampling/four_rooms_cont/train_gap/combo_v2}.pdf}
-  \caption{Convergence rates in Continuous Four Rooms averaged over 25 runs with 100000 interactions with the environment. {\bf left} uniform random behavior policy and target policy which takes the down action with probability $0.9$ and probability $0.1 / 3$ for all other actions. Learning used incremental updates (as specified in appendix \ref{appendix:inc_updates}). {\bf right} uniform random behavior and target policy with persistent down action selection learned with mini-batch updates with RMSProp.
+  \caption{Convergence rates in Continuous Four Rooms averaged over 25 runs with 100000 interactions with the environment. {\bf left} uniform random behavior policy and target policy which takes the down action with probability $0.9$ and probability $0.1 / 3$ for all other actions. Learning used incremental updates (as specified in section \ref{appendix:inc_updates}). {\bf right} uniform random behavior and target policy with persistent down action selection learned with mini-batch updates with RMSProp.
   }\label{fig:frc}
 \end{figure*}
 Two experiments similar to above are conducted in a continuous state Four Rooms variant. The agent is a circle with radius 0.1, and the state consists of a continuous tuple containing the x and y coordinates of the agent's center point. The agent takes an action in one of the 4 cardinal directions moving $0.5 \pm \mathcal{U}(0.0, 0.1)$  in that directions with random drift in the orthogonal direction sampled from $\mathcal{N}(0.0,0.01)$. The representation is a tile coded feature vector with 64 tilings and 8 tiles. Results are provided for both mini-batch updating (as above) and incremental updating (i.e. updating on each transition of a mini-batch incrementally, see appendix \ref{appendix:inc_updates} for details). For the mini-batch experiment, the target policy deterministically takes the down action. For the incremental experiment, the target policy takes the down action with probability $0.9$ and selects all other action with probability $0.1 / 3$.
 
-Generalization can mitigate some of the differences between IR and IS above in some settings, but in others the difference remains just as stark (see Figure \ref{fig:frc} and Appendix \ref{appendix:four_rooms_cont}). If the behavior policy from the tabular domain, which skews the behavior in a sparse set of states, is used the nearby states mitigate this skew. However, if a behavior policy that selects all actions uniformly is used, then again IR obtains noticeable gains over IS and V-trace, for reducing the required number of updates, as shown in Figure \ref{fig:frc}.
+Generalization can mitigate some of the differences between IR and IS above in some settings, but in others the difference remains just as stark (see Figure ref:fig:frc and Appendix ref:appendix:four_rooms_cont). If the behavior policy from the tabular domain, which skews the behavior in a sparse set of states, is used the nearby states mitigate this skew. However, if a behavior policy that selects all actions uniformly is used, then again IR obtains noticeable gains over IS and V-trace, for reducing the required number of updates, as shown in Figure \ref{fig:frc}.
 
 Similar results are found for the incremental setting Figure \ref{fig:frc} (left), where resampling still outperforms all other methods in terms of convergence rates. Given WIS-TD(0)'s significant degrade in performance as the number of updates decreases, I also compare with using WIS-TD(0) when sampling according to resampling IR+WIS-TD(0). Interestingly, this method outperforms all others  --- albeit only slightly against IR with constant learning rate. This result leads us to believe RMSProp may be a optimizer poor choice for this setting. Expanded results can be found in Appendix \ref{appendix:four_rooms_cont}.
 
@@ -2442,35 +2520,126 @@ In this Chapter, I introduced a new approach to off-policy learning: Importance 
 
 The algorithm and results in this Chapter suggest new directions for off-policy prediction, particularly for faster convergence. Resampling is promising for scaling to learning many value functions in parallel, because many fewer updates can be made for each value function. A natural next step is a demonstration of IR, in such a parallel prediction system. Resampling from a buffer also opens up questions about how to further focus updates. One such option is using an intermediate sampling policy. Another option is including prioritization based on error, such as was done for control with prioritized sweeping [[cite:&peng1993efficient]] and prioritized replay [[cite:&schaul2015prioritized]].
 
-* DONE [#A] [8/8] Conclusions and Final Remarks
+* Conclusions and Final Remarks
 
 This thesis set out to uncover some of the key discrepancies between how recurrent models work in the supervised learning setting and the continual reinforcement learning setting. In this chapter, I will summarize the main contributions made to agent-state construction in the continual RL setting. I will discuss potential future directions and propose open questions and directions for developing methods of agent-state construction based on the work presented in this thesis.
 
-** DONE Summary of Contributions
+** Summary of Contributions
 CLOSED: [2023-03-03 Fri 12:18]
 
-The work presented in this thesis takes a deep look into using recurrent networks in the reinforcement learning setting. I focus on two assumptions brought over from supervised learning and construct an architecture to take advantage of temporal-difference learning to learn agent state. This thesis presented work to provide evidence for the following statement
-#+BEGIN_QUOTE
-The architectural intuitions and assumptions developed in supervised learning for agent-state search are limiting in the reinforcement learning and continual reinforcement learning settings.
-#+END_QUOTE
-Through controlled experimentation and a focused approach the contributions which make up this thesis show several limitations of recurrent networks as used in the supervised learning setting when applying them to the reinforcement learning and continual reinforcement learning settings.
+The work presented in this thesis takes a deep look into using recurrent networks in the reinforcement learning setting. I focus on two assumptions brought over from supervised learning and construct an architecture to take advantage of temporal-difference learning to learn agent state. Through controlled experimentation and a focused approach the contributions which make up this thesis show several limitations of recurrent networks as used in the supervised learning setting when applying them to the reinforcement learning and continual reinforcement learning settings. Some of these limitations were alleviated by leveraging ideas inspired by predictive representations of state [[cite:&littman2002predictive;&tanner2005thesis]], with several future research directions identified.
 
-First, the incorporation of actions and other information was investigated in the DRQN framework in Chapter ref:chap:arnn. In this chapter, I discussed several approaches to incorporate information into the cell of a recurrent network found throughout the literature. I incorporated these approaches into both simple recurrent cells and gated-recurrent units to uncover the advantages of each. I showed that in most cases we should be applying the action through a multiplicative update, and that combining architectures can be used to find the appropriate cell for a problem.
+# Through controlled experimentation and a focused approach the contributions which make up this thesis show several limitations and develop several improvements of recurrent networks as used in the supervised learning setting when applying them to the reinforcement learning and continual reinforcement learning settings. 
+# #+BEGIN_QUOTE
+# The architectural intuitions and assumptions developed in supervised learning for agent-state search are limiting in the reinforcement learning and continual reinforcement learning settings.
+# #+END_QUOTE
+
+
+First, the incorporation of actions and other information was investigated in the DRQN framework in Chapter ref:chap:arnn. In this chapter, I discussed several approaches to incorporate information into the cell of a recurrent network found throughout the literature. I incorporated these approaches into both simple recurrent cells and gated-recurrent units to uncover the advantages of each. I showed that, in most cases, we should be applying the action through a multiplicative update, and that combining architectures can be used to find the appropriate cell for a problem.
 
 Next, I approached the assumption that the hidden units of a recurrent network should be learned through only the loss at the final layer of the network and developed a predictive approach to learning state which restricts the agent-state to predictions of the observation stream. Approaching this question resulted in a new predictive framework for agent-state construction known as /General Value Function Networks/ (Chapter ref:chap:gvfn). I explored the similarities of this approach to previous predictive approaches, and showed GVFNs encompasses the predictive targets of several previous directions.
 
 To fully develop the predictive approach found in Chapter ref:chap:gvfn, I defined a set of learning updates following in the footsteps of gradient temporal-difference algorithms and previous predictive architectures in ref:chap:gvfn:algs. These algorithms follow naturally from the gradient temporal-difference learning updates [[cite:&maei2009convergent;&sutton2009fast]] and gradient temporal-difference networks [[cite:&silver2013gradient]]. Our learning update extends beyond these approaches to incorporate composite predictive questions into the objective as well as arbitrary discounting (with the usual limitations [[cite:&white2017unifying]]).
 
-In Chapter ref:chap:gvfn:empirical, I empirically compared the usual approaches to agent-state construction in supervised learning with our predictive approach in several continual reinforcement learning and continual timeseries domains. I showed the incorporation of predictions which can be learned through temporal-difference learning results in a recurrent network which can learn absent of gradients rolled back through time. These predictions were also competitive to predictions made by other recurrent architectures when allowed large truncations in BPTT. I investigated several predictive questions which result in a wide range of performance and also highlight GVFs learned through temporal-difference as a key component. Finally, I reproduced a known counter example structure in ring world and showed this can be solved through the use of recurrent semi-gradient temporal difference learning rather than the full gradient update rule derived in section ref:chap:gvfn.
+In Chapter ref:chap:gvfn:empirical, I empirically compared the usual approaches to agent-state construction in supervised learning with our predictive approach in several continual reinforcement learning and continual timeseries domains. I showed the incorporation of predictions which can be learned through temporal-difference learning results in a recurrent network which can learn absent of gradients rolled back through time. These predictions were also competitive to predictions made by other recurrent architectures when allowed large truncations in BPTT. I investigated several predictive questions which result in a wide range of performance and also highlight GVFs learned through temporal-difference as a key component. Finally, I reproduced a known counter example for temporal-different networks in ring world and showed this can be solved through the use of recurrent semi-gradient temporal difference learning rather than the full gradient update rule derived in section ref:chap:gvfn.
 
-The empirical results discussed in ref:chap:gvfn:empirical lead to questions about the underlying targets presented by composite predictive questions and what an algorithm to discover structures like this may look like. I posed and provided initial explanations and explorations in Chapters ref:chap:composite and ref:chap:gvfn:discovery respectively. These results create a strong future research direction in developing new methods for discovering predictive questions and combing GVFs to create novel hand designed structures which might be relevant across a wide range of problems
+The empirical results discussed in ref:chap:gvfn:empirical lead to questions about the underlying targets presented by composite predictive questions and what an algorithm to discover structures like this may look like. I posed and provided initial explanations and explorations in Chapters ref:chap:composite and ref:chap:gvfn:discovery respectively. These results create a promising future research direction in developing new methods for discovering predictive questions and combing GVFs to create novel hand designed structures which might be relevant across a wide range of problems
 
 Finally, posing off-policy prediction questions for learning an agent-state requires us to re-think the core approach to off-policy prediction. Due to traditional importance sampling can quickly result in large variance unstable updates, I proposed importance resampling as a technique to avoid the instability induced by large importance sampling ratios in Chapter ref:chap:resampling. This new approach to off-policy prediction effectively manages the update variance found when using importance sampling ratios directly in the update, while also improving the efficiency of each update towards learning the target prediction.
 
 In this thesis, I not only contributed to our understanding and art in learning agent-state for the partial observable reinforcement learning setting, I developed a general purpose approach to learning agent-state through temporal-difference and showed the utility of such an approach as compared to the usual approach found in supervised learning. This thesis lays the ground work for a wide range of interesting research questions about learning agent-state. More details of these future directions can be found below.
 
+** Future directions and work
+In this section, I outline several promising future research directions derived from the work presented in this thesis.
+*** Open Problems for Recurrent Architectures in RL
+CLOSED: [2023-03-03 Fri 11:55]
+:PROPERTIES:
+:CUSTOM_ID: sec:conc:arnn:open-problems
+:END:
 
-** DONE Conclusion
+Recurrent architectures are often taken off-the-shelf from the supervised learning setting for use in reinforcement learning. While this has been moderately successful, the RL problem poses challenges not often considered by supervised learning. Below I discuss three interesting properties of an RL system, and how they affect learning using recurrent networks.
+
+*Practical Online Recurrent Learning:*
+
+In reinforcement learning, it is desirable to learn as much about the most recent experience before selecting an action (i.e. to learn online and incrementally). Learning efficiently online enables adapting behavior in real time and scaling to massive data-streams and architectures. This puts pressure on the learning system to update the weights within a set amount of time so the system can act cite:&sutton2011horde;&white2015developing, which is often not a concern in the supervised setting. In settings where an agent must move around its environment independently, the on-board computational system can be heavily constrained by the power of the processor as well as limited energy from the battery. An algorithm whose computational and memory complexity scales independently of the sequence length (without the quadratic complexity on size of the network as real time recurrent learning cite:&williams1989learning) and could be applied online-incrementally would be a major breakthrough in using recurrent architectures for RL and computationally constrained systems generally. A detailed discussion on relevant literature is in Section ref:sec:bg:perception:tempdepend.
+
+*Active Data Collection Matters:*
+
+Imagine an agent in a hallway with recognizable observations only at the beginning and end of the hallway, much like our TMaze environments. The agent must learn a state update which spans at least the length of the hallway. But this is in the best case scenario when the agent prioritizes making it to the end of the hallway. In reality, our agents will randomly explore the hallway until the end, often extending the length of the sequence the agent needs to learn over. The interaction between the agent's behavior (or exploration) and the difficulty of training under partial observability with a recurrent agent is currently unexplored. Active data collection strategies could mitigate the length of long-temporal dependencies, which would show massive improvements in our agent's learning efficiency and ability.
+
+\begin{wrapfigure}[14]{r}{0.4\textwidth}
+  \includegraphics[width=0.4\textwidth]{./plots/arnns/figures/dirtmaze_learn_intervention.pdf}
+  \caption{Average success over the intervention taking the go forward activation and starting in the eastward position. {\bf (Naive Strategy)} Using the evaluated intervention over 60k steps for training, {\bf (Hand Designed)} a sequence of hand designed interventions to build up to the final evaluation intervention over 60k steps.} \label{fig:dirtmaze_inter}
+\end{wrapfigure}
+
+
+To show the potential of active data collection, I will briefly revisit the Directional TMaze. Start with an agent who has learned the base task of the Directional TMaze environment. If the agent is forced to take specific actions and to start in a specific orientation at the beginning of the episode, we could feasibly teach the agent to artificially extend the horizon of its policy without increasing the length of the training sequence. See Figure ref:fig:dirtmaze_inter for preliminary results of how behavior can extend the horizon of the agent's policy. In this experiment, trained multiplicative agents are paced through a set of interventions. The naive strategy uses epsilon greed after forcing the agent to step forward twice down the hallway. The hand designed sequence, instead guides the agent through a series of forced actions to build to the final desired policy. This simple experiment shows the potential for slowly extending the temporal horizon of a policy without adjusting the truncation value by intervening on the agent's behavior.
+
+
+*Insight Beyond Learning Curves:*
+
+
+Learning curves provide little understanding of an agent's learning process and this likely limits algorithmic progress in partially observable settings. Unfortunately, such metrics can't be used to address more complicated questions about the agent and its behavior. While searching for SOTA is admirable, deeper questions about the internal learned structures and behaviors of our agents are often, but not always, ignored. Analyzing the internal dynamics of an agent with recurrent architectures is uniquely challenging in reinforcement learning. Some challenges include:
+# \begin{itemize} % [topsep=0pt,itemsep=-1ex]
+#   \setlength\itemsep{-0.0em}
+#   \setlength\topsep{0.0pt}
+- Generating data for evaluating and analyzing representation learning is an especially difficult problem for agents with recurrence. The data generated must be coherent trajectories the agent may potentially experience in the environment, meaning a (or several) data generating policy must be selected to provide coverage over the space of agent-environment interactions
+- Current tools for analyzing state representations are designed for NLP cite:&karpathy2015visualizing;&ming2017understanding and are ill-suited for analyzing the link between the environment, the agent's state, and the behavior policy.
+- Analyzing the behavior of our agents through performance metrics leaves many questions unanswered: How the agent might be behaving? When does the agent make a long-term decision? In what circumstances might the agent's policy fail?
+# \end{itemize}
+
+# \section{Insight Beyond Learning Curves} \label{app:understanding}
+Learning curves showing the agent's performance, usually through episodic return or prediction error, over the agent's lifetime has been the primary method algorithms are compared. Unfortunately, such metrics can't be used to address more complicated questions about the agent and its behavior. While searching for SOTA is admirable, deeper questions about the internal learned structures and behaviors of our agents are often, but not always, ignored. Analyzing the internal dynamics of an agent with recurrent architectures is uniquely challenging in reinforcement learning.
+
+One challenge is how data is generated. Unlike SL whose data is usually a dataset designed ahead of time, RL generates data through interactions with an environment whose underlying dynamics are likely unaccessible to the system designer. While randomly generated data, in combination with tools from NLP cite:&karpathy2015visualizing;&ming2017understanding, can give us some insight into how our agent's perform, see section ref:sec:arnn:learnability, extending the analysis to larger domains could leave large parts of the agent-environment interactions unseen. 
+
+While I provide some representational analysis in the prediction setting, further results in the control setting would be even more beneficial. Unfortunately, many of the analysis tools considered require the ``correct'' target at a given time. In the control setting, even when the underlying dynamics of an environment can be fully specified (say in lunar lander) a notion of what the right action is at a given time can be extremely difficult to discover. Future work should go into analyzing the link between histories, agent state, environment state, and behavior.
+
+Even when analyzing the behavior of our agent, using the performance metric as the primary measure is deeply flawed. This type of analysis fails to address questions such as: How the agent might be behaving? When does the agent make a long-term decision? In what circumstances might the agent's policy fail? Analyzing the agent as a non-linear coupled system with the environment through a series of dynamical equations could lead to further insight on conditions which lead the agent to behave in certain ways or when certain decisions are made by the agent. cite:&beer2003dynamics develop a series of questions and experiments to analyze an artificial agent from this perspective in a simple catcher like domain. While these tools would be difficult to apply to real-world problems, using them in simulations could provide useful insight into a full description of the agent's learned policy.
+
+Because of the above challenges there are several lingering questions about these types of agents left unanswered in these domains. 1) Under what conditions will the agent's policy fail in an environment? 2) How robust are the policies to out-of-distribution events and how does this effect the hidden state?  3) What algorithms do the learning process discover to solve the domains reliably? 4) Is the model stable over a long training period or in a continual domain? 5) When does the agent make a decision, and does the agent stick to this decision? I believe answering these questions and more can lead to better understanding of recurrent agents as well as pathways to better algorithms for training such agents.
+
+*** Learning how to encode action in recurrent architecture through experience
+CLOSED: [2023-03-03 Fri 11:55]
+:PROPERTIES:
+:CUSTOM_ID: sec:conc:arnnbias
+:END:
+
+So far, we've focused on architectures which have static architectures, where the agent has no agency in learning the appropriate structure. While this strategy seems to be reasonable as a starting point, in the future an architecture which can learn these different networks would be more desirable. I propose one such architecture here and an initial empirical evaluation of this architecture, leading to a discussion on the problematic properties such an algorithm might have.
+{{{c}}}
+\begin{align*}
+  \interstate_t^i &= f_{\text{update}}(\weights, \xvec_{t}, \avec_{t-1}) \\
+  \psi_t &= f_{\text{GN}}(\xvec_t, \avec_{t-1}) \\
+  \state_t &= \interstate_t \odot psi_t.
+\end{align*}
+{{{c}}}
+Where $f_{\text{GN}}: \Actions \times \States \times \Observations \rightarrow \Reals^{|\state|}$ is a parameterized function which is used to create a mixture over the experts state $\interstate \in \Reals ^{|\state|}$ produced by a state update function $f_{\text{update}}$. Both the gating function and the expert rnn state update function can be arbitrarily constructed. In this section, I focus on the simple RNN update and a feed forward ANN with relu activations and a softmax activation on the final layer.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.95\linewidth]{plots/arnns/figures/moe.pdf}
+  \caption{ Directional TMaze sweep over size of the gating network (i.e how many units in a single hidden layer with relu activations and an output network w/ softmax output) for ({\bf left}) RNN and ({\bf right}) GRU. All experiments follow the procedures from previous results, except the MoE networks use 20 runs.}
+\label{fig:moe}
+\end{figure}
+
+The results are presented in Figure ref:fig:moe. A sweep over various number of experts and a simple gating network with a single layer and softmax activation. As compared to the additive and multiplicative the mixture of experts RNN network performs in-between the two networks. The GRU, on the other hand, fails to perform well in this domain. This might be related to the results seen in section ref:sec:arnn:combining, where both the combined GRUs failed to outperform the multiplicative.
+
+*** Understanding the intersection between predictive and non-predictive agent-state construction
+CLOSED: [2023-03-03 Fri 11:55]
+
+While this thesis creates a dichotomy between predictive and non-predictive approaches to learning agent-state, this is generally not a necessary distinction. One key question is to combine the two approaches into a network that both takes advantage of temporal-difference for learning state as well as has the flexibility to learn state objects which aren't dictated by predictive questions. Such an architecture could improve on the sensitivity to truncation for many recurrent networks while also providing a depth of representation not available in the current state of the GVFN framework. Future work should go into understanding such an architecture.
+
+*** Discovery and the form of GVF prediction targets
+CLOSED: [2023-03-03 Fri 11:55]
+
+As explored in Chapters ref:chap:composite and ref:chap:gvfn:discovery, little is known about the shape of composite predictive targets or of the space of predictive questions generally. while several works appeal to the ability of GVFs to specify questions about everything the agent could imagine, we must be careful that prior knowledge in the space of questions an agent can specify is avoided. Instead, questions should be built on the sequence of observations from the environment. This can be done through a meta-learning process or generate and test (see Chapter ref:chap:gvfn:discovery), but little effort has gone into understanding the complex structures of these predictive question networks. 
+
+*** Beyond a synchronous predictive network
+CLOSED: [2023-03-03 Fri 11:55]
+
+Like co-agent networks before them, the GVFN framework provides a mechanism for de-linking the final objective of the agent and its internal representation learning. Using this framework to derive a asynchronous set of architectures could provide a lower-variance scheme as compared to the co-agent network work. The key reason this is possible is because the targets of the individual units are now predictions of the underlying data stream (or any other available signal), meaning the variance in predictions should be the direct result of the underlying uncertainty or variance in the actual data stream. This is unlike co-agent networks as they rely on random sampling for each co-agent's activations. An approach which combines prediction and control demons in the GVFN framework could be key to creating such an asynchronous network.
+
+** Conclusion
 CLOSED: [2023-03-03 Fri 11:59]
 
 This thesis provides evidence that the intuitions developed about recurrent neural networks in supervised learning might not directly apply to the continual reinforcement learning setting. While many of the approaches derived in SL could be useful in RL, these should be re-investigated, validated, and understood in the continual reinforcement learning setting. While I propose several directions for improvement in recurrent networks for CRL, this thesis lays the groundwork for many avenues to contribute to the use and understanding of recurrent networks in CRL. The future of recurrent networks CRL will likely share many similarities with those found in SL, but will likely have radically different approaches to construction, learning, and analysis which cannot be developed in the SL setting alone.
@@ -2488,97 +2657,8 @@ This thesis provides evidence that the intuitions developed about recurrent neur
 #+end_export
 
 
-* DONE [5/5] Future directions and work
-** DONE Open Problems for Recurrent Architectures in RL
-CLOSED: [2023-03-03 Fri 11:55]
-:PROPERTIES:
-:CUSTOM_ID: sec:conc:arnn:open-problems
-:END:
 
-Recurrent architectures are often taken off-the-shelf from the supervised learning setting for use in reinforcement learning. While this has been moderately successful, the RL problem poses challenges not often considered by supervised learning. Below we discuss three interesting properties of an RL system, and how they affect learning using recurrent networks.
-
-*Practical Online Recurrent Learning:*
-
-In reinforcement learning, it is desirable to learn as much about the most recent experience before selecting an action (i.e. to learn online and incrementally). Learning efficiently online enables adapting behavior in real time and scaling to massive data-streams and architectures. This puts pressure on the learning system to update the weights within a set amount of time so the system can act cite:&sutton2011horde;&white2015developing, which is often not a concern in the supervised setting. In settings where an agent must move around its environment independently, the on-board computational system can be heavily constrained by the power of the processor as well as limited energy from the battery. An algorithm whose computational and memory complexity scales independently of the sequence length (without the quadratic complexity on size of the network as real time recurrent learning cite:&williams1989learning) and could be applied online-incrementally would be a major breakthrough in using recurrent architectures for RL and computationally constrained systems generally. A detailed discussion on relevant literature is in Appendix \ref{app:ltd}.
-
-*Active Data Collection Matters:*
-
-Imagine an agent in a hallway with recognizable observations only at the beginning and end of the hallway, much like our TMaze environments. The agent must learn a state update which spans at least the length of the hallway. But this is in the best case scenario when the agent prioritizes making it to the end of the hallway. In reality, our agents will randomly explore the hallway until the end, often extending the length of the sequence the agent needs to learn over. The interaction between the agent's behavior (or exploration) and the difficulty of training under partial observability with a recurrent agent is currently unexplored. Active data collection strategies could mitigate the length of long-temporal dependencies, which would show massive improvements in our agent's learning efficiency and ability.
-
-\begin{wrapfigure}[20]{r}{0.4\textwidth}
-  \includegraphics[width=0.4\textwidth]{./plots/arnns/figures/dirtmaze_learn_intervention.pdf}
-  \caption{Average success over the intervention taking the go forward activation and starting in the eastward position. {\bf (Naive Strategy)} Using the evaluated intervention over 60k steps for training, {\bf (Hand Designed)} a sequence of hand designed interventions to build up to the final evaluation intervention over 60k steps.} \label{fig:dirtmaze_inter}
-\end{wrapfigure}
-
-
-To show the potential of active data collection, we will briefly revisit the Directional TMaze. Start with an agent who has learned the base task of the Directional TMaze environment. If we force the agent to take specific actions and to start in a specific orientation at the beginning of the episode, we could feasibly teach the agent to artificially extend the horizon of its policy without increasing the length of the training sequence. See Figure \ref{fig:dirtmaze_inter} for preliminary results of how behavior can extend the horizon of the agent's policy. In this experiment, trained multiplicative agents are paced through a set of interventions. The naive strategy uses epsilon greed after forcing the agent to step forward twice down the hallway. The hand designed sequence, instead guides the agent through a series of forced actions to build to the final desired policy. This simple experiment shows the potential for slowly extending the temporal horizon of a policy without adjusting the truncation value by intervening on the agent's behavior.
-
-
-*Insight Beyond Learning Curves:*
-
-
-Learning curves provide little understanding of an agent's learning process and this likely limits algorithmic progress in partially observable settings. Unfortunately, such metrics can't be used to address more complicated questions about the agent and its behavior. While searching for SOTA is admirable, deeper questions about the internal learned structures and behaviors of our agents are often, but not always, ignored. Analyzing the internal dynamics of an agent with recurrent architectures is uniquely challenging in reinforcement learning. Some challenges include (see Appendix \ref{app:understanding} for details):
-# \begin{itemize} % [topsep=0pt,itemsep=-1ex]
-#   \setlength\itemsep{-0.0em}
-#   \setlength\topsep{0.0pt}
-- Generating data for evaluating and analyzing representation learning is an especially difficult problem for agents with recurrence. The data generated must be coherent trajectories the agent may potentially experience in the environment, meaning a (or several) data generating policy must be selected to provide coverage over the space of agent-environment interactions
-- Current tools for analyzing state representations are designed for NLP cite:&karpathy2015visualizing;&ming2017understanding and are ill-suited for analyzing the link between the environment, the agent's state, and the behavior policy.
-- Analyzing the behavior of our agents through performance metrics leaves many questions unanswered: How the agent might be behaving? When does the agent make a long-term decision? In what circumstances might the agent's policy fail?
-# \end{itemize}
-
-# \section{Insight Beyond Learning Curves} \label{app:understanding}
-Learning curves showing the agent's performance, usually through episodic return or prediction error, over the agent's lifetime has been the primary method algorithms are compared. Unfortunately, such metrics can't be used to address more complicated questions about the agent and its behavior. While searching for SOTA is admirable, deeper questions about the internal learned structures and behaviors of our agents are often, but not always, ignored. Analyzing the internal dynamics of an agent with recurrent architectures is uniquely challenging in reinforcement learning.
-
-One challenge is how data is generated. Unlike SL whose data is usually a dataset designed ahead of time, RL generates data through interactions with an environment whose underlying dynamics are likely unaccessible to the system designer. While randomly generated data, in combination with tools from NLP cite:&karpathy2015visualizing;&ming2017understanding, can give us some insight into how our agent's perform, see section \ref{sec:learnability}, extending the analysis to larger domains could leave large parts of the agent-environment interactions unseen. 
-
-While we provide some representational analysis in the prediction setting, further results in the control setting would be even more beneficial. Unfortunately, many of the analysis tools we considered require the ``correct'' target at a given time. In the control setting, even when the underlying dynamics of an environment can be fully specified (say in lunar lander) a notion of what the right action is at a given time can be extremely difficult to discover. Future work should go into analyzing the link between histories, agent state, environment state, and behavior.
-
-Even when analyzing the behavior of our agent, using the performance metric as the primary measure is deeply flawed. This type of analysis fails to address questions such as: How the agent might be behaving? When does the agent make a long-term decision? In what circumstances might the agent's policy fail? Analyzing the agent as a non-linear coupled system with the environment through a series of dynamical equations could lead to further insight on conditions which lead the agent to behave in certain ways or when certain decisions are made by the agent. cite:&beer2003dynamics develop a series of questions and experiments to analyze an artificial agent from this perspective in a simple catcher like domain. While these tools would be difficult to apply to real-world problems, using them in simulations could provide useful insight into a full description of the agent's learned policy.
-
-Because of the above challenges there are several lingering questions about these types of agents left unanswered in these domains. 1) Under what conditions will the agent's policy fail in an environment? 2) How robust are the policies to out-of-distribution events and how does this effect the hidden state?  3) What algorithms do the learning process discover to solve the domains reliably? 4) Is the model stable over a long training period or in a continual domain? 5) When does the agent make a decision, and does the agent stick to this decision? We believe answering these questions and more can lead to better understanding of recurrent agents as well as pathways to better algorithms for training such agents.
-
-** DONE Learning how to encode action in recurrent architecture through experience
-CLOSED: [2023-03-03 Fri 11:55]
-:PROPERTIES:
-:CUSTOM_ID: sec:conc:arnnbias
-:END:
-
-So far, we've focused on architectures which have static architectures, where the agent has no agency in learning the appropriate structure. While this strategy seems to be reasonable as a starting point, in the future an architecture which can learn these different networks would be more desirable. We propose one such architecture here and an initial empirical evaluation of this architecture, leading to a discussion on the problematic properties such an algorithm might have.
-
-\begin{align*}
-  \interstate_t^i &= f_{\text{update}}(\weights, \xvec_{t}, \avec_{t-1}) \\
-  \psi_t &= f_{\text{GN}}(\xvec_t, \avec_{t-1}) \\
-  \state_t &= \interstate_t \odot psi_t.
-\end{align*}
-
-Where $f_{\text{GN}}: \Actions \times \States \times \Observations \rightarrow \Reals^{|\state|}$ is a parameterized function which is used to create a mixture over the experts state $\interstate \in \Reals ^{|\state|}$ produced by a state update function $f_{\text{update}}$. Both the gating function and the expert rnn state update function can be arbitrarily constructed. In this section we focus on the simple RNN update and a feed forward ANN with relu activations and a softmax activation on the final layer.
-
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.95\linewidth]{plots/arnns/figures/moe.pdf}
-  \caption{ Directional TMaze sweep over size of the gating network (i.e how many units in a single hidden layer with relu activations and an output network w/ softmax output) for ({\bf left}) RNN and ({\bf right}) GRU. All experiments follow the procedures from previous results, except the MoE networks use 20 runs.}
-\label{fig:moe}
-\end{figure}
-
-The results are presented in Figure \ref{fig:moe}. A sweep over various number of experts and a simple gating network with a single layer and softmax activation. As compared to the additive and multiplicative the mixture of experts RNN network performs in-between the two networks. The GRU, on the other hand, fails to perform well in this domain. This might be related to the results seen in section \ref{sec:combining}, where both the combined GRUs failed to outperform the multiplicative.
-
-** DONE Understanding the intersection between predictive and non-predictive agent-state construction
-CLOSED: [2023-03-03 Fri 11:55]
-
-While this thesis creates a dichotomy between predictive and non-predictive approaches to learning agent-state, this is generally not a necessary distinction. One key question is can we combine the two approaches into a network that both takes advantage of temporal-difference for learning state as well as has the flexibility to learn state objects which aren't dictated by predictive questions. Such an architecture could improve on the sensitivity to truncation for many recurrent networks while also providing a depth of representation not available in the current state of the GVFN framework. Future work should go into understanding such an architecture.
-
-** DONE Discovery and the form of GVF prediction targets
-CLOSED: [2023-03-03 Fri 11:55]
-
-As explored in Chapters ref:chap:composite and ref:chap:gvfn:discovery, little is known about the shape of composite predictive targets or of the space of predictive questions generally. while several works appeal to the ability of GVFs to specify questions about everything the agent could imagine, we must be careful that we are avoiding prior knowledge into the space of questions an agent can specify. Instead, questions should be built on the sequence of observations from the environment. This can be done through a meta-learning process or generate and test (see Chapter ref:chap:gvfn:discovery), but little effort has gone into understanding the complex structures of these predictive question networks. 
-
-** DONE Beyond a synchronous predictive network
-CLOSED: [2023-03-03 Fri 11:55]
-
-Like co-agent networks before them, the GVFN framework provides a mechanism for de-linking the final objective of the agent and its internal representation learning. Using this framework to derive a asynchronous set of architectures could provide a lower-variance scheme as compared to the co-agent network work. The key reason this is possible is because the targets of the individual units are now predictions of the underlying data stream (or any other available signal), meaning the variance in predictions should be the direct result of the underlying uncertainty or variance in the actual data stream. This is unlike co-agent networks as they rely on random sampling for each co-agent's activations. An approach which combines prediction and control demons in the GVFN framework could be key to creating such an asynchronous network.
-
-* TODO [#B] Details and extended ideas for incorporating actions in recurrent networks
+* Details and extended ideas for incorporating actions in recurrent networks
 :PROPERTIES:
 :CUSTOM_ID: app:arnns
 :END:
@@ -2600,15 +2680,22 @@ We present the results for the online setting in figure ref:app:arnns:fig:online
 
 ** Masked Grid World
 
-
-\begin{wrapfigure}[21]{l}{0.5\textwidth}
+\begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{plots/arnns/figures/masked_gw.pdf}
+  \includegraphics[width=0.8\textwidth]{plots/arnns/figures/masked_gw.pdf}
   \caption{Average number of steps to goal over truncation for Masked Grid World {\bf left} over the entire
     learning process {\bf right} from a set of representative states after
     training. Cell (state size) {\bf top} RNN (24), AARNN (20),
     MARNN (10) {\bf bottom} GRU (24), AAGRU (20), MAGRU (10).}\label{fig:maskedgw}
-\end{wrapfigure}
+\end{figure}
+# \begin{wrapfigure}[21]{l}{0.5\textwidth}
+#   \centering
+#   \includegraphics[width=0.5\textwidth]{plots/arnns/figures/masked_gw.pdf}
+#   \caption{Average number of steps to goal over truncation for Masked Grid World {\bf left} over the entire
+#     learning process {\bf right} from a set of representative states after
+#     training. Cell (state size) {\bf top} RNN (24), AARNN (20),
+#     MARNN (10) {\bf bottom} GRU (24), AAGRU (20), MAGRU (10).}\label{fig:maskedgw}
+# \end{wrapfigure}
 
 While the TMaze and DirTMaze give some insight into when different encodings might be preferable, the DirTMaze and Ring World share similar dynamics in how the actions effect the unobserved state of the MDP. Specifically, there are two actions which effect a state component symmetrically. This prompts the question on whether this property is driving the benefits of the multiplicative update's success, or whether there are other scenarios where the multiplicative does better. We propose a new environment which is a simple grid world with border wrapping. The agent can take a step in all the cardinal directions, and observes when it enters a random subset of the states (all aliased together). The goal state is also randomly selected at the beginning of an agent's life. This creates random action observation patterns the agent must notice and act on to get to the goal. The border wrapping prevents the agent from moving to a corner of the environment and then going to the goal.
 
@@ -2646,8 +2733,9 @@ In this section we discuss the experiments from the paper in greater detail. In 
 :CUSTOM_ID: app:arnns:emp:rw
 :END:
 
-\begin{wrapfigure}[10]{r}{0.4\textwidth}
-  \vspace{-1cm}
+# [10]{r}{0.4\textwidth}
+\begin{figure}
+\centering
   \begin{tabular}{l | r}  
     Parameter & Value \\ [0.5ex] 
     \hline
@@ -2663,7 +2751,7 @@ In this section we discuss the experiments from the paper in greater detail. In 
     Independent Runs & 50 \\
   \end{tabular}
   \caption{Ring World Hyperparameters} \label{app:fig:ringworld_params}
-\end{wrapfigure}
+\end{figure}
 
 Table \ref{app:fig:ringworld_params} gives the hyperparameters used in the ringworld experiments. We also provide full sensitivity curves over truncation for all cell types and hidden state sizes tested in Figure \ref{fig:app_er_rw_sens}. 
 
@@ -2703,7 +2791,7 @@ We detail all hyperparameter settings, and give results for different network si
 We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further results (Figures \ref{fig:app_ll_mr} and \ref{fig:app_ll_median})
 
 \begin{figure}
-  \begin{subfigure}{0.5\textwidth}
+  \begin{subfigure}{0.6\textwidth}
     \begin{tabular}{l | r}  
      Parameter & Value \\ [0.5ex] 
      \hline
@@ -2723,14 +2811,14 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
 
     \end{tabular}
   \end{subfigure}
-  \begin{subfigure}{0.49\textwidth}
+  \begin{subfigure}{0.4\textwidth}
       \includegraphics[width=\linewidth]{plots/arnns/figures/tmaze_with_fac.pdf}
     \end{subfigure}
     
   \begin{subfigure}{1\textwidth}
     \centering
   \begin{tabular}{l | c | c | c}  
-   Cell & RMSprop Learning Rate & Hidden State Size & Number of Model Parameters \\ [0.5ex] 
+   Cell & RMSprop Learning Rate & Hidden State Size & Model Parameters \\ [0.5ex] 
    \hline
     GRU    & 0.005     & 6          & 214 \\
     AAGRU  & 0.0003125 & 6          & 286 \\
@@ -2757,7 +2845,8 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
   \includegraphics[width=0.95\linewidth]{plots/arnns/figures/dirtmaze_with_fac_20k.pdf}
 \end{subfigure}
 
-  \begin{subfigure}[l]{0.4\textwidth}
+  \begin{subfigure}[l]{\textwidth}
+\centering
     \begin{tabular}{l | r}  
       Parameter & Value \\ [0.5ex] 
       \hline
@@ -2773,8 +2862,10 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
       Target update freq & 1000 steps \\
       Independent Runs & 100 \\
     \end{tabular}
-  \end{subfigure}  
-  \begin{subfigure}[r]{0.5\textwidth}
+  \end{subfigure}
+
+  \begin{subfigure}[r]{\textwidth}
+\centering
   \begin{tabular}{l | c | c | c }  
    Cell & $\eta$ & Hidden State Size & Num Weights \\ [0.5ex] 
    \hline
@@ -2844,12 +2935,12 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
 
 
 \begin{figure}
-  \begin{subfigure}{0.5\textwidth}
+  \begin{subfigure}{0.6\textwidth}
     \begin{tabular}{l | r}  
      Parameter & Value \\ [0.5ex] 
      \hline
      Steps & 4,000,000 steps \\
-     Steps before learning starts & 1000 steps \\
+     Steps before learning & 1000 steps \\
      Optimizer & RMSprop \\
      RMSprop $\eta$ & $0.1 \times 1.6^{(-20:2:-6)}$ \\
      RMSprop $\rho$ & 0.99\\
@@ -2863,12 +2954,12 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
      Independent Runs & 20 \\
     \end{tabular}
 \end{subfigure}
-\begin{subfigure}{0.49\textwidth}
+\begin{subfigure}{0.4\textwidth}
   \includegraphics[width=\linewidth]{plots/arnns/figures/lunarlander_with_fac.pdf}
 \end{subfigure}
 \begin{subfigure}{\textwidth}
   \begin{tabular}{l | c | c | c | c}  
-   Cell & RMSprop Learning Rate & Hidden State Size (Factors/Action Encoding) & Number of Model Parameters \\ [0.5ex] 
+   Cell & RMSprop Learning Rate & $\state$ Size ($\factors$/$|\action|$) & Num Weights \\ [0.5ex] 
    \hline
     GRU    & 0.0003553   & 154          & 156,414 \\
     AAGRU  & 0.0001387   & 152          & 155,004 \\
@@ -2924,7 +3015,7 @@ We provide all hyperparameter settings (Figure \ref{fig:app_ll}) and further res
   \caption{Individual learning curves. Line is the median over 1000 episodes, with the shaded region as the 1st and 3rd quantile over the same window.} \label{fig:app_ll_median}
 \end{figure}
 
-* TODO Further details and supporting proofs for Importance Resampling
+* Further details and supporting proofs for Importance Resampling
 ** Variance of Updates
 :PROPERTIES:
 :CUSTOM_ID: app:ir:var
@@ -2987,16 +3078,257 @@ with expectation across buffers. Therefore, the analysis of $\V(\xbciwer \ | \ B
 
 ** Additional Theoretical Results and Proofs
 :PROPERTIES:
-:CUSTOM_ID: app:sec:arnns:theory
+:CUSTOM_ID: app:sec:resampling:theory
+:END:
+
+\begin{lemma} \label{lem:time_bcir}
+  Let $B_t = \{X_{t+1}, ..., X_{t+n}\}$ be the buffer of the most recent $n$ transitions sampled by time $t+n$, which are generated sequentially from an irreducible, finite MDP with a fixed policy $\mu$. We define $\xbciwerb{t}$ be the BCIR estimator for buffer $B_t$. If $\E_\pi[|\Delta|] < \infty$, then $\E[\xbciwerb{t}] = \E_\pi[\Delta]$.
+\end{lemma}
+
+\begin{proof}
+  Let $X_t = (S_t, A_t, R_{t+1}, S_{t+1})$ be a transition and $\{B_t\}_{t \in \Naturals}$ be the sequence of buffers that are observed, each containing $n$ consecutive transitions.
+  
+    Using the law of iterated expectations, 
+  \[ \E \left[ \xbciwerb{t} \right] = \E \left[ \E[ \xbciwerb{t} | B_t ] \right] \]
+  where the outer expectation is over the stationary distribution of $B_t$ and the inner expectation is over the sampling distribution of IR from the buffer $B_t$.
+   
+  Using the definition of $\xbciwerb{t} | B_t$, we have that
+  \begin{align*}
+  \E[ \xbciwerb{t} | B_t ]  &= \bar{\rho} \sum_{i=1}^n \Delta_i \frac{\rho_i}{\sum_{i=1}^{n} \rho_i} \\
+  &= \frac{1}{n} \sum_{i=1}^n \rho_i \Delta_i
+  \end{align*}
+  
+  Next, the stationary distribution of $B_t$ is given by
+  $d(B_t) = Pr(B_t = (x_{t+1}, ..., x_{t+n})) =\\ d_X(x_t) p(x_{t+1}|x_t) ... p(x_{t+n}|x_{t+n-1})$, where $d_X$ is the stationary distribution of $X_t$.
+  We can verify directly by checking that for all $B' = (x_2, ..., x_{n+1})$
+  \[     \sum_{B} d(B) p(B'|B) = d(B')\]
+  where $B =(x_1, ..., x_n)$
+  
+  To see this, first note that $p(B'|B) = p(x_{n+1} | x_n) \mathbf{1} (B,B') $ 
+  where $\mathbf{1}(B, B')$ is equal to $1$ if the states $(x_2, ..., x_n)$ in $B$ match the states $(x_2, .., x_n)$ in $B'$. In other words, the first $n-1$ transitions in $B'$ must match the last $n-1$ transitions in $B$ for $p(B'|B)$ to be positive. 
+  Next, fixing $B'$,
+  \begin{align*}
+    &\sum_{B} d(B) p(B'|B) \\
+    &= \sum_{x_1, ..., x_n} d_\mu(x_1) p(x_2| x_1) ... p(x_n|x_{n-1})  p(x_{n+1} | x_n) \mathbf{1} (B,B') \\
+    &= \sum_{x_1}  d_\mu(x_1) p(x_2| x_1) ... p(x_n|x_{n-1})  p(x_{n+1} | x_n) \quad \text{since $(x_2, ..., x_n)$ have to match} \\
+    &= d_\mu(x_2) p(x_3| x_2) ... p(x_n|x_{n-1})  p(x_{n+1} | x_n) \\
+    &= d(B')
+  \end{align*}
+  which verifies the expression for the stationary distribution of $B_t$.
+  
+ 
+  Continuing from before, we expand the expectation as:
+  \begin{align*}
+    & \E \left[ \frac{1}{n} \sum_{t=1}^n \rho_t \Delta_t \right] \\
+    &= \sum_{x_1,...x_n} d_X(x_1) p(x_2|x_1)...p(x_n|x_{n-1})  \left( \frac{1}{n} \sum_{t=1}^n \rho_t \Delta_t \right) \\
+    &= \sum_{\substack{s_1, a_1, r_2, s_2, ...,\\ s_n, a_n, r_{n+1}, s_{n+1}}}
+      d_\mu(s_1) \left( \prod_{i=1}^n \mu(a_i|s_i) p(s_{i+1}, r_{i+1}|s_i, a_i) \right) \left( \frac{1}{n} \sum_{t=1}^n \rho_t \Delta_t \right) \\
+    &=  \frac{1}{n} \sum_{t=1}^n  \sum_{\substack{s_1, a_1, r_2, s_2, ...,\\ s_n, a_n, r_{n+1}, s_{n+1}}}
+      d_\mu(s_1) \left( \prod_{i=1}^n \mu(a_i|s_i) p(s_{i+1}, r_{i+1}|s_i, a_i) \right) \left( \rho_t \Delta_t \right). \\
+  \end{align*}
+    Next, by taking the sums over $(s_1, a_1, ... r_{n+1}, s_{n+1})$ within the products to make the summands depend only on the variables being summed over, we get
+   \begin{align*}
+     &= \frac{1}{n} \sum_{t=1}^n \sum_{s_1} d_\mu(s_1) 
+     \sum_{a_1, r_2, s_2} \mu(a_1|s_1) p(s_2, r_2| s_1, a_1) 
+     \sum_{a_2, r_3, s_3} \mu(a_2|s_2) p(s_3, r_3| s_2, a_2) ...\\
+     &\sum_{a_t, r_{t+1}, s_{t+1}} \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left( \rho_t \Delta_t \right) \\
+     &\sum_{\substack{a_{t+1}, r_{t+2}, s_{t+2}, ...,\\ s_n, a_n, r_{n+1}, s_{n+1}}}  \prod_{i=t+1}^n \mu(a_i|s_i) p(s_{i+1}, r_{i+1}|s_i, a_i) \\
+     &= \frac{1}{n} \sum_{t=1}^n \sum_{s_1} d_\mu(s_1) 
+     \sum_{a_1, r_2, s_2} \mu(a_1|s_1) p(s_2, r_2| s_1, a_1) 
+     \sum_{a_2, r_3, s_3} \mu(a_2|s_2) p(s_3, r_3| s_2, a_2) ...\\
+     &\sum_{a_t, r_{t+1}, s_{t+1}} \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left( \rho_t \Delta_t \right).
+   \end{align*}
+   This followed since the third line is summing over the probability of all trajectories starting from $s_{t+1}$ and thus is equal to 1.
+   Next, we note that, if $C$ is a constant that does not depend on $s_1, a_1, r_2$, then
+   $\sum_{s_1, a_1, r_2} d_\mu(s_1) \mu(a_1|s_1) p(s_2, r_2|s_1, a_1) C = d_\mu(s_2) C$ since $d_\mu(s_2)$ is the stationary distribution (if we additionally assume $p(s_2, r_2|s_1, a_1) = p(s_2|s_1, a_1) p(r_2 | s_1, a_1)$ or equivalently that rewards depend only on state and action).
+   
+   Continuing from before, by reordering the sums we have and repeatedly using the above note,
+   \begin{align*}
+   &= \frac{1}{n} \sum_{t=1}^n \sum_{s_2}  \underbrace{\sum_{s_1, a_1, r_2}  d_\mu(s_1) 
+   \mu(a_1|s_1) p(s_2, r_2| s_1, a_1)}_{d_\mu(s_2)}
+   \sum_{a_2, r_3, s_3} \mu(a_2|s_2) p(s_3, r_3| s_2, a_2) ...\\
+   &\sum_{a_t, r_{t+1}, s_{t+1}} \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left( \rho_t \Delta_t \right) \\ 
+   &= \frac{1}{n} \sum_{t=1}^n \sum_{s_2} d_\mu(s_2)
+   \sum_{a_2, r_3, s_3} \mu(a_2|s_2) p(s_3, r_3| s_2, a_2) ...\\
+   &\sum_{a_t, r_{t+1}, s_{t+1}} \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left( \rho_t \Delta_t \right)\\
+   &= ... \quad \text{(Repeating the same process)} \\
+   &=  \frac{1}{n} \sum_{t=1}^n \sum_{s_t, a_t, r_{t+1}, s_{t+1}} d_\mu(s_t) \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left( \rho_t \Delta_t \right).
+   \end{align*}
+   Recall that $\Delta_t = \Delta(s_t, a_t, r_{t+1}, s_{t+1})$ is a function of the transition so we cannot simplify further.
+
+   Finally, 
+   \begin{align*}
+   &= \frac{1}{n} \sum_{t=1}^n  \sum_{s_t, a_t, r_{t+1}, s_{t+1}}
+    d_\mu(s_t) \mu(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \left(\frac{\pi(a_t)}{\mu(a_t)} \Delta_t \right) \\ 
+   &= \frac{1}{n} \sum_{t=1}^n \sum_{s_t, a_t, r_{t+1}, s_{t+1}} 
+    d_\mu(s_t) \pi(a_t|s_t) p(s_{t+1}, r_{t+1}| s_t, a_t) \Delta_t \\
+   &=  \frac{1}{n} \sum_{t=1}^n \E_\pi[\Delta] \\
+   &= \E_\pi[\Delta]
+   \end{align*}
+   
+\end{proof}
+
+
+*Theorem* ref:thm:resampling:sliding-window
+Let $B_t = \{X_{t+1}, ..., X_{t+n}\}$ be the buffer of the most recent $n$ transitions sampled by time $t+n$, which are generated sequentially from an irreducible, finite MDP with a fixed policy $\mu$.
+Define the sliding-window estimator $\xwindow{t} \defeq \frac{1}{T} \sum_{t=1}^T \xbciwerb{t}$. 
+Then, if $\E_\pi [|\Delta| ] < \infty$, then $\xwindow{T}$ converges to $\E_\pi [\Delta ]$ almost surely as $T \rightarrow \infty$.
+
+\begin{proof}
+  Let $X_t = (S_t, A_t, R_{t+1}, S_{t+1})$ be a transition. Then the sequence $\{X_t\}_{t \in \Naturals}$ forms an irreducible Markov chain as there is positive probability of eventually visiting any $X'$ starting from any $X$ since this is true for states $S'$ and $S$ in the original MDP (by irreducibility). 
+  
+  Let $\{B_t\}_{t \in \Naturals}$ be the sequence of buffers that are observed. This also forms an irreducible Markov chain by the same reasoning as above since $\{X_t\}_{t \in \Naturals}$ is irreducible. 
+  Additionally, the sequence of pairs $\{(\xbciwerb{t}, B_t) \}_{t \in \Naturals}$ is an irreducible Markov chain.
+ 
+%  Let $ \E [ \xbciwerb{t} | B_t ]$ be the expected update on the batch $B_t$. Note that this expectation is over the sampling distribution of IR.
+
+  Using the ergodic theorem (theorem 4.16 in \citep{levin2017markov}) on  $\{(\xbciwerb{t}, B_t) \}_{t \in \Naturals}$ with the projection function $f(x,y)= x$, we have that 
+  \[ \lim_{T \rightarrow \infty}  \frac{1}{T} \sum_{t=1}^T \xbciwerb{t} 
+  = \E \left[ \xbciwerb{t} \right] \]
+  where the expectation is over the joint stationary distribution of $(\xbciwerb{t}, B_t)$. 
+  
+  Using Lemma \ref{lem:time_bcir} we can show that $ \E \left[ \xbciwerb{t} \right] = \E_\pi [\Delta]$, completing the proof.
+  
+\end{proof}
+
+
+** Expanded Empirical Results
+:PROPERTIES:
+:CUSTOM_ID: app:sec:resampling:emp
 :END:
 
 
+*** Markov Chain
+:PROPERTIES:
+:CUSTOM_ID: appendix:markov
+:END:
 
+This section contains the full set of markov chain experiments using several different policies. Results can be found in figure \ref{fig:markov_sens} and figure \ref{fig:markov_vtrace_sens}. See figure captions for more details.
+
+
+\begin{figure*}[ht!]
+  \centering
+  \includegraphics[width=\textwidth]{{plots/resampling/markov/learning_rate_sens/grouped.pdf}}
+  \caption{Sensitivity curves for Markov Chain experiments with policy action probabilities [left, right] {\bf left} $\mu = [0.5,0.5], \pi=[0.1,0.9]$; {\bf center} $\mu = [0.9,0.1], \pi=[0.1,0.9]$; {\bf right} $\mu = [0.99,0.01], \pi=[0.01,0.99]$.
+  } \label{fig:markov_sens_2}
+\end{figure*}
+
+\begin{figure*}[ht!]
+  \centering
+  \includegraphics[width=\textwidth]{{plots/resampling/markov/vtrace/grouped.pdf}}
+  \caption{Learning rate sensitivity plots for V-Trace (with the same settings as Figure \ref{fig:markov_sens}). Three clipping parameters were chosen, including 1.0, 0.5 $\rho_\text{max}$ and 0.9 $\rho_\text{max}$, where $\rho_\text{max}$ is the maximum possible IS ratio. For 1.0 $\rho_\text{max}$, updates under V-trace become exactly equivalent to IS. 
+  } \label{fig:markov_vtrace_sens}
+\end{figure*}
+
+
+\begin{figure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/collide_down_random_state_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/collide_down_random_state_weight_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/collide_down_uniform_16}.pdf}
+  \end{subfigure}
+
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/favored_down_random_state_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/favored_down_random_state_weight_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_train_gap_beg/favored_down_uniform_16}.pdf}
+  \end{subfigure}
+  \caption{SGD: Target Policy: {\bf Top}: persistent down, {\bf Bottom} favored down. Behaviour Policy: {\bf left} State Variant {\bf center} State Weight Variant {\bf right} Uniform.  Sample efficiency plots.} \label{fig:app_frc_sgd}
+\end{figure}
+
+*** Continuous Four Rooms
+:PROPERTIES:
+:CUSTOM_ID: appendix:four_rooms_cont
+:END:
+
+The continuous four rooms environment is an 11x11 2d continuous world with walls setup as the original four rooms environment grid world. The agent is a circle with radius 0.1, and the state consists of a continuous tuple containing the x and y coordinates of the agent's center point. The agent takes an action in one of the 4 cardinal directions moving $0.5 \pm \mathbb{U}(0.0, 0.1)$  in that directions and random drift in the orthogonal direction sampled from $\mathbb{N}(0.0,0.01)$. The simulation takes 10 intermediary steps to more accurately detect collisions.
+
+We use three behavior policies in our experiments. *Uniform:* the agent selects all actions uniformly, *State Variant:* the agent selects all actions uniformly except in pre-determined subsections of the environment where the agent will take down with likelihood 0.1 and the rest distributed evenly over the other actions, *State Weight Variant:* the agent selects all actions uniformly except in pre-determined subsections where the pmf is defined randomly. We also use two target policies. *Persistent Down:* where the agent always takes the down action, *Favored Down:* where the agent takes the down action with likelihood 0.9 and uniformly among the other actions with likelihood 0.1. We use a cumulant function which indicates collision with a wall and a termination function which terminates on collision and is 0.9 otherwise for all value functions.
+We present results using SGD and RMSProp over many algorithms and parameter settings in figures \ref{fig:app_frc_sgd}, \ref{fig:app_frc_rmsprop}, \ref{fig:app_frc_incremental}, and \ref{fig:app_frc_sgd_sens}.
+
+
+\begin{figure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/collide_down_random_state_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/collide_down_random_state_weight_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/collide_down_uniform_16}.pdf}
+  \end{subfigure}
+
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/favored_down_random_state_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/favored_down_random_state_weight_variant_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/rmsprop_train_gap_beg/favored_down_uniform_16}.pdf}
+  \end{subfigure}
+  \caption{RMSProp Target Policy: {\bf Top}: persistent down, {\bf Bottom} favored down. Behaviour Policy: {\bf left} State Variant {\bf center} State Weight Variant {\bf right} Uniform. Sample efficiency plots.} \label{fig:app_frc_rmsprop}
+\end{figure}
+
+\begin{figure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_collide_down_policy_random_state_variant_batchsize_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_collide_down_policy_random_state_weight_variant_batchsize_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_collide_down_policy_uniform_batchsize_16}.pdf}
+  \end{subfigure}
+
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_favored_down_policy_random_state_variant_batchsize_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_favored_down_policy_random_state_weight_variant_batchsize_16}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/four_rooms_cont_sgd_inc_plots_15_65/gvf_favored_down_policy_uniform_batchsize_16}.pdf}
+  \end{subfigure}
+  \caption{Incremental Experiments Target Policy: {\bf Top}: persistent down, {\bf Bottom} favored down. Behaviour Policy: {\bf left} State Variant {\bf center} State Weight Variant {\bf right} Uniform. Sample efficiency plots.} \label{fig:app_frc_incremental}
+\end{figure}
+
+\begin{figure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/collide_down_random_state_variant_16_1}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/collide_down_random_state_weight_variant_16_1}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/collide_down_uniform_16_1}.pdf}
+  \end{subfigure}
+
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/favored_down_random_state_variant_16_1}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/favored_down_random_state_weight_variant_16_1}.pdf}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \includegraphics[width=\textwidth]{{plots/resampling/four_rooms_cont/appendix/sgd_mean_beg/favored_down_uniform_16_1}.pdf}
+  \end{subfigure}
+  \caption{SGD: Target Policy: {\bf Top}: persistent down, {\bf Bottom} favored down. Behaviour Policy: {\bf left} State Variant {\bf center} State Weight Variant {\bf right} Uniform. Learning Rate Sensitivity} \label{fig:app_frc_sgd_sens}
+\end{figure}
 
 
 * Sections Looking for a home                                      :noexport:
 
-*************** TODO [#A] Figure out where Learning long-temporal dependencies goes?
+*************** DONE [#A] Figure out where Learning long-temporal dependencies goes?
+CLOSED: [2023-05-31 Wed 09:54]
 *************** END
 
 This chapter
@@ -3009,31 +3341,7 @@ This chapter
 
 For a machine intelligent system with an egocentric perspective, sufficiently summarizing the history of interactions is critical to success in its lifetime. While a unique state can be defined as the set of all histories which induce the same predictions over all futures [[cite:&littman2002predictive;&zhang2021learning]], an agent only has a single lifetime and must make due without living through multiple histories. Awash in the stream of sensor readings available to the agent, it is not always clear what regularities are important for the agent to capture for long-term success in the world or how to capture such regularities. Many other constrained definitions of a sufficient summary of state exists [[cite:&subramanian2022approximate]]. Many approaches focus on the capability of the agent to predict the reward function to develop a policy of behavior, but this approach might not be sufficient if its rewards are non-stationary or if the agent has multiple goals. Another idea is the agent's beliefs should be grounded in predictions about the sensorimotor stream directly. This includes predictions about the prescribed reward function, but also encompasses all real-valued signals for which the agent has access.
 
-** DONE [1/1] Learning Long-temporal Dependencies
-:PROPERTIES:
-:CUSTOM_ID: sec:bg:perception:tempdepend
-:END:
 
-*************** DONE edit LLTD section :noexport:
-CLOSED: [2023-02-21 Tue 15:48]
-*************** END
-
-
-Learning long-temporal dependencies is the primary concern of both RL and SL applications of recurrent networks. While great work has been done to coalesce around a few potential architectures and algorithms for SL settings, these are often found lacking in the online-incremental RL context cite:&sodhani2020training;&rafiee2022eyeblinks;&schlegel2021general. 
-# discussed in section \ref{sec:open_problems}.
-Not only do agents need to learn from the currently stored data (i.e. in an experience replay buffer), they must also continually incorporate the newest information into their decisions (i.e. update online and incrementally). The importance of learning state from an online stream of data has been heavily emphasized in the past through predictive representations of state cite:&littman2002predictive, temporal-difference networks [[cite:&sutton2005temporaldifference]] and GVF networks [[cite:&schlegel2021general]], and in modeling trace patterning systems [[cite:&rafiee2022eyeblinks]]. From a supervised learning perspective, several problems like saturating capacity and catastrophic forgetting are cited as the most pressing for any parametric continual learning system [[cite:&sodhani2020training]]. Below we suggest a few alternative directions needing further exploration in the RL context.
-
-The current standard in training recurrent architectures in RL is truncated BPTT. This algorithm trades off the ability to learn long-temporal dependencies with computation and memory complexity. Currently, the system designer must set the length of temporal sequences the agent needs to model (as would be needed for truncated BPTT to be effective [[cite:&mozer1995focused;&ke2018sparse;&tallec2018unbiased;&rafiee2022eyeblinks]]). Setting this length is a difficult task, as it interacts with the underlying environment and the agent's exploration strategy
-# (see section \ref{sec:open_problems} for more details).
-As the truncation parameter increases it is known that the gradient estimates become wildly variant [[cite:&pascanu2013difficulty;&sodhani2020training]], which can make learning slow.
-
-An alternative to (truncated) BPTT is real time recurrent learning (RTRL) cite:&williams1989learning. Unfortunately RTRL is known to suffer high computational costs for large networks. Several approximations have been developed to alleviate these costs [[cite:&tallec2018unbiased;&mujika2018approximating]], but these algorithms often struggle from high variance updates making learning slow. The approximation to the RTRL influence matrix proposed by cite:&menick2020practical shows significant promise in sparse recurrent networks, even outperforming BPTT when trained fully online. citeauthor:&ke2018sparse (citeyear:&ke2018sparse) propose a sparse attentive backtracking credit assignment algorithm inspired by hippocampal replay, showing evidence the algorithm has beneficial properties of both BPTT and truncated BPTT. The focused architecture was often able to compete with the fully connected architecture on length of learned temporal sequence and prediction error on several benchmark tasks. Another line of search/credit assignment algorithms is generate and test [[cite:&kudenko1998feature;&mahmood2013representation;&dohare2022continual;&samani2021learning]]. These search algorithms aren't as tied to their initialization as other systems as they intermittently inject randomness into their search to jump out of local minima. Many of these approaches combine both gradient descent and generate and test to gain the benefits of both. While a full generate and test solution is possible, finding the right heuristics to generate useful state objects quickly could be problem dependent.
-
-Learning long-temporal dependencies through regularizing objectives on the state has shown promise in alleviating the need for unrolling the network over long-temporal sequences. citeauthor:&schlegel2021general (citeyear:&schlegel2021general) use GVFs to make the hidden state of a simple RNN predictions about the observations showing potential in lightening the need for BPTT. This approach is sensitive the GVF parameters to use as targets on the state of the network. Predictive state recurrent neural networks [[cite:&downey2017predictive]] combine the benefits of RNNs and predictive representations of state [[cite:&littman2002predictive]] in a single architecture. They show improvement in several settings, but don't explore the model when starved for temporal information in the update. Another approach is through stimulating traces, as shown by [[cite:&rafiee2022eyeblinks]], where traces of observations are used to bridge the gap between different stimuli. Instead of traces, an objective which learns the expected trace [[cite:&hasselt2021expected]] of the trajectory could provide similar benefits as a predictive objective. One can even change the requirements on the architecture in terms of final objectives. [[cite:&mozer1991induction]] propose to predict only the contour or general trends of a temporal sequence, reducing the resolution considerably. Value functions are another object which takes an infinite sequence and reduces resolution to make the target easier to predict [[cite:&sutton1995td;&sutton2011horde;&modayil2014multitimescale;&vanhasselt2015learning]].
-
-It is also possible to reduce or avoid the need for BPTT for modeling long-temporal sequences by adjusting the internal mechanisms of the recurrent architecture. Echo-state Networks [[cite:&jaeger2002adaptive]] are one possible direction. Related to the generate and test idea, echo-state networks rely on a random fixed "reservoir" network, where predictions are made by only adjusting the outgoing weights. Because the recurrent architecture is fixed, no gradients flow through the recurrent connections meaning no BPTT is needed to estimate the gradients. Unfortunately, these networks are dependent on their initializations making them hard to deploy in practice. [[citeauthor:&mozer1995focused]] ([[citeyear:&mozer1995focused]]) propose a focused architecture design, where recurrent connections are made more sparsely (even just singular connections). This significantly reduces the computational complexity of RTRL and allows for a focused version of BPTT.
-
-Transformers [[cite:&vaswani2017attention]] are a widely used alternative to recurrent architectures in natural language processing. Transformers have also shown some success in reinforcement learning but either require the full sequence of observations at inference and learning time [[cite:&mishra2018simple;&parisotto2020stabilizing]] or turn the RL problem into a supervised problem using the full return as the training signal [[cite:&chen2021decision]]. Because of these compromises, it is still unclear if transformers are a viable solution to the state construction problem in continual reinforcement learning.
 * Graveyard                                                        :noexport:
 ** Old Introduction                                               :noexport:
 Learning to behave and predict using partial information about the world is critical for applying reinforcement learning (RL) algorithms to large, complex domains. For example, consider a deployed automated spacecraft with a faulty sensor that is only able to read signals intermittently. For the spacecraft to stay in service it needs to deploy a learning algorithm to maintain helpful information (or state) about the history of intermittent sensor readings as it relates to the other sensors and how the spacecraft is behaving. Game playing systems such as StarCraft [[citep:&vinyals2019grandmaster]] provides another good example. An agent who plays StarCraft must build a working representation of the map, it's base and strategy, and any information about its rival's base and strategy as it focuses its observations on specific locations to perform actions.
