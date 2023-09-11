@@ -71,7 +71,7 @@
 % \usepackage{cite}
 \usepackage[%
 backend=biber,%
-style=numeric,%
+style=authoryear,%
 backref=false,%
 sortcites=true,sorting=nyt,%
 mincitenames=1,maxcitenames=2%
@@ -95,6 +95,10 @@ mincitenames=1,maxcitenames=2%
      {\renewcommand{\finentrypunct}{\addspace}%
        \printtext{\addperiod\hfill\rlap{\hskip15pt\colorbox{blue!5}{\scriptsize\printlist[pageref][-\value{listtotal}]{pageref}}}}}}
 
+\AtEveryBibitem{
+    \clearfield{urlyear}
+    \clearfield{urlmonth}
+}   
 
 \addbibresource{thesis.bib}
 \addbibresource{me.bib}
