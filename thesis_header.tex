@@ -72,10 +72,14 @@
 \usepackage[%
 backend=biber,%
 style=authoryear,%
-backref=false,%
-sortcites=true,sorting=nyt,%
-mincitenames=1,maxcitenames=2%
+% backref=true,%
+sortcites=true,sorting=ynt,%
+% uniquename=false,
+mincitenames=1,maxcitenames=2,%
+maxbibnames=99
 ]{biblatex}
+
+\newcommand{\printpublication}[1]{\AtNextCite{\defcounter{maxnames}{99}}\fullcite{#1}}
 % `backref=true` adds back references - Links to the in-text citations from
 % the corresponding bibliography entries. Back references are not mentioned
 % in thesis guidelines, but are, in my opinion, helpful for reading and editing.

@@ -90,8 +90,6 @@ and sets formatting up for main text.
 
 
 
-
-
 * Introduction
 :PROPERTIES:
 :CUSTOM_ID: chap:introduction
